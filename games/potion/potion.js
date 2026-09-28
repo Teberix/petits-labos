@@ -43,6 +43,7 @@ function createGame(container, ctx) {
   const { t, sfx } = ctx;
   const timers = new Set();
   const cleanups = [];
+  let destroyed = false; // set when the player leaves; stops anything still waiting
 
   // setTimeout that is cancelled automatically when the game closes.
   function later(fn, ms) {
@@ -365,8 +366,13 @@ function createGame(container, ctx) {
     clearHint();
     sfx.chime();
     ctx.speak(successLine(round.spec.recipe));
+    // Every potion earns a star (it flies from the creature to the counter);
+    // every 5th star also brings a new sticker, revealed before the next creature.
+    const sticker = ctx.rewards.star(play.els.creatureBox);
 
-    later(() => {
+    later(async () => {
+      if (sticker) await ctx.rewards.showSticker(sticker);
+      if (destroyed) return;
       play.index++;
       if (play.index < play.rounds.length) {
         restartAnimation(play.els.creatureBox.parentElement, 'leave');
@@ -451,6 +457,7 @@ function createGame(container, ctx) {
   return {
     start: showLevels,
     destroy() {
+      destroyed = true;
       timers.forEach(clearTimeout);
       timers.clear();
       stopRoundInputs();

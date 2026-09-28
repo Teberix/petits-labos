@@ -4,7 +4,7 @@ import { t } from '../i18n.js';
 import { sfx } from '../audio.js';
 import { getProfile } from '../storage.js';
 import { parentGateButton } from '../parentgate.js';
-import { repeatButton, say, topBar } from '../ui.js';
+import { iconButton, repeatButton, say, topBar } from '../ui.js';
 import { GAMES } from '../../games/registry.js';
 
 export function render(root, { profileId }, app) {
@@ -22,7 +22,7 @@ export function render(root, { profileId }, app) {
 
   root.append(
     topBar({
-      left: [playerButton],
+      left: [playerButton, iconButton('album', t('openCollection'), () => app.show('collection', { profileId }), 'album-btn')],
       title: t('chooseGame'),
       right: [repeatButton(), parentGateButton(() => app.show('parent', { from: 'hub', profileId }))],
     }),

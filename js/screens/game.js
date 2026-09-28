@@ -9,12 +9,16 @@
 //   ctx.speak(text, lang?) read an instruction aloud (the repeat button replays it)
 //   ctx.sfx                { pop, chime, boing, plop, bubbles, fanfare }
 //   ctx.load() / ctx.save(data)   this game's saved data for this player
+//   ctx.rewards.star(fromEl)      +1 star (flies from fromEl to the counter); returns a
+//                                 newly earned sticker or null
+//   ctx.rewards.showSticker(s)    full-screen sticker reveal; a Promise, resolves when closed
 //   ctx.exit()             back to the hub
 import { h } from '../dom.js';
 import { getLang, t } from '../i18n.js';
 import { sfx, stopSpeaking } from '../audio.js';
 import { getGameData, getProfile, setGameData } from '../storage.js';
 import { iconButton, repeatButton, say, topBar } from '../ui.js';
+import { addStar, flyStar, showSticker, starBadge } from '../rewards.js';
 import { GAMES } from '../../games/registry.js';
 
 export function render(root, { profileId, gameId }, app) {
@@ -28,7 +32,7 @@ export function render(root, { profileId, gameId }, app) {
     topBar({
       left: [iconButton('home', t('home'), exit)],
       title: t(entry.titleKey),
-      right: [repeatButton()],
+      right: [starBadge(profileId), repeatButton()],
     }),
     stage,
   );
@@ -41,6 +45,14 @@ export function render(root, { profileId, gameId }, app) {
     sfx,
     load: () => getGameData(profileId, gameId),
     save: (data) => setGameData(profileId, gameId, data),
+    rewards: {
+      star(fromEl) {
+        const sticker = addStar(profileId);
+        flyStar(fromEl, profileId);
+        return sticker;
+      },
+      showSticker,
+    },
     exit,
   };
 

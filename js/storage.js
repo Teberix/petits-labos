@@ -5,8 +5,9 @@
 //   schema: 1,
 //   settings: { lang: 'fr' },
 //   profiles: [
-//     { id, name, avatar, readingLang, unlockAll?, games: { <gameId>: { ...game-owned data } } }
-//     (unlockAll is optional: missing = false, so older data needs no migration)
+//     { id, name, avatar, readingLang, unlockAll?, rewards?, games: { <gameId>: { ...game-owned data } } }
+//     unlockAll / rewards are optional (missing = off / nothing earned), so older data needs no migration.
+//     rewards = { stars: 12, stickers: ['sun', 'rocket'] }
 //   ]
 // }
 //
@@ -140,6 +141,21 @@ export function setGameData(profileId, gameId, data) {
   const profile = getProfile(profileId);
   if (!profile) return;
   profile.games[gameId] = data;
+  save();
+}
+
+// ---- Rewards (shared by all games): { stars: number, stickers: [stickerId, …] } ----
+// Optional on the profile (missing = nothing earned yet), so no migration needed.
+
+export function getRewards(profileId) {
+  const saved = getProfile(profileId)?.rewards ?? {};
+  return { stars: saved.stars ?? 0, stickers: [...(saved.stickers ?? [])] };
+}
+
+export function setRewards(profileId, rewards) {
+  const profile = getProfile(profileId);
+  if (!profile) return;
+  profile.rewards = rewards;
   save();
 }
 

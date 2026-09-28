@@ -92,8 +92,10 @@ js/i18n.js, js/i18n/   t(), addStrings(); fr/es/en dictionaries
 js/audio.js            Web Audio sfx + speechSynthesis (prefers local voices)
 js/parentgate.js       3 s press-and-hold button
 js/dragdrop.js         draggable(el, { targets, onDrop, onTap, canDrag }) — pointer events, ghost copy
+js/rewards.js          stars + stickers (shared by all games): addStar, flyStar, showSticker, starBadge
+js/stickers.js         the 24 album stickers (SVG) — names in js/i18n as sticker.<id>
 js/ui.js, dom.js, icons.js   top bar, repeat button, h() DOM helper, shell SVG icons
-js/screens/            profiles, hub, game (mounts a game + builds ctx), parent
+js/screens/            profiles, hub, game (mounts a game + builds ctx), parent, collection (album)
 games/registry.js      one line per game
 games/<id>/meta.js     id, titleKey, strings, tile icon (loaded eagerly by the hub)
 games/<id>/<id>.js     default export { mount(container, ctx), unmount() } (lazy-loaded)
@@ -122,6 +124,9 @@ Conventions:
 - Updates are applied only at safe moments: app launch, entering hub/profiles, or the app
   returning to the foreground on hub/profiles. Never while a game is mounted.
 - Storage format change → bump `SCHEMA_VERSION` + add a migration in `js/storage.js`.
+- Rewards: 1 star per success (games call `ctx.rewards.star(el)`), a random new sticker
+  every 5 stars (`ctx.rewards.showSticker` — await it before moving on). No scores,
+  no ratings, never take stars away. Free-play modes give no stars.
 
 ## Local dev
 

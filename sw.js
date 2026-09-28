@@ -14,7 +14,7 @@
 // All URLs are relative to this file, so the app works under any sub-path
 // (e.g. https://<user>.github.io/petits-labos/).
 
-const VERSION = '0.2.1';
+const VERSION = '0.3.0';
 const CACHE_PREFIX = 'petits-labos-';
 const CACHE_NAME = CACHE_PREFIX + VERSION;
 
@@ -46,10 +46,13 @@ const PRECACHE = [
   'js/i18n/fr.js',
   'js/icons.js',
   'js/parentgate.js',
+  'js/rewards.js',
+  'js/screens/collection.js',
   'js/screens/game.js',
   'js/screens/hub.js',
   'js/screens/parent.js',
   'js/screens/profiles.js',
+  'js/stickers.js',
   'js/storage.js',
   'js/ui.js',
   'js/updates.js',

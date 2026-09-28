@@ -47,6 +47,11 @@ export const sfx = {
       note({ freq: f, to: f * 1.6, dur: 0.07, volume: 0.12, delay: i * 0.15 });
     }
   },
+  // A star flying to the counter: two quick high notes.
+  twinkle: () => {
+    note({ freq: 1320, dur: 0.12, type: 'triangle', volume: 0.15 });
+    note({ freq: 1760, dur: 0.18, type: 'triangle', volume: 0.15, delay: 0.08 });
+  },
   // Big success: a little rising arpeggio.
   fanfare: () => {
     [523, 659, 784, 1047].forEach((freq, i) => note({ freq, dur: 0.3, type: 'triangle', delay: i * 0.12 }));
