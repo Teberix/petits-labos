@@ -24,7 +24,7 @@ export function parentGateButton(onPass) {
 
   function start(event) {
     // Capture keeps us receiving pointerup even if the finger slides a little.
-    button.setPointerCapture?.(event.pointerId);
+    try { button.setPointerCapture(event.pointerId); } catch { /* still works without it */ }
     button.classList.add('holding');
     timer = setTimeout(() => {
       reset();

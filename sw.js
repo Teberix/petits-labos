@@ -14,7 +14,7 @@
 // All URLs are relative to this file, so the app works under any sub-path
 // (e.g. https://<user>.github.io/petits-labos/).
 
-const VERSION = '0.1.0';
+const VERSION = '0.2.0';
 const CACHE_PREFIX = 'petits-labos-';
 const CACHE_NAME = CACHE_PREFIX + VERSION;
 
@@ -24,8 +24,13 @@ const PRECACHE = [
   'index.html',
   'manifest.webmanifest',
   'css/base.css',
+  'games/potion/art.js',
+  'games/potion/levels.js',
   'games/potion/meta.js',
+  'games/potion/mixing.js',
+  'games/potion/potion.css',
   'games/potion/potion.js',
+  'games/potion/strings.js',
   'games/registry.js',
   'icons/icon-192.png',
   'icons/icon-512.png',
@@ -34,6 +39,7 @@ const PRECACHE = [
   'js/app.js',
   'js/audio.js',
   'js/dom.js',
+  'js/dragdrop.js',
   'js/i18n.js',
   'js/i18n/en.js',
   'js/i18n/es.js',

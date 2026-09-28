@@ -1,0 +1,280 @@
+/* "La Potion" — layout + animations.
+   Portrait:  visitor on top, cauldron in the middle, jar shelf at the bottom.
+   Landscape: visitor | cauldron | shelf side by side.
+   Touch targets stay ≥ 64px; on small screens the layout rearranges instead. */
+
+/* ---------- Level map ---------- */
+
+.potion-levels {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto; /* many levels on a small landscape phone: scroll rather than clip */
+  display: flex;
+  flex-wrap: wrap;
+  align-content: center;
+  justify-content: center;
+  gap: var(--gap);
+  padding: var(--gap);
+}
+.level-btn {
+  width: clamp(6rem, 24vmin, 10rem);
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  border: none;
+  border-radius: 50%;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+.level-btn:active { transform: translateY(0.2rem); box-shadow: none; }
+.level-btn.done { background: #E7F8EE; }
+.level-btn.locked { opacity: 0.55; }
+.level-num { font-size: clamp(2rem, 8vmin, 3.5rem); font-weight: 800; color: var(--primary); line-height: 1; }
+.level-dots { display: flex; gap: 0.25rem; }
+.level-dot, .recipe-dot, .drop-dot { border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.15); }
+.level-dot { width: 0.8rem; height: 0.8rem; }
+.level-lock { width: 2rem; height: 2rem; color: var(--ink-soft); }
+
+/* ---------- Play layout ---------- */
+
+/* The play area is exactly one screen tall. The visitor and the shelf take what they
+   need; the lab gets the rest, and the cauldron sizes itself to fit (see .cauldron). */
+.potion-play {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-areas: "visitor" "lab" "shelf";
+  gap: 0.5rem;
+  padding: 0 var(--gap) var(--gap);
+}
+@media (orientation: landscape) {
+  .potion-play {
+    grid-template-rows: minmax(0, 1fr);
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas: "visitor lab shelf";
+    align-items: center;
+  }
+}
+
+/* Visitor: the creature + a speech bubble showing the potion it wants. */
+.visitor {
+  grid-area: visitor;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+@media (orientation: landscape) { .visitor { flex-direction: column; } }
+
+.creature { width: clamp(5rem, 20vmin, 9rem); }
+.creature svg { display: block; width: 100%; height: auto; }
+
+.bubble {
+  position: relative;
+  padding: 0.5rem 0.75rem;
+  border-radius: 1.5rem;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+.request { display: flex; flex-direction: column; align-items: center; gap: 0.3rem; }
+.request-top { display: flex; align-items: center; gap: 0.25rem; }
+.request-jar { width: clamp(3rem, 11vmin, 4.5rem); }
+.request-jar svg { display: block; width: 100%; height: auto; }
+.request-icon { font-size: clamp(1.8rem, 7vmin, 2.8rem); }
+.request-name { max-width: 8rem; font-size: 1.2rem; font-weight: 800; text-align: center; }
+
+/* Recipe (counting levels): "2 ●●  1 ●" */
+.recipe { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.4rem; }
+.recipe-group {
+  display: flex;
+  align-items: center;
+  gap: 0.15rem;
+  padding: 0.15rem 0.45rem;
+  border-radius: 1rem;
+  background: var(--bg);
+}
+.recipe-num { margin-right: 0.2rem; font-size: 1.15rem; font-weight: 800; }
+.recipe-dot { width: 0.95rem; height: 0.95rem; }
+
+/* Lab: [empty] [cauldron] [stir], with the dropped colours underneath.
+   Narrow portrait phones: the cauldron takes the full width and the two
+   buttons move below it, around the drops (targets stay 72px). */
+.lab {
+  grid-area: lab;
+  height: 100%;
+  min-height: 0;
+  width: 100%;
+  max-width: 44rem;
+  justify-self: center;
+  display: grid;
+  /* The middle column gets whatever the two buttons leave, never more. */
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-rows: minmax(0, 1fr) auto;
+  grid-template-areas: "empty cauldron stir" ". drops .";
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem clamp(0.25rem, 2vw, 1.5rem);
+}
+.empty-btn { grid-area: empty; }
+.stir-btn { grid-area: stir; }
+.drops-row { grid-area: drops; justify-self: center; }
+
+/* Phones (narrow portrait, or short landscape): buttons go under the cauldron,
+   so the cauldron can use the full width of its column. */
+@media (orientation: portrait) and (max-width: 34rem), (orientation: landscape) and (max-height: 34rem) {
+  .lab {
+    grid-template-areas: "cauldron cauldron cauldron" "empty drops stir";
+  }
+}
+@media (orientation: landscape) and (max-height: 34rem) {
+  .bubble { max-width: 9rem; }
+}
+
+/* The cauldron fills the height it is given, keeping its proportions. */
+.cauldron {
+  grid-area: cauldron;
+  position: relative;
+  justify-self: center;
+  height: 100%;
+  max-height: 24rem;
+  min-height: 0;
+  aspect-ratio: 200 / 190;
+  max-width: 100%;
+  border-radius: 1.5rem;
+  transition: background 0.2s;
+}
+.cauldron > svg { display: block; width: 100%; height: 100%; }
+.cauldron.drop-hover { background: rgba(108, 74, 182, 0.12); }
+.cauldron.drop-hover .cauldron-art { transform: scale(1.05); }
+.cauldron-art { transition: transform 0.15s; }
+
+.liquid { transition: fill 0.7s ease; }
+.blobs .blob { animation: blob-in 0.35s ease-out; }
+.blobs.melting { opacity: 0; transition: opacity 0.6s; }
+.bubbles circle { fill: #fff; opacity: 0.5; animation: bubble 2.4s ease-in-out infinite; }
+.bubbles circle:nth-child(2) { animation-delay: 0.8s; }
+.bubbles circle:nth-child(3) { animation-delay: 1.6s; }
+.flames path { transform-origin: center bottom; transform-box: fill-box; animation: flicker 0.9s ease-in-out infinite alternate; }
+.flames path:nth-child(2) { animation-delay: 0.3s; }
+
+.cauldron.splash .cauldron-art { animation: splash 0.3s ease-out; }
+.cauldron.emptying .cauldron-art { animation: tip 0.6s ease-in-out; }
+
+/* The spoon only shows while stirring. */
+.spoon {
+  position: absolute;
+  left: 50%;
+  top: -12%;
+  width: 16%;
+  opacity: 0;
+  pointer-events: none;
+  transform-origin: 50% 90%;
+}
+.spoon svg { display: block; width: 100%; height: auto; }
+.cauldron.stirring .spoon { opacity: 1; animation: stir 0.7s ease-in-out 2; }
+
+.tool-btn {
+  width: var(--tap);
+  height: var(--tap);
+  flex: none;
+  display: grid;
+  place-items: center;
+  padding: 0.6rem;
+  border: none;
+  border-radius: 50%;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  color: #3B3355;
+}
+.tool-btn svg { width: 100%; height: 100%; }
+.tool-btn:active { transform: translateY(0.2rem); box-shadow: none; }
+.stir-btn.ready { background: var(--accent); animation: pulse 1.2s ease-in-out infinite; }
+
+.drops-row { max-width: 12rem; display: flex; flex-wrap: wrap; justify-content: center; gap: 0.3rem; min-height: 1.1rem; }
+.drop-dot { width: 1.1rem; height: 1.1rem; animation: blob-in 0.3s ease-out; }
+
+/* Shelf of paint jars (drag sources). */
+.shelf {
+  grid-area: shelf;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--gap);
+}
+@media (orientation: landscape) {
+  .shelf { flex-direction: column; flex-wrap: wrap; height: 100%; align-content: center; justify-content: center; gap: 0.5rem; }
+}
+.jar {
+  width: clamp(4.5rem, 16vmin, 6rem); /* ≥ 72px */
+  cursor: grab;
+}
+.jar svg { display: block; width: 100%; height: auto; pointer-events: none; }
+.jar.drag-source { opacity: 0.4; }
+.drag-ghost { filter: drop-shadow(0 0.5rem 0.4rem rgba(0, 0, 0, 0.25)); }
+
+/* Hints: sparkle/pulse on what to use. */
+.jar.hint, .tool-btn.hint { animation: sparkle 0.9s ease-in-out infinite; }
+
+/* ---------- Creature moods ---------- */
+.creature .eyes-happy, .creature .mouth-happy, .creature .mouth-oops { display: none; }
+.creature[data-mood="happy"] .eyes-open, .creature[data-mood="happy"] .mouth-neutral { display: none; }
+.creature[data-mood="happy"] .eyes-happy, .creature[data-mood="happy"] .mouth-happy { display: inline; }
+.creature[data-mood="happy"] { animation: hop 0.5s ease-in-out 3; }
+.creature[data-mood="oops"] .mouth-neutral { display: none; }
+.creature[data-mood="oops"] .mouth-oops { display: inline; }
+.creature[data-mood="oops"] { animation: shake 0.5s ease-in-out; }
+
+.visitor.arrive { animation: arrive 0.5s ease-out; }
+.visitor.leave { animation: leave 0.45s ease-in forwards; }
+
+/* ---------- Level done ---------- */
+.level-done {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--gap);
+  padding: var(--gap);
+}
+.done-creatures, .done-jars { display: flex; gap: var(--gap); justify-content: center; flex-wrap: wrap; }
+.done-creatures .creature { width: clamp(4.5rem, 18vmin, 8rem); }
+.done-jar { width: clamp(3.5rem, 12vmin, 5rem); animation: hop 0.6s ease-in-out infinite alternate; }
+.done-jar:nth-child(2) { animation-delay: 0.2s; }
+.done-jar:nth-child(3) { animation-delay: 0.4s; }
+.done-jar svg { display: block; width: 100%; height: auto; }
+.continue-btn {
+  width: calc(var(--tap) * 1.4);
+  height: calc(var(--tap) * 1.4);
+  padding: 1rem;
+  border: none;
+  border-radius: 50%;
+  background: var(--green);
+  color: #fff;
+  box-shadow: var(--shadow);
+  animation: pulse 1.2s ease-in-out infinite;
+}
+.continue-btn svg { width: 100%; height: 100%; }
+
+.wiggle { animation: shake 0.4s ease-in-out; }
+
+/* ---------- Keyframes ---------- */
+@keyframes blob-in { from { transform: scale(0); } to { transform: scale(1); } }
+@keyframes bubble { 0%, 100% { transform: translateY(0); opacity: 0; } 50% { transform: translateY(-6px); opacity: 0.6; } }
+@keyframes flicker { from { transform: scaleY(0.85); } to { transform: scaleY(1.1); } }
+@keyframes splash { 50% { transform: scale(1.06, 0.96); } }
+@keyframes tip { 40% { transform: rotate(-25deg); } 100% { transform: rotate(0); } }
+@keyframes stir { 0%, 100% { transform: translateX(-50%) rotate(-25deg); } 50% { transform: translateX(-50%) rotate(25deg); } }
+@keyframes pulse { 50% { transform: scale(1.08); } }
+@keyframes sparkle {
+  0%, 100% { transform: scale(1); filter: drop-shadow(0 0 0 #FFD34D); }
+  50% { transform: scale(1.12); filter: drop-shadow(0 0 0.6rem #FFD34D); }
+}
+@keyframes hop { 50% { transform: translateY(-12%); } }
+@keyframes shake { 25% { transform: rotate(-6deg); } 75% { transform: rotate(6deg); } }
+@keyframes arrive { from { transform: translateX(-60vw); } to { transform: translateX(0); } }
+@keyframes leave { to { transform: translateX(60vw); opacity: 0; } }

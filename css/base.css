@@ -118,6 +118,13 @@ button:disabled { opacity: 0.5; cursor: default; }
   transition: stroke-dashoffset var(--hold-ms) linear;
 }
 
+/* In a game (all games) the top bar stays on one row even on phones (only 2 buttons). */
+#app[data-screen="game"] .top-bar {
+  grid-template-columns: auto 1fr auto;
+  grid-template-areas: "left title right";
+  padding-block: 0.5rem;
+}
+
 /* ---------- Screen body + big tiles ---------- */
 
 .screen-body {
@@ -159,6 +166,9 @@ button:disabled { opacity: 0.5; cursor: default; }
 .hint { color: var(--ink-soft); }
 
 /* ---------- Game screen ---------- */
+
+/* A game fills exactly one screen (no page scrolling); games lay out inside it. */
+#app[data-screen="game"] { height: 100dvh; overflow: hidden; }
 
 .game-stage {
   flex: 1;
@@ -248,3 +258,7 @@ input[type="text"] {
 }
 .actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 0.75rem; }
 .confirm-text { margin: 0; font-size: 1.2rem; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; }
+}

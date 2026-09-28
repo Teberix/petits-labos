@@ -91,13 +91,27 @@ js/storage.js          localStorage document, schema version + MIGRATIONS
 js/i18n.js, js/i18n/   t(), addStrings(); fr/es/en dictionaries
 js/audio.js            Web Audio sfx + speechSynthesis (prefers local voices)
 js/parentgate.js       3 s press-and-hold button
+js/dragdrop.js         draggable(el, { targets, onDrop, onTap, canDrag }) — pointer events, ghost copy
 js/ui.js, dom.js, icons.js   top bar, repeat button, h() DOM helper, shell SVG icons
 js/screens/            profiles, hub, game (mounts a game + builds ctx), parent
 games/registry.js      one line per game
 games/<id>/meta.js     id, titleKey, strings, tile icon (loaded eagerly by the hub)
 games/<id>/<id>.js     default export { mount(container, ctx), unmount() } (lazy-loaded)
 tools/                 dev-only Node scripts, zero dependencies (never loaded by the app)
+tests/                 dev-only unit tests: node --test tests/*.test.mjs
 ```
+
+La Potion (`games/potion/`) — 10 levels: 1 primaries · 2 secondaries · 3 review · 4 counting
+1–5 · 5 shades (2+1 drops) · 6 light/dark (white, black) · 7 3-ingredient recipes · 8 free lab
+(done after the first named mix) · 9 colour detective (shade, no recipe) · 10 4–5 drop recipes.
+Wrong amounts of the right colours → "Almost! Add a little more X!" (`missingIngredient()`).
+Progress is saved by level `id` — never renumber existing levels.
+`levels.js` = level config (edit freely, documented at top),
+`mixing.js` = RYB paint model + `matches()` (modes `ratio` with tolerance, `counts` exact —
+level 3 must use `counts`), `strings.js` = all lines it speaks, `art.js` = SVG,
+`potion.css` = its own stylesheet (loaded by the game, relative to the module).
+Don't use `requestAnimationFrame` for game logic/timers (it pauses in some webviews) —
+use `setTimeout` + CSS animations.
 
 Conventions:
 - **All URLs relative** (`./sw.js`, `css/base.css`) — the app lives at `/petits-labos/`.
@@ -123,7 +137,10 @@ node tools/serve.mjs          # → http://localhost:8080/petits-labos/ (same su
 
 ## Release routine
 
-One-time setup (needs `gh` logged in):
+Repo: https://github.com/Teberix/petits-labos — live app: https://teberix.github.io/petits-labos/
+(setup done 2026-09-28; commits use the repo-local GitHub noreply email, never the personal one).
+
+One-time setup (already done, kept for reference):
 ```bash
 gh repo create petits-labos --public --source . --push
 gh api -X POST repos/{owner}/petits-labos/pages -f "source[branch]=main" -f "source[path]=/"

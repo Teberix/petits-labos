@@ -38,6 +38,19 @@ export const sfx = {
     note({ freq: 990, dur: 0.35, type: 'triangle', delay: 0.12 });
   },
   boing: () => note({ freq: 320, to: 110, dur: 0.3, type: 'triangle', volume: 0.25 }),
+  // A drop falling into liquid.
+  plop: () => note({ freq: 900, to: 180, dur: 0.12, volume: 0.25 }),
+  // Bubbling while stirring: a few quick random blips.
+  bubbles: () => {
+    for (let i = 0; i < 6; i++) {
+      const f = 250 + Math.random() * 400;
+      note({ freq: f, to: f * 1.6, dur: 0.07, volume: 0.12, delay: i * 0.15 });
+    }
+  },
+  // Big success: a little rising arpeggio.
+  fanfare: () => {
+    [523, 659, 784, 1047].forEach((freq, i) => note({ freq, dur: 0.3, type: 'triangle', delay: i * 0.12 }));
+  },
 };
 
 // Unlock audio on the very first touch so the first sound isn't lost.

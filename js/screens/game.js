@@ -6,7 +6,7 @@
 //                          use ctx.profile.readingLang instead)
 //   ctx.t(key, vars)       translate a string (games add theirs via meta.strings)
 //   ctx.speak(text, lang?) read an instruction aloud (the repeat button replays it)
-//   ctx.sfx                { pop, chime, boing }
+//   ctx.sfx                { pop, chime, boing, plop, bubbles, fanfare }
 //   ctx.load() / ctx.save(data)   this game's saved data for this player
 //   ctx.exit()             back to the hub
 import { h } from '../dom.js';
