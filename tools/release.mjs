@@ -69,5 +69,21 @@ if (!push) {
   console.log('No git remote yet — nothing pushed. See CLAUDE.md → "Release routine".');
 } else {
   execFileSync('git', ['push', '--follow-tags', 'origin', 'main'], { cwd: ROOT, stdio: 'inherit' });
-  console.log('✓ Pushed. GitHub Pages will redeploy in a minute or two.');
+  console.log('✓ Pushed.');
+  requestPagesBuild();
+}
+
+// GitHub sometimes skips the Pages build after a push (it happened for v0.2.0),
+// so we ask for one explicitly. Needs the GitHub CLI; harmless if it builds twice.
+function requestPagesBuild() {
+  const repo = git('remote', 'get-url', 'origin').match(/github\.com[:/]([^/]+\/[^/.]+)/)?.[1];
+  const candidates = ['gh', 'C:\\Program Files\\GitHub CLI\\gh.exe'];
+  for (const gh of candidates) {
+    try {
+      execFileSync(gh, ['api', '-X', 'POST', `repos/${repo}/pages/builds`], { stdio: 'ignore' });
+      console.log('✓ GitHub Pages build requested — live in a minute or two.');
+      return;
+    } catch { /* try the next location */ }
+  }
+  console.log('GitHub CLI not found: if the site does not update, re-run the Pages build on GitHub.');
 }
