@@ -73,17 +73,35 @@ if (!push) {
   requestPagesBuild();
 }
 
-// GitHub sometimes skips the Pages build after a push (it happened for v0.2.0),
-// so we ask for one explicitly. Needs the GitHub CLI; harmless if it builds twice.
+// GitHub sometimes skips the Pages build after a push (it happened for v0.2.0).
+// Wait up to 30 s for GitHub to start one for this commit; only if it doesn't,
+// request one — requesting while GitHub's own build runs cancels it (seen in v0.2.1).
+// Needs the GitHub CLI; without it, just prints a reminder.
 function requestPagesBuild() {
   const repo = git('remote', 'get-url', 'origin').match(/github\.com[:/]([^/]+\/[^/.]+)/)?.[1];
-  const candidates = ['gh', 'C:\\Program Files\\GitHub CLI\\gh.exe'];
-  for (const gh of candidates) {
-    try {
-      execFileSync(gh, ['api', '-X', 'POST', `repos/${repo}/pages/builds`], { stdio: 'ignore' });
-      console.log('✓ GitHub Pages build requested — live in a minute or two.');
-      return;
-    } catch { /* try the next location */ }
+  const head = git('rev-parse', 'HEAD');
+  const gh = ['gh', 'C:\\Program Files\\GitHub CLI\\gh.exe'].find((cmd) => {
+    try { execFileSync(cmd, ['--version'], { stdio: 'ignore' }); return true; } catch { return false; }
+  });
+  if (!gh || !repo) {
+    console.log('GitHub CLI not found: if the site does not update, re-run the Pages build on GitHub.');
+    return;
   }
-  console.log('GitHub CLI not found: if the site does not update, re-run the Pages build on GitHub.');
+  const sleep = (ms) => Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
+  for (let i = 0; i < 6; i++) {
+    sleep(5000);
+    try {
+      const latest = execFileSync(gh, ['api', `repos/${repo}/pages/builds/latest`, '--jq', '.commit'], { encoding: 'utf8' }).trim();
+      if (latest === head) {
+        console.log('✓ GitHub Pages is building — live in a minute or two.');
+        return;
+      }
+    } catch { /* not reachable yet: keep waiting */ }
+  }
+  try {
+    execFileSync(gh, ['api', '-X', 'POST', `repos/${repo}/pages/builds`], { stdio: 'ignore' });
+    console.log('✓ GitHub had not started a Pages build: requested one — live in a few minutes.');
+  } catch {
+    console.log('Could not request a Pages build: if the site does not update, re-run it on GitHub.');
+  }
 }
