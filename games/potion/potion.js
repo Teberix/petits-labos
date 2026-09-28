@@ -77,6 +77,7 @@ function createGame(container, ctx) {
   }
 
   function isUnlocked(index) {
+    if (ctx.profile.unlockAll) return true; // parent switch in the profile settings
     return index === 0 || progress().completed.includes(LEVELS[index - 1].id);
   }
 

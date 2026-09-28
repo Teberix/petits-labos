@@ -33,6 +33,10 @@ export default {
   name: 'Name',
   avatar: 'Avatar',
   readingLang: 'Reading language',
+  unlockAll: 'All levels unlocked',
+  unlockAllHint: 'Yes: every level of every game is open. No: they unlock one by one.',
+  yes: 'Yes',
+  no: 'No',
   noProfiles: 'No profiles yet.',
   noProfilesHint: 'Parents: hold ⚙️ for 3 seconds to create one.',
 };

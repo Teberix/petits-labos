@@ -104,6 +104,7 @@ export function render(root, params, app) {
       name: existing?.name ?? '',
       avatar: existing?.avatar ?? AVATARS[getProfiles().length % AVATARS.length],
       readingLang: existing?.readingLang ?? getLang(),
+      unlockAll: existing?.unlockAll ?? false, // games open every level for this player
     };
 
     const nameInput = h('input', {
@@ -123,11 +124,14 @@ export function render(root, params, app) {
     // Re-render only the choice rows when a choice is made (keeps the typed name).
     const avatarSlot = h('div');
     const langSlot = h('div');
+    const unlockSlot = h('div');
     const drawChoices = () => {
       avatarSlot.replaceChildren(choiceRow(AVATARS.map((a) => ({ value: a, label: a })), draft.avatar,
         (a) => { draft.avatar = a; drawChoices(); }, 'avatar-choices'));
       langSlot.replaceChildren(choiceRow(LANGS.map((l) => ({ value: l, label: LANG_NAMES[l] })), draft.readingLang,
         (l) => { draft.readingLang = l; drawChoices(); }));
+      unlockSlot.replaceChildren(choiceRow([{ value: false, label: t('no') }, { value: true, label: t('yes') }], draft.unlockAll,
+        (v) => { draft.unlockAll = v; drawChoices(); }));
     };
     drawChoices();
 
@@ -136,6 +140,8 @@ export function render(root, params, app) {
       h('label', { for: 'profile-name' }, t('name')), nameInput,
       h('p', { class: 'field-label' }, t('avatar')), avatarSlot,
       h('p', { class: 'field-label' }, t('readingLang')), langSlot,
+      h('p', { class: 'field-label' }, t('unlockAll')), unlockSlot,
+      h('p', { class: 'hint' }, t('unlockAllHint')),
       h('div', { class: 'actions' },
         h('button', { class: 'btn', type: 'button', onclick: () => go({ name: 'main' }) }, t('cancel')),
         saveButton,

@@ -1,7 +1,8 @@
 // Game screen — loads a game module from the registry and mounts it.
 //
 // Every game receives this `ctx` object:
-//   ctx.profile            the current player { id, name, avatar, readingLang }
+//   ctx.profile            the current player { id, name, avatar, readingLang, unlockAll }
+//                          unlockAll = parent switch: every level must be playable
 //   ctx.lang               language to play in (app language; reading games may
 //                          use ctx.profile.readingLang instead)
 //   ctx.t(key, vars)       translate a string (games add theirs via meta.strings)

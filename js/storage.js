@@ -5,7 +5,8 @@
 //   schema: 1,
 //   settings: { lang: 'fr' },
 //   profiles: [
-//     { id, name, avatar, readingLang, games: { <gameId>: { ...game-owned data } } }
+//     { id, name, avatar, readingLang, unlockAll?, games: { <gameId>: { ...game-owned data } } }
+//     (unlockAll is optional: missing = false, so older data needs no migration)
 //   ]
 // }
 //
@@ -109,8 +110,8 @@ export function getProfile(id) {
   return getProfiles().find((p) => p.id === id) ?? null;
 }
 
-export function addProfile({ name, avatar, readingLang }) {
-  const profile = { id: newId(), name, avatar, readingLang, games: {} };
+export function addProfile({ name, avatar, readingLang, unlockAll = false }) {
+  const profile = { id: newId(), name, avatar, readingLang, unlockAll, games: {} };
   ensureLoaded().profiles.push(profile);
   save();
   return profile;

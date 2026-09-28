@@ -33,6 +33,10 @@ export default {
   name: 'Prénom',
   avatar: 'Avatar',
   readingLang: 'Langue de lecture',
+  unlockAll: 'Tous les niveaux débloqués',
+  unlockAllHint: 'Oui : tous les niveaux de tous les jeux sont ouverts. Non : ils se débloquent un par un.',
+  yes: 'Oui',
+  no: 'Non',
   noProfiles: 'Aucun profil pour le moment.',
   noProfilesHint: 'Parents : maintenez ⚙️ 3 secondes pour en créer un.',
 };
