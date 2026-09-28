@@ -1,0 +1,38 @@
+export default {
+  // Kids (read aloud)
+  whoPlays: '¿Quién juega?',
+  chooseGame: '¡Elige un juego!',
+  comingSoon: '¡Muy pronto!',
+
+  // Buttons (screen readers / tooltips)
+  repeat: 'Repetir',
+  home: 'Inicio',
+  back: 'Volver',
+  changePlayer: 'Cambiar de jugador',
+  parentHold: 'Padres: mantener 3 segundos',
+
+  // Parent area
+  parentTitle: 'Zona de padres',
+  version: 'Versión',
+  checkUpdates: 'Buscar actualizaciones',
+  updateChecking: 'Buscando…',
+  updateUpToDate: 'La aplicación está al día.',
+  updateReady: 'Nueva versión descargada. Se instalará al volver al inicio.',
+  updateOffline: 'Sin conexión. Vuelve a intentarlo más tarde.',
+  updateUnsupported: 'Actualizaciones no disponibles en este navegador.',
+  appLanguage: 'Idioma de la aplicación',
+  profiles: 'Perfiles',
+  addProfile: 'Añadir un perfil',
+  editProfile: 'Editar perfil',
+  edit: 'Editar',
+  delete: 'Borrar',
+  confirmDelete: '¿Borrar «{name}» y todo su progreso?',
+  yesDelete: 'Sí, borrar',
+  cancel: 'Cancelar',
+  save: 'Guardar',
+  name: 'Nombre',
+  avatar: 'Avatar',
+  readingLang: 'Idioma de lectura',
+  noProfiles: 'Todavía no hay perfiles.',
+  noProfilesHint: 'Padres: mantengan ⚙️ 3 segundos para crear uno.',
+};

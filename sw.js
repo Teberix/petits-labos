@@ -1,0 +1,97 @@
+// Service worker — offline-first cache + deferred updates.
+//
+// How updates work:
+//  1. The browser re-downloads this file when the app opens (and when app.js calls
+//     registration.update()). If a single byte changed, a NEW worker installs in the
+//     background and downloads every file into a NEW cache named after VERSION.
+//  2. The new worker then WAITS. It never takes over by itself (no skipWaiting here),
+//     so a running game is never swapped out mid-play.
+//  3. app.js tells the waiting worker to take over only at a safe moment (app launch,
+//     or back at the hub with no game running). It sends 'SKIP_WAITING', then reloads.
+//  4. On activation, caches from older versions are deleted.
+//
+// VERSION and PRECACHE are rewritten by tools/release.mjs / tools/update-precache.mjs.
+// All URLs are relative to this file, so the app works under any sub-path
+// (e.g. https://<user>.github.io/petits-labos/).
+
+const VERSION = '0.1.0';
+const CACHE_PREFIX = 'petits-labos-';
+const CACHE_NAME = CACHE_PREFIX + VERSION;
+
+// PRECACHE:START — generated list, do not edit by hand (run: node tools/update-precache.mjs)
+const PRECACHE = [
+  './',
+  'index.html',
+  'manifest.webmanifest',
+  'css/base.css',
+  'games/potion/meta.js',
+  'games/potion/potion.js',
+  'games/registry.js',
+  'icons/icon-192.png',
+  'icons/icon-512.png',
+  'icons/icon-maskable-512.png',
+  'icons/icon.svg',
+  'js/app.js',
+  'js/audio.js',
+  'js/dom.js',
+  'js/i18n.js',
+  'js/i18n/en.js',
+  'js/i18n/es.js',
+  'js/i18n/fr.js',
+  'js/icons.js',
+  'js/parentgate.js',
+  'js/screens/game.js',
+  'js/screens/hub.js',
+  'js/screens/parent.js',
+  'js/screens/profiles.js',
+  'js/storage.js',
+  'js/ui.js',
+  'js/updates.js',
+  'js/version.js',
+];
+// PRECACHE:END
+
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) =>
+      // cache: 'reload' skips the HTTP cache so we never store a stale copy
+      // of a file from the previous version.
+      cache.addAll(PRECACHE.map((url) => new Request(url, { cache: 'reload' })))
+    )
+  );
+});
+
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys()
+      .then((names) => Promise.all(
+        names
+          .filter((name) => name.startsWith(CACHE_PREFIX) && name !== CACHE_NAME)
+          .map((name) => caches.delete(name))
+      ))
+      .then(() => self.clients.claim())
+  );
+});
+
+// Cache-first: answer from the cache, only fall back to the network for unknown files.
+self.addEventListener('fetch', (event) => {
+  const request = event.request;
+  if (request.method !== 'GET') return;
+  if (new URL(request.url).origin !== self.location.origin) return;
+
+  event.respondWith((async () => {
+    const cache = await caches.open(CACHE_NAME);
+    const cached = await cache.match(request, { ignoreSearch: true });
+    if (cached) return cached;
+    // Any page navigation inside the app gets the app shell.
+    if (request.mode === 'navigate') {
+      const shell = await cache.match('./');
+      if (shell) return shell;
+    }
+    return fetch(request);
+  })());
+});
+
+self.addEventListener('message', (event) => {
+  if (event.data === 'SKIP_WAITING') self.skipWaiting();
+});
