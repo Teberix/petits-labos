@@ -1,0 +1,174 @@
+/* "Le Train des Suites" — layout + animations. All classes start with tr- so nothing
+   clashes with other games' stylesheets (they stay loaded after a game closes).
+
+   [        track         ]   the train: locomotive + wagons, in rows (left → right,
+   [        track         ]   like reading). train.js picks how many per row and the
+   [ tray: tokens to place ]  wagon size (--per-row, --car) to fill the track area.
+   Nothing scrolls during play. */
+
+/* ---------- Level map ---------- */
+
+.tr-levels {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto; /* many levels on a small landscape phone: scroll the MAP, never the game */
+  display: flex;
+  flex-wrap: wrap;
+  align-content: center;
+  justify-content: center;
+  gap: var(--gap);
+  padding: var(--gap);
+}
+.tr-level-btn {
+  position: relative;
+  width: clamp(6rem, 24vmin, 10rem);
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  border: none;
+  border-radius: 1.5rem;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+.tr-level-btn:active { transform: translateY(0.2rem); box-shadow: none; }
+.tr-level-btn.done { background: #E3F0FF; }
+.tr-level-btn.locked { opacity: 0.55; }
+.tr-level-num { font-size: clamp(2rem, 8vmin, 3.5rem); font-weight: 800; color: #3C7BE8; }
+.tr-level-lock { position: absolute; bottom: 0.6rem; width: 1.8rem; height: 1.8rem; color: var(--ink-soft); }
+
+/* ---------- Play layout ---------- */
+
+.tr-play {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: 0.5rem;
+  padding: 0 var(--gap) var(--gap);
+}
+
+.tr-track {
+  min-height: 0;
+  min-width: 0;
+  display: grid;
+  place-items: center;
+  overflow: hidden; /* the train rolls in and out of view */
+}
+
+.tr-train {
+  --car: 64px;      /* set by train.js */
+  --per-row: 7;     /* set by train.js */
+  display: grid;
+  grid-template-columns: repeat(var(--per-row), var(--car));
+  grid-auto-rows: calc(var(--car) * 1.3);
+  gap: 0.4rem;
+}
+
+/* A car (the locomotive or a wagon), with a strip of rail under it. */
+.tr-loco, .tr-car {
+  width: var(--car);
+  height: calc(var(--car) * 1.3);
+  background: linear-gradient(#8B95A5, #8B95A5) bottom / 100% 4px no-repeat;
+}
+.tr-loco { display: flex; align-items: flex-end; }
+.tr-loco svg { display: block; width: 100%; height: auto; }
+
+.tr-car {
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 2px;
+}
+.tr-cargo {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  place-items: center;
+  padding: 12%;
+  border-radius: 0.6rem;
+  background: #FFE3B0;
+  box-shadow: inset 0 -0.3rem 0 rgba(43, 33, 65, 0.12);
+}
+.tr-cargo svg { width: 100%; height: 100%; }
+.tr-wheels { height: 22%; flex: none; }
+.tr-wheels svg { display: block; width: 100%; height: 100%; }
+
+/* An empty wagon: dashed outline and a big "?". */
+.tr-gap .tr-cargo {
+  background: #FFF7EC;
+  border: 0.2rem dashed #C98B54;
+  box-shadow: none;
+  font-size: calc(var(--car) * 0.45);
+  font-weight: 800;
+  color: #C98B54;
+  line-height: 1;
+}
+.tr-gap.drop-hover .tr-cargo { background: #E3F0FF; border-color: #3C7BE8; color: #3C7BE8; }
+
+/* ---------- Tray ---------- */
+
+.tr-tray {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: var(--gap);
+  padding: 0.5rem;
+  border-radius: var(--radius);
+  background: #F3E6D3;
+}
+.tr-token {
+  --size: clamp(64px, 13vmin, 104px);
+  width: var(--size);
+  height: var(--size);
+  flex: none;
+  padding: calc(var(--size) * 0.12); /* (a % padding would be % of the whole tray) */
+  border: none;
+  border-radius: 1rem;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+.tr-token svg { display: block; width: 100%; height: 100%; }
+.tr-token:active { transform: translateY(0.15rem); box-shadow: none; }
+
+/* ---------- Level done ---------- */
+
+.tr-done {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--gap);
+}
+.tr-done-loco { width: clamp(6rem, 30vmin, 12rem); animation: tr-hop 0.6s ease-in-out infinite; }
+.tr-done-loco svg { display: block; width: 100%; height: auto; }
+.tr-continue {
+  width: var(--tap);
+  height: var(--tap);
+  padding: 0.9rem;
+  border: none;
+  border-radius: 50%;
+  background: var(--green);
+  color: #fff;
+  box-shadow: var(--shadow);
+}
+.tr-continue svg { width: 100%; height: 100%; }
+
+/* ---------- Animations ---------- */
+
+.tr-wiggle { animation: tr-shake 0.4s ease-in-out; }
+.tr-bounce { animation: tr-bounce 0.5s ease-out; }
+.tr-pop-in { animation: tr-pop-in 0.25s ease-out; }
+.tr-arrive { animation: tr-arrive 0.9s ease-out; }
+.tr-leave { animation: tr-leave 1.3s ease-in forwards; }
+
+@keyframes tr-hop { 50% { transform: translateY(-10%); } }
+@keyframes tr-shake { 25% { transform: rotate(-6deg); } 75% { transform: rotate(6deg); } }
+@keyframes tr-bounce { 35% { transform: translateY(-35%); } 65% { transform: translateY(6%); } 85% { transform: translateY(-4%); } }
+@keyframes tr-pop-in { from { transform: scale(0.4); } }
+@keyframes tr-arrive { from { transform: translateX(100vw); } }
+@keyframes tr-leave { to { transform: translateX(-110vw); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .tr-arrive, .tr-leave { animation-duration: 0.01s; }
+}

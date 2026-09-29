@@ -1,0 +1,169 @@
+// Pure logic of "Le Train des Suites" — no DOM, tested in tests/train.test.mjs.
+//
+// A puzzle is a train of wagons, each carrying a token (e.g. 'red'), with one or more
+// empty wagons (gaps) the child fills from a tray of choices:
+//   { pattern: 'AB',
+//     cars:    ['red', 'blue', 'red', 'blue', 'red', null],   // null = empty wagon
+//     gaps:    [5],
+//     answer:  { 5: 'blue' },
+//     choices: ['blue', 'red'],                              // the tray, shuffled
+//     key:     'red,blue,red,blue,red,blue|5' }              // to avoid repeats
+// Patterns are written with letters: 'AB', 'AAB', 'ABC'… (A, B, C = different tokens).
+//
+// Every puzzle made here is checked before it's used (owner's rules):
+//   - exactly ONE way to fill the gaps from the tray makes a train that repeats;
+//   - at least 2 full periods of the pattern are visible (no gap in them).
+
+export const MAX_WAGONS = 9; // longest train (fits 3 rows of 4 on a 360px phone)
+
+// ---------- Small random helpers (rng = a function like Math.random) ----------
+
+export function randomInt(min, max, rng = Math.random) {
+  return min + Math.floor(rng() * (max - min + 1));
+}
+
+export function shuffle(list, rng = Math.random) {
+  const out = [...list];
+  for (let i = out.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [out[i], out[j]] = [out[j], out[i]];
+  }
+  return out;
+}
+
+// `n` different items from the list, in random order.
+export function pickSome(list, n, rng = Math.random) {
+  return shuffle(list, rng).slice(0, n);
+}
+
+// ---------- Is it a pattern? ----------
+
+// True when every item equals the one `q` places before it (ABAB… has period 2).
+export function hasPeriod(seq, q) {
+  for (let i = q; i < seq.length; i++) {
+    if (seq[i] !== seq[i - q]) return false;
+  }
+  return true;
+}
+
+// A full train "follows a pattern" when a motif repeats at least twice in it:
+// some period q with 2q ≤ length. ABABAB → yes (q = 2). ABABAA → no.
+export function repeats(seq) {
+  for (let q = 1; 2 * q <= seq.length; q++) {
+    if (hasPeriod(seq, q)) return true;
+  }
+  return false;
+}
+
+// How many whole periods of length p (counted from the locomotive: wagons 0…p-1,
+// p…2p-1, …) have no gap in them.
+export function fullPeriods(cars, p) {
+  let count = 0;
+  for (let start = 0; start + p <= cars.length; start += p) {
+    if (cars.slice(start, start + p).every((c) => c !== null)) count++;
+  }
+  return count;
+}
+
+// Every way to fill the gaps with tray tokens (a token can be used several times)
+// that gives a train that repeats. A good puzzle has exactly one.
+// Returns a list of { gapIndex: token } objects.
+export function validFillings(cars, gaps, choices) {
+  const found = [];
+  const seq = [...cars];
+  function fill(g) {
+    if (g === gaps.length) {
+      if (repeats(seq)) found.push(Object.fromEntries(gaps.map((i) => [i, seq[i]])));
+      return;
+    }
+    for (const token of choices) {
+      seq[gaps[g]] = token;
+      fill(g + 1);
+    }
+    seq[gaps[g]] = null;
+  }
+  fill(0);
+  return found;
+}
+
+// ---------- Making puzzles ----------
+
+// Where the empty wagons go:
+//   'end'    the last wagon
+//   'middle' one wagon somewhere inside the train (not the first, not the last)
+//   'period' the whole last period (p wagons)
+export function gapIndices(gap, length, p, rng = Math.random) {
+  if (gap === 'end') return [length - 1];
+  if (gap === 'middle') return [randomInt(1, length - 2, rng)];
+  if (gap === 'period') return Array.from({ length: p }, (_, i) => length - p + i);
+  throw new Error(`unknown gap "${gap}"`);
+}
+
+// One random attempt; null when it breaks a rule (the caller tries again).
+function tryPuzzle(level, rng) {
+  const pattern = level.patterns[randomInt(0, level.patterns.length - 1, rng)];
+  const p = pattern.length;
+  const letters = [...new Set(pattern)];
+  const tokens = pickSome(level.tokens, letters.length, rng);
+  const tokenOf = Object.fromEntries(letters.map((letter, i) => [letter, tokens[i]]));
+
+  // 'period' levels: exactly 3 periods (2 to see, 1 to fill).
+  const length = level.gap === 'period' ? 3 * p : randomInt(level.wagons[0], level.wagons[1], rng);
+  if (length > MAX_WAGONS) return null;
+  const full = Array.from({ length }, (_, i) => tokenOf[pattern[i % p]]);
+  const gaps = gapIndices(level.gap, length, p, rng);
+  const cars = full.map((token, i) => (gaps.includes(i) ? null : token));
+  if (fullPeriods(cars, p) < 2) return null;
+
+  // The tray: every token of the pattern, plus others from the level's set if the
+  // level wants more choices.
+  const others = level.tokens.filter((t) => !tokens.includes(t));
+  const choices = shuffle([...tokens, ...pickSome(others, level.choices - tokens.length, rng)], rng);
+  if (validFillings(cars, gaps, choices).length !== 1) return null;
+
+  return {
+    pattern,
+    cars,
+    gaps,
+    answer: Object.fromEntries(gaps.map((i) => [i, full[i]])),
+    choices,
+    key: `${full.join()}|${gaps.join()}`,
+  };
+}
+
+// A new puzzle for this level, never the same train as `previousKey`.
+export function makePuzzle(level, rng = Math.random, previousKey = null) {
+  for (let attempt = 0; attempt < 200; attempt++) {
+    const puzzle = tryPuzzle(level, rng);
+    if (puzzle && puzzle.key !== previousKey) return puzzle;
+  }
+  throw new Error(`level ${level.id}: no puzzle found`);
+}
+
+// The first empty wagon (a tapped tray token goes there), or -1 when all are filled.
+export function firstEmpty(cars) {
+  return cars.indexOf(null);
+}
+
+// ---------- Layout ----------
+
+export const CAR_RATIO = 1.3; // a wagon is 1.3 × as tall as it is wide (cargo + wheels)
+export const CAR_MAX = 150;   // px: wagons don't get bigger than this on big screens
+export const CAR_MIN = 64;    // px: a comfortable drop target
+
+// How to lay out `count` cars (locomotive included) in a width × height box: the
+// FEWEST rows whose wagons are still ≥ CAR_MIN (long rows read like a sentence, so
+// the pattern stays easy to see), else the rows giving the biggest wagons.
+// Returns { rows, perRow, size } (size in px).
+export function fitTrain(count, width, height, gap) {
+  let best = null;
+  for (let rows = 1; rows <= 4; rows++) {
+    const perRow = Math.ceil(count / rows);
+    const byWidth = (width - (perRow - 1) * gap) / perRow;
+    const byHeight = (height - (rows - 1) * gap) / rows / CAR_RATIO;
+    const option = { rows, perRow, size: Math.min(byWidth, byHeight, CAR_MAX) };
+    if (option.size >= CAR_MIN) return option;
+    if (!best || option.size > best.size) best = option;
+  }
+  return best;
+}
