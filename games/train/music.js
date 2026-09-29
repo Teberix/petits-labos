@@ -15,6 +15,12 @@ export const PITCH = {
   pear: 784,
   grapes: 880,
   watermelon: 1047,
+  // Growing trains: the more dots, the higher the note (a rising tune).
+  dots1: 523,
+  dots2: 587,
+  dots3: 659,
+  dots4: 784,
+  dots5: 880,
 };
 
 let ac = null;

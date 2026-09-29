@@ -1,7 +1,7 @@
 // Dev-only (never precached): Le Train des Suites' worst-case screens for
 // tools/check-layout.mjs and its offline interaction for tools/check-offline.mjs.
 // See tools/check-kit.mjs.
-import { validFillings } from './pattern.js';
+import { validFillings, dotCount } from './pattern.js';
 
 // A check-only level (never in levels.js): AAB × 3 = 9 wagons, the longest train whose
 // rows must break at period boundaries. Added to the page's LEVELS array (the same
@@ -43,15 +43,20 @@ async function readTrain(page) {
   }));
 }
 
-// The one right token for the first empty wagon, and a wrong one.
+// The one right token for the first empty wagon, and a wrong one; plus `answer`
+// ({ gapIndex: token }) for every empty wagon. Growing trains are recognised by their
+// dots.
 async function tokensFor(page) {
   const { cars, choices } = await readTrain(page);
   const gaps = cars.flatMap((c, i) => (c === null ? [i] : []));
-  const fillings = validFillings(cars, gaps, choices);
+  const grow = cars.some((c) => dotCount(c) !== null);
+  const fillings = validFillings(cars, gaps, choices, grow);
   if (fillings.length !== 1) throw new Error(`train ${cars} has ${fillings.length} answers`);
   const right = fillings[0][gaps[0]];
-  return { cars, right, wrong: choices.find((c) => c !== right) };
+  return { cars, gaps, answer: fillings[0], right, wrong: choices.find((c) => c !== right) };
 }
+
+const gapAt = (index) => `.tr-car.tr-gap[data-index="${index}"]`;
 
 async function expectCars(page, count) {
   const { cars } = await readTrain(page);
@@ -128,6 +133,40 @@ export default {
         await kit.settle(page);
         const hinted = await page.evaluate(() => document.querySelectorAll('.tr-token.tr-hint').length);
         if (hinted !== 1) throw new Error(`${hinted} wiggling tokens`);
+      },
+    },
+    {
+      // 3 empty wagons, filled out of order: the LAST one first (dragged), then a
+      // wrong token dragged onto the middle one — the filled one stays, both others
+      // stay empty, no star yet.
+      name: 'level 5, longest train (3 empty wagons), out of order + a wrong token',
+      async setup(page, kit) {
+        await openLevel(page, kit, 5, { longest: true });
+        await expectCars(page, 9);
+        const { gaps, answer, choices } = { ...(await tokensFor(page)), ...(await readTrain(page)) };
+        if (gaps.length !== 3) throw new Error(`${gaps.length} empty wagons, expected 3`);
+        const stars = await savedStars(page);
+        const [first, middle, last] = gaps;
+        await kit.drag(page, token(answer[last]), gapAt(last));
+        await kit.drag(page, token(choices.find((c) => c !== answer[middle])), gapAt(middle));
+        await kit.settle(page);
+        const { cars } = await readTrain(page);
+        if (cars[last] !== answer[last]) throw new Error('the last wagon was not filled (or was cleared)');
+        if (cars[first] !== null || cars[middle] !== null) throw new Error(`expected the first and middle wagons empty: ${cars}`);
+        if (await savedStars(page) !== stars) throw new Error('no star before the train is complete');
+      },
+    },
+    {
+      // Growing train 1-2-3-4-? and 2 wrong tokens: hint 2 = the new dots turn orange.
+      name: 'level 6, longest growing train, hint 2 (orange dots)',
+      async setup(page, kit) {
+        await openLevel(page, kit, 6, { longest: true });
+        await expectCars(page, 5);
+        const { wrong } = await tokensFor(page);
+        for (let i = 0; i < 2; i++) await kit.tap(page, token(wrong));
+        await kit.settle(page);
+        const hinted = await page.evaluate(() => document.querySelector('.tr-train.tr-grow-hint') !== null);
+        if (!hinted) throw new Error('hint 2 not shown');
       },
     },
     {

@@ -112,6 +112,9 @@
   color: #C98B54;
   line-height: 1;
 }
+/* Hint 2 in a growing train: the new dot of each wagon turns orange. */
+.tr-grow-hint .tr-dot-new { fill: #FF8A3D; }
+
 /* Hint 2: the first full period (the part that repeats) gets a blue frame (inset:
    the track clips anything outside the wagons). */
 .tr-period .tr-cargo { box-shadow: inset 0 0 0 0.25rem #3C7BE8; animation: tr-glow 1.2s ease-in-out infinite; }

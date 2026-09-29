@@ -42,6 +42,19 @@ export const TOKENS = {
       .map(([x, y]) => `<ellipse cx="${x}" cy="${y}" rx="2.6" ry="4" fill="#2B2141"/>`).join('')}</g>`) },
 };
 
+// Growing trains: 1 to 5 dots in a 3 + 2 frame (faint circles = the empty places), so
+// each wagon visibly has "one more". The last dot (the new one) has its own class:
+// hint 2 colours it (.tr-grow-hint in train.css).
+const DOT_PLACES = [[24, 34], [50, 34], [76, 34], [24, 66], [50, 66]];
+for (let n = 1; n <= DOT_PLACES.length; n++) {
+  TOKENS[`dots${n}`] = {
+    color: '#3C7BE8',
+    art: svg(DOT_PLACES.map(([x, y], i) => (i < n
+      ? `<circle class="tr-dot${i === n - 1 ? ' tr-dot-new' : ''}" cx="${x}" cy="${y}" r="11" fill="#3C7BE8"/>`
+      : `<circle cx="${x}" cy="${y}" r="10" fill="none" stroke="#C9B79C" stroke-width="2.5"/>`)).join('')),
+  };
+}
+
 export const token = (id) => TOKENS[id].art;
 
 // The locomotive, facing left (it pulls the train to the left, wagons follow on its right).

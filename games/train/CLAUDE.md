@@ -8,14 +8,16 @@ tray into them. Non-linguistic → app language (French by default).
 IN PROGRESS — (a) pattern logic + tests, level 1 playable (drag/tap, star, train
 rolls away, next train) · (b) a musical note per token + the 3-step hints, rows that
 break at period boundaries · (c) levels 2–4 (fruits; AAB/ABB/AABB; gap in the
-middle), side tray in landscape. Next: (d) level 5 (whole-period gap, no AABB) and
-level 6 (dots growing by 1; small/medium/big as a variant) · (e) level 7 free mode.
-Then a phone preview (same flow as Le Marché).
+middle), side tray in landscape · (d) level 5 (whole missing period) and level 6
+(growing dots). Next: (e) level 7 free mode. Then a phone preview (same flow as Le
+Marché).
 
 ## Levels
 1 AB colours, gap at the end, 2 in the tray · 2 fruits, AB / ABC, 3 in the tray (one
 fruit not in the train) · 3 colours, AAB / ABB / AABB · 4 fruits, AB / ABC / AAB / ABB,
-gap in the middle, 4 in the tray. 5 trains each. Progress is saved by level `id` —
+gap in the middle, 4 in the tray · 5 colours, AB / ABC / AAB / ABB, the whole last
+period missing (3 periods = 6 or 9 wagons), 4 in the tray · 6 growing dots:
+1-2-3-?, 2-3-4-?, 1-2-3-4-? (tray: the answer and its neighbours). 5 trains each. Progress is saved by level `id` —
 never renumber.
 
 ## Rules (owner's decisions, 2026-09-29)
@@ -23,6 +25,13 @@ never renumber.
   that makes the train repeat) AND at least 2 full periods visible across the whole
   train. `makePuzzle` rejects anything else; `tests/train.test.mjs` enforces both.
 - Max 9 wagons. Level 5 (whole-period gap = 3 periods) excludes AABB (12 wagons).
+- Level 5 (owner, 2026-09-29): the empty wagons can be filled in any order (drag onto
+  any of them; a tap fills the leftmost); a wrong token in one never clears the
+  others; hints count per train; 1 star per completed train.
+- Level 6 (owner, 2026-09-29): dots growing by one only (the small/medium/big variant
+  was dropped: ambiguous after "big"), max 5 dots, at least 3 wagons before the gap,
+  one answer (tested). Dots sit in a 3 + 2 frame with faint empty places; hint 2
+  turns each wagon's newest dot orange; the notes rise with the dots.
 - Colour tokens also differ in shape (red circle, blue square, yellow triangle, green
   star, purple heart) — never colour alone.
 - Fruits: apple, banana, grapes, pear, watermelon (not strawberry: two red fruits).
@@ -52,8 +61,9 @@ never renumber.
 ## Files
 - `levels.js` — level data (tokens, patterns, wagons, gap kind, choices, rounds).
 - `pattern.js` — pure logic, tested: `hasPeriod`, `repeats`, `fullPeriods`,
-  `firstFullPeriod`, `validFillings`, `gapIndices`, `makePuzzle` (never the same train
-  twice in a row), `firstEmpty`, and `fitTrain` (layout math, see Rules).
+  `firstFullPeriod`, `dotCount` / `grows` (growing trains), `validFillings` (repeat or
+  grow), `gapIndices`, `makePuzzle` (never the same train twice in a row; each puzzle
+  has `period`, 1 for growing trains), `firstEmpty`, and `fitTrain` (layout, see Rules).
 - `music.js` — the notes (`PITCH` per token; tests check every level token has one),
   the gap's knock, the whistle. Own lazy AudioContext.
 - `train.js` — screens and flow; `strings.js` (incl. `train.token.*` colour names),
@@ -61,8 +71,10 @@ never renumber.
 - `checks.js` — dev-only: longest train of levels 1–4 (Math.random pinned to 0.999
   in the page: the last pattern, the most wagons, the gap furthest right); AAB × 3
   through a check-only level 99 pushed into the page's `LEVELS` (rows must break at
-  periods; exactly 3 per row at 360px); hints 2 + 3 on screen (levels 1 and 4); the
-  screen after a wrong token. Offline: wrong token → no star, right token (dragged) →
+  periods; exactly 3 per row at 360px); hints 2 + 3 on screen (levels 1 and 4); level 5
+  filled out of order (last wagon first, then a wrong token on the middle one: the
+  filled one stays, no star yet); level 6 hint 2 (orange dots); the screen after a
+  wrong token. Offline: wrong token → no star, right token (dragged) →
   one star, a different train comes next.
 
 ## Layout

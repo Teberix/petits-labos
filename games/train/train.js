@@ -11,13 +11,17 @@
 //                         the next train rolls in;
 //           wrong token → a soft "boing", the empty wagon wobbles, the token bounces
 //                         back to the tray. Never counted against the child.
-// Tray tokens are sources: the same token can be used for several wagons.
+// Tray tokens are sources: the same token can be used for several wagons. With several
+// empty wagons (level 5) they can be filled in any order (drag), or left to right (tap);
+// a wrong token never clears the others.
+// Growing trains (level 6): wagons with 1, 2, 3… dots; same flow.
 // Music: every token has its own note (music.js); tapping a wagon plays it, so the
 //        pattern is also a tune.
 // Hints, stronger after each wrong token (per train):
 //        1 → the train "sings": wagons light up one by one with their notes (the gap
 //            knocks), then the voice names them: « rouge, bleu, rouge… et après ? »
-//        2 → the first full period is outlined (the part that repeats)
+//        2 → the first full period is outlined (the part that repeats); in a growing
+//            train, the new dot of each wagon turns orange ("one more each time")
 //        3 → the right token wiggles in the tray
 // The puzzles (and their checks: one answer only, 2 full periods visible) are made in
 // pattern.js; the level data is in levels.js.
@@ -150,7 +154,8 @@ function createGame(container, ctx) {
     renderTrain(true);
     renderTray();
 
-    let line = t('train.ask');
+    // (Several empty wagons, level 5: say so on every train, not only in the intro.)
+    let line = t(puzzle.gaps.length > 1 ? 'train.askMany' : 'train.ask');
     if (play.index === 0) {
       if (play.level.id === LEVELS[0].id) line += ' ' + t('train.howTo');
       if (play.level.intro) line += ' ' + t(play.level.intro);
@@ -198,7 +203,7 @@ function createGame(container, ctx) {
     const { track, train } = play?.els ?? {};
     if (!track || !train) return;
     const gap = parseFloat(getComputedStyle(train).columnGap) || 0;
-    const { perRow, size } = fitTrain(puzzle.cars.length, puzzle.pattern.length, track.clientWidth, track.clientHeight, gap);
+    const { perRow, size } = fitTrain(puzzle.cars.length, puzzle.period, track.clientWidth, track.clientHeight, gap);
     train.dataset.perRow = perRow; // (read by checks.js)
     train.style.setProperty('--columns', perRow + 1);
     train.style.setProperty('--car', `${Math.floor(size)}px`);
@@ -271,7 +276,7 @@ function createGame(container, ctx) {
     } else if (puzzle.misses === 2) {
       puzzle.showPeriod = true;
       markPeriod();
-      remark(t('train.hintPeriod'));
+      remark(t(puzzle.grow ? 'train.hintGrow' : 'train.hintPeriod'));
     } else if (!puzzle.tokenHint) {
       puzzle.tokenHint = true;
       renderTray();
@@ -301,8 +306,13 @@ function createGame(container, ctx) {
   }
 
   // Hint 2: outline the first period that has no empty wagon (the part that repeats).
+  // Growing train: colour each wagon's new dot instead.
   function markPeriod() {
-    const p = puzzle.pattern.length;
+    if (puzzle.grow) {
+      play.els.train.classList.add('tr-grow-hint');
+      return;
+    }
+    const p = puzzle.period;
     const start = firstFullPeriod(puzzle.cars, p);
     for (let i = start; i < start + p; i++) carAt(i)?.classList.add('tr-period');
   }

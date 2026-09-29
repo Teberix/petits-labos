@@ -3,6 +3,8 @@
 // A puzzle is a train of wagons, each carrying a token (e.g. 'red'), with one or more
 // empty wagons (gaps) the child fills from a tray of choices:
 //   { pattern: 'AB',
+//     period:  2,                                            // pattern length (1 when growing)
+//     grow:    false,                                        // true: a growing train (below)
 //     cars:    ['red', 'blue', 'red', 'blue', 'red', null],   // null = empty wagon
 //     gaps:    [5],
 //     answer:  { 5: 'blue' },
@@ -13,6 +15,9 @@
 // Every puzzle made here is checked before it's used (owner's rules):
 //   - exactly ONE way to fill the gaps from the tray makes a train that repeats;
 //   - at least 2 full periods of the pattern are visible (no gap in them).
+// Growing trains (level 6): wagons carry 1, 2, 3… dots, one more each time (max 5):
+//   tokens 'dots1'…'dots5'; at least 3 wagons before the gap; exactly ONE way to fill
+//   the gap so that each wagon has one dot more than the one before.
 
 export const MAX_WAGONS = 9; // longest train (fits 3 rows of 4 on a 360px phone)
 
@@ -65,15 +70,35 @@ export function fullPeriods(cars, p) {
   return count;
 }
 
+// ---------- Growing trains ----------
+
+export const MAX_DOTS = 5;
+export const DOTS = Array.from({ length: MAX_DOTS }, (_, i) => `dots${i + 1}`);
+
+// 'dots3' → 3 (null for any other token).
+export function dotCount(token) {
+  const match = /^dots(\d)$/.exec(token ?? '');
+  return match ? Number(match[1]) : null;
+}
+
+// True when every wagon has exactly one dot more than the one before.
+export function grows(seq) {
+  const counts = seq.map(dotCount);
+  if (counts.some((n) => n === null)) return false;
+  return counts.every((n, i) => i === 0 || n === counts[i - 1] + 1);
+}
+
 // Every way to fill the gaps with tray tokens (a token can be used several times)
-// that gives a train that repeats. A good puzzle has exactly one.
+// that gives a good train: one that repeats — or, when `grow` is true, one that
+// grows by one dot each wagon. A good puzzle has exactly one.
 // Returns a list of { gapIndex: token } objects.
-export function validFillings(cars, gaps, choices) {
+export function validFillings(cars, gaps, choices, grow = false) {
   const found = [];
   const seq = [...cars];
+  const good = grow ? grows : repeats;
   function fill(g) {
     if (g === gaps.length) {
-      if (repeats(seq)) found.push(Object.fromEntries(gaps.map((i) => [i, seq[i]])));
+      if (good(seq)) found.push(Object.fromEntries(gaps.map((i) => [i, seq[i]])));
       return;
     }
     for (const token of choices) {
@@ -107,8 +132,36 @@ export function gapIndices(gap, length, p, rng = Math.random) {
   throw new Error(`unknown gap "${gap}"`);
 }
 
+// A growing train: `before` wagons (level.before = [min, max], at least 3) counting up
+// by one from a random start, then the empty wagon; the last one has ≤ MAX_DOTS dots.
+// The tray: the answer and its neighbours (one dot less / more) when they exist.
+function tryGrowingPuzzle(level, rng) {
+  const before = randomInt(level.before[0], level.before[1], rng);
+  if (before < 3 || before + 1 > MAX_DOTS) return null;
+  const start = randomInt(1, MAX_DOTS - before, rng);
+  const full = Array.from({ length: before + 1 }, (_, i) => `dots${start + i}`);
+  const gaps = [before];
+  const cars = full.map((token, i) => (i === before ? null : token));
+  const answer = start + before;
+  const near = [answer - 1, answer + 1, answer - 2, answer + 2].filter((n) => n >= 1 && n <= MAX_DOTS);
+  const choices = shuffle([full[before], ...near.slice(0, level.choices - 1).map((n) => `dots${n}`)], rng);
+  if (choices.length !== level.choices) return null;
+  if (validFillings(cars, gaps, choices, true).length !== 1) return null;
+  return {
+    pattern: null,
+    period: 1,
+    grow: true,
+    cars,
+    gaps,
+    answer: { [before]: full[before] },
+    choices,
+    key: `${full.join()}|${before}`,
+  };
+}
+
 // One random attempt; null when it breaks a rule (the caller tries again).
 function tryPuzzle(level, rng) {
+  if (level.grow) return tryGrowingPuzzle(level, rng);
   const pattern = level.patterns[randomInt(0, level.patterns.length - 1, rng)];
   const p = pattern.length;
   const letters = [...new Set(pattern)];
@@ -131,6 +184,8 @@ function tryPuzzle(level, rng) {
 
   return {
     pattern,
+    period: p,
+    grow: false,
     cars,
     gaps,
     answer: Object.fromEntries(gaps.map((i) => [i, full[i]])),

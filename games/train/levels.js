@@ -12,6 +12,9 @@
 //   choices   how many different tokens in the tray (at least the pattern's letters)
 //   rounds    trains to finish the level
 //   intro     (optional) extra line said at the first train (key in strings.js)
+//   grow      true → a growing train instead of a pattern: 1, 2, 3… dots, one more
+//             each wagon (max 5); uses `before` = [min, max] wagons before the gap
+//             (at least 3) instead of tokens/patterns/wagons/gap
 //
 // pattern.js checks every train before it's shown: exactly one way to fill it, and at
 // least 2 full periods visible. tests/train.test.mjs generates many trains per level
@@ -20,6 +23,7 @@
 // Colour tokens also differ in shape (never colour alone).
 export const COLORS = ['red', 'blue', 'yellow', 'green', 'purple'];
 export const FRUITS = ['apple', 'banana', 'grapes', 'pear', 'watermelon'];
+export const DOTS = ['dots1', 'dots2', 'dots3', 'dots4', 'dots5'];
 
 export const LEVELS = [
   // Two colours taking turns; the last wagon is missing.
@@ -30,4 +34,9 @@ export const LEVELS = [
   { id: 3, tokens: COLORS, patterns: ['AAB', 'ABB', 'AABB'], wagons: [7, 9], gap: 'end', choices: 3, rounds: 5, intro: 'train.intro.double' },
   // Any of those, but the empty wagon is somewhere in the middle; 4 in the tray.
   { id: 4, tokens: FRUITS, patterns: ['AB', 'ABC', 'AAB', 'ABB'], wagons: [6, 9], gap: 'middle', choices: 4, rounds: 5, intro: 'train.intro.middle' },
+  // A whole period is missing (the train is 3 periods; no AABB: that would be 12
+  // wagons). The empty wagons can be filled in any order.
+  { id: 5, tokens: COLORS, patterns: ['AB', 'ABC', 'AAB', 'ABB'], gap: 'period', choices: 4, rounds: 5, intro: 'train.intro.period' },
+  // Growing: one more dot each wagon (max 5), 3 or 4 wagons before the gap.
+  { id: 6, grow: true, tokens: DOTS, before: [3, 4], choices: 3, rounds: 5, intro: 'train.intro.grow' },
 ];

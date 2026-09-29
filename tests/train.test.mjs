@@ -3,7 +3,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  MAX_WAGONS, hasPeriod, repeats, fullPeriods, validFillings, gapIndices, makePuzzle, firstEmpty, firstFullPeriod, fitTrain, CAR_RATIO, CAR_MAX, CAR_MIN,
+  MAX_WAGONS, hasPeriod, repeats, fullPeriods, validFillings, gapIndices, makePuzzle, firstEmpty, firstFullPeriod, grows, dotCount, MAX_DOTS, fitTrain, CAR_RATIO, CAR_MAX, CAR_MIN,
 } from '../games/train/pattern.js';
 import { LEVELS } from '../games/train/levels.js';
 import { TOKENS } from '../games/train/art.js';
@@ -19,12 +19,21 @@ function seeded(seed) {
 }
 
 // The rules every puzzle must follow (owner's decisions).
+//   repeating trains: exactly one answer, at least 2 full periods visible;
+//   growing trains:   exactly one answer, at least 3 wagons before the gap, ≤ 5 dots.
 function checkPuzzle(level, puzzle, where) {
-  const { cars, gaps, answer, choices, pattern } = puzzle;
+  const { cars, gaps, answer, choices, period } = puzzle;
   assert.ok(cars.length <= MAX_WAGONS, `${where}: ${cars.length} wagons`);
   assert.deepEqual(gaps, cars.flatMap((c, i) => (c === null ? [i] : [])), `${where}: gaps = the empty wagons`);
-  assert.ok(fullPeriods(cars, pattern.length) >= 2, `${where}: fewer than 2 full periods visible`);
-  const fillings = validFillings(cars, gaps, choices);
+  if (level.grow) {
+    assert.ok(puzzle.grow && period === 1, `${where}: a growing puzzle`);
+    assert.ok(gaps[0] >= 3, `${where}: only ${gaps[0]} wagons before the gap`);
+    for (const token of [...cars.filter(Boolean), ...choices]) assert.ok(dotCount(token) <= MAX_DOTS, `${where}: ${token}`);
+  } else {
+    assert.equal(period, puzzle.pattern.length);
+    assert.ok(fullPeriods(cars, period) >= 2, `${where}: fewer than 2 full periods visible`);
+  }
+  const fillings = validFillings(cars, gaps, choices, level.grow);
   assert.equal(fillings.length, 1, `${where}: ${fillings.length} valid answers`);
   assert.deepEqual(fillings[0], answer, `${where}: the answer is the one valid filling`);
   assert.equal(new Set(choices).size, choices.length, `${where}: tray tokens are all different`);
@@ -70,6 +79,35 @@ test('gapIndices', () => {
     assert.ok(i >= 1 && i <= 5);
   }
   assert.throws(() => gapIndices('nowhere', 6, 2));
+});
+
+test('growing trains: dotCount / grows', () => {
+  assert.equal(dotCount('dots3'), 3);
+  assert.equal(dotCount('red'), null);
+  assert.ok(grows(['dots1', 'dots2', 'dots3', 'dots4']));
+  assert.ok(!grows(['dots1', 'dots2', 'dots3', 'dots3']));
+  assert.ok(!grows(['dots1', 'dots3', 'dots5']));  // +2: not "one more"
+  assert.ok(!grows(['dots1', 'red']));
+  assert.deepEqual(validFillings(['dots2', 'dots3', 'dots4', null], [3], ['dots4', 'dots5', 'dots3'], true), [{ 3: 'dots5' }]);
+});
+
+test('level 5: every train is 3 periods with the whole last period empty (no AABB)', () => {
+  const level = LEVELS.find((l) => l.gap === 'period');
+  assert.ok(!level.patterns.includes('AABB'));
+  const rng = seeded(5);
+  for (let n = 0; n < 200; n++) {
+    const { cars, gaps, period } = makePuzzle(level, rng);
+    assert.equal(cars.length, 3 * period);
+    assert.deepEqual(gaps, Array.from({ length: period }, (_, i) => 2 * period + i));
+  }
+});
+
+test('level 6: all the growing trains (1-2-3-?, 2-3-4-?, 1-2-3-4-?) come up', () => {
+  const level = LEVELS.find((l) => l.grow);
+  const rng = seeded(6);
+  const seen = new Set();
+  for (let n = 0; n < 200; n++) seen.add(makePuzzle(level, rng).key);
+  assert.deepEqual([...seen].sort(), ['dots1,dots2,dots3,dots4,dots5|4', 'dots1,dots2,dots3,dots4|3', 'dots2,dots3,dots4,dots5|3']);
 });
 
 test('firstEmpty', () => {
@@ -142,7 +180,8 @@ test('levels: ids unique, fields sane, tokens drawn', () => {
   assert.equal(new Set(ids).size, ids.length);
   for (const level of LEVELS) {
     assert.ok(level.rounds >= 1);
-    for (const p of level.patterns) {
+    if (level.grow) assert.ok(level.before[0] >= 3, `level ${level.id}: at least 3 wagons before the gap`);
+    for (const p of level.patterns ?? []) {
       const letters = new Set(p).size;
       assert.ok(level.choices >= letters, `level ${level.id}: tray smaller than pattern ${p}`);
       assert.ok(level.tokens.length >= level.choices, `level ${level.id}: not enough tokens`);
