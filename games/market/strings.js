@@ -69,6 +69,7 @@ export default {
     'market.free.changeOver.one': 'Oups, {n} franc de trop ! Reprends-le.',
     'market.free.changeOver.other': 'Oups, {n} francs de trop ! Reprends-les.',
     'market.free.sold': 'Vendu ! Merci et à bientôt !',
+    'market.free.inBasket': 'Ce produit est dans le panier de l’acheteuse : son prix ne change pas !',
   },
   es: {
     'market.chooseLevel': '¡Elige un nivel!',
@@ -136,6 +137,7 @@ export default {
     'market.free.changeOver.one': '¡Uy, {n} franco de más! Quítalo.',
     'market.free.changeOver.other': '¡Uy, {n} francos de más! Quítalos.',
     'market.free.sold': '¡Vendido! ¡Gracias y hasta pronto!',
+    'market.free.inBasket': 'Esto está en la cesta de la compradora: ¡su precio no cambia!',
   },
   en: {
     'market.chooseLevel': 'Choose a level!',
@@ -203,5 +205,6 @@ export default {
     'market.free.changeOver.one': 'Oops, {n} franc too much! Take it back.',
     'market.free.changeOver.other': 'Oops, {n} francs too much! Take them back.',
     'market.free.sold': 'Sold! Thank you, see you soon!',
+    'market.free.inBasket': 'This one is in the buyer’s basket: its price stays the same!',
   },
 };

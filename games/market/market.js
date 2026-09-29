@@ -30,6 +30,9 @@
 //            change: paid too much → the seller gives the change from the till, on the
 //                    level-5 screen (basket total in grey dots, a neutral outline up to
 //                    what was paid — up to 20, across both ten-frames).
+//          Switching roles mid-purchase: the counter's coins go back to the purse, the
+//          basket stays (its goods' prices are locked meanwhile) and the purchase
+//          resumes on the buyer's next turn. The basket empties only after a sale.
 //          The first sale marks the level as done.
 // The money logic is in money.js, the level data in levels.js.
 import { h } from '../../js/dom.js';
@@ -523,7 +526,7 @@ function createGame(container, ctx) {
     const { free } = play;
     free.phase = phase;
     play.els.root.dataset.phase = phase; // market.css hides the counter and purse while selling
-    if (phase === 'sell') free.goods.forEach((g) => { g.inBasket = false; });
+    // (The basket is kept across role switches: it's only emptied after a sale.)
     const price = basketTotal();
     sale = {
       price,
@@ -562,9 +565,12 @@ function createGame(container, ctx) {
     play.els.scene.replaceChildren(h('div', { class: 'mk-freeshop' }, turn, h('div', { class: 'mk-shop' }, goods)));
   }
 
-  // Seller ⇄ buyer. Coins left on the counter go quietly back to the purse.
+  // Seller ⇄ buyer, even in the middle of a purchase: coins on the counter go back to
+  // the purse (enterPhase starts an empty counter), the basket stays, and the purchase
+  // resumes when the buyer's turn comes back.
   function switchRoles() {
     if (sale.busy) return;
+    if (sale.tray.length) sfx.plop(); // the coins going back to the purse
     sfx.pop();
     if (play.free.phase === 'sell') enterPhase('buy', t('market.free.toBuyer'));
     else enterPhase('sell', t('market.free.toSeller'));
@@ -574,6 +580,14 @@ function createGame(container, ctx) {
     const { free } = play;
     if (sale.busy) return;
     if (free.phase === 'sell') {
+      if (good.inBasket) {
+        // Paused purchase: goods in the buyer's basket keep their price (so the basket
+        // stays ≤ 20 francs and the buyer finds it as she left it).
+        sfx.boing();
+        restartAnimation(el, 'mk-bounce');
+        remark(t('market.free.inBasket'));
+        return;
+      }
       good.price = nextPrice(good.price, play.level.prices[1]);
       sfx.pop();
     } else if (free.phase === 'buy') {
@@ -635,7 +649,10 @@ function createGame(container, ctx) {
     sfx.chime();
     remark(t('market.free.sold'));
     markCompleted(play.level, false);
-    later(() => enterPhase('sell', t('market.free.toSeller')), CELEBRATE_MS);
+    later(() => {
+      play.free.goods.forEach((g) => { g.inBasket = false; }); // sold: the basket is empty again
+      enterPhase('sell', t('market.free.toSeller'));
+    }, CELEBRATE_MS);
   }
 
   // ---------- Level complete ----------

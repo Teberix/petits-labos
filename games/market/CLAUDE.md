@@ -40,7 +40,10 @@ Progress is saved by level `id` — never renumber existing levels. Each level h
 - Seller level: the ten-frame starts with the price's grey dots; the change counts up to
   5. Free shop: basket total ≤ 20 (more bounces back); if the buyer pays too much, the
   seller gives the change on that same screen, any amount up to 20 (neutral outline up
-  to what was paid, across both ten-frames).
+  to what was paid, across both ten-frames). Switching roles mid-purchase: the
+  counter's coins go back to the purse, the basket is kept (its goods' prices are locked
+  — tapping one bounces), and the purchase resumes on the buyer's next turn. The basket
+  empties only after a sale.
 
 ## Files
 - `levels.js` — coins, price ranges, items, rounds, seller/free flags. Never hand-write

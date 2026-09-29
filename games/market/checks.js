@@ -223,6 +223,37 @@ export default {
       },
     },
     {
+      // Free shop: switch roles in the middle of a purchase. The counter's coins go
+      // back to the purse, the basket stays (its prices are locked while the seller
+      // plays), and the purchase resumes. Ends on the resumed purchase, ready to pay.
+      name: 'free shop, roles switched mid-purchase, then resumed',
+      async setup(page, kit) {
+        await openLevel(page, kit, 6);
+        await setPrice(page, kit, 0, 3);
+        await setPrice(page, kit, 1, 2);
+        await kit.tap(page, '.mk-turn');
+        await expectPhase(page, 'buy');
+        for (const i of [0, 1]) await kit.tap(page, page.locator('.mk-shop-item').nth(i));
+        await putCoins(page, kit, [2, 1]);
+        await expectStacks(page, { 1: 1, 2: 1 }, 3);
+
+        await kit.tap(page, '.mk-turn'); // → seller, mid-purchase
+        await expectPhase(page, 'sell');
+        const basket = () => page.locator('.mk-shop-item.in-basket').count();
+        if (await basket() !== 2) throw new Error('the basket was not kept for the seller\'s turn');
+        await kit.tap(page, page.locator('.mk-shop-item').nth(0)); // locked: its price must stay 3
+        const price0 = Number(await page.locator('.mk-shop-item').nth(0).locator('.mk-tag').getAttribute('data-price'));
+        if (price0 !== 3) throw new Error(`a good in the basket changed price (${price0})`);
+
+        await kit.tap(page, '.mk-turn'); // → buyer again: the purchase resumes
+        await expectPhase(page, 'buy');
+        if (await basket() !== 2) throw new Error('the basket was not kept for the buyer\'s return');
+        await expectStacks(page, {}, 0); // the coins went back to the purse
+        await putCoins(page, kit, [5]);
+        await expectStacks(page, { 5: 1 }, 5); // 3 + 2 = 5: exact, ready to pay
+      },
+    },
+    {
       // Free shop: exact change completes the sale, and it's the seller's turn again.
       name: 'free shop, exact change → the seller\'s turn again',
       async setup(page, kit) {
