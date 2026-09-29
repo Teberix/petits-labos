@@ -104,3 +104,14 @@ height. `fitTrain` picks rows/size from the track's size
 grid row/column. The locomotive has column 1; other rows start under the first wagon,
 so periods line up in columns. All classes start with `tr-`. The track clips its
 content (the train rolls in/out), so hint frames are inset.
+
+## Playtest (to do)
+Built in steps (a)–(e), all on 2026-09-29; not released. Phone preview through the
+temporary repo `Teberix/petits-labos-preview` (preview-only `VERSION`
+`0.5.0-preview.N`, never committed to `main`). What the gate can't judge:
+- dragging onto an empty wagon (middle of a row, level 4; any order, level 5);
+- the notes on a phone speaker, their volume next to the voice; hint 1's timing
+  (colour names ~0.3 s after the last note);
+- whether the fruits are recognised (grapes, half watermelon) and the dots countable
+  (~15 px each on a 360px phone);
+- level 7: is "tap a start wagon to take it out" found without help?
