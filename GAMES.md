@@ -6,7 +6,7 @@ owner confirms it was playtested with the kids.
 | # | Game | Teaches | Status |
 |---|---|---|---|
 | 1 | La Potion | colours, cause/effect, counting | DONE |
-| 2 | Robot Codeur | sequencing, then loops | IN PROGRESS |
+| 2 | Robot Codeur | sequencing, then loops | DONE |
 | 3 | Lettres Magiques | letters/sounds/first words (FR/ES/EN) | planned |
 | 4 | Le Marché | counting, addition, CHF coins | planned |
 | 5 | Le Train des Suites | patterns/logic | planned |
