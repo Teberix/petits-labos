@@ -3,6 +3,8 @@ node_modules/
 Thumbs.db
 *.log
 .claude/settings.local.json
+# Worktrees the Claude app creates for side sessions
+.claude/worktrees/
 
 # Local only: words that must never be committed (kids' names…) — see tools/check-privacy.mjs
 tools/private-words.txt

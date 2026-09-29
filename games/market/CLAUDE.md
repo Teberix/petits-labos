@@ -70,7 +70,7 @@ while selling, the counter and purse are hidden (`.mk-play[data-phase="sell"]`).
 classes start with `mk-`. The checks wait for `market.css` before tapping a level.
 
 ## Playtest history
-Built in steps (a)–(f), each playtested by the owner with the kids on a phone through a
-temporary preview repo (preview-only `VERSION`, never committed to `main`): levels 1–6
-validated on 2026-09-29. Changes from those playtests: stall layout fixed for phones,
+Built in steps (a)–(f), playtested by the owner with the kids on a phone through a
+temporary preview repo (preview-only `VERSION`, never committed to `main`): levels 1–5
+validated on 2026-09-29; the free shop (level 6) is not playtested yet. Changes from those playtests: stall layout fixed for phones,
 animal as seller in levels 1–4, stars only for the exact amount, grey price dots.
