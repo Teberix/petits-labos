@@ -102,6 +102,16 @@
 .tr-wheels { height: 22%; flex: none; }
 .tr-wheels svg { display: block; width: 100%; height: 100%; }
 
+/* Free mode: a start wagon is a button (tap = take it out). */
+button.tr-car {
+  border: none;
+  padding: 0 0 2px;
+  font: inherit;
+  color: inherit;
+  background-color: transparent;
+}
+.tr-hidden { visibility: hidden; } /* a wagon of the free train that hasn't come yet */
+
 /* An empty wagon: dashed outline and a big "?". */
 .tr-gap .tr-cargo {
   background: #FFF7EC;
@@ -158,6 +168,23 @@
 .tr-token:active { transform: translateY(0.15rem); box-shadow: none; }
 /* Hint 3: the right token wiggles until it's used. */
 .tr-token.tr-hint { animation: tr-hint 0.9s ease-in-out infinite; }
+
+/* The free mode's green "go" button (a locomotive). It wiggles once the start is long
+   enough. */
+.tr-go {
+  --size: clamp(64px, 13vmin, 104px);
+  width: var(--size);
+  height: var(--size);
+  flex: none;
+  padding: calc(var(--size) * 0.12);
+  border: none;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: var(--shadow);
+  opacity: 0.5;
+}
+.tr-go svg { display: block; width: 100%; height: 100%; }
+.tr-go.tr-ready { opacity: 1; animation: tr-hint 0.9s ease-in-out 2; }
 
 /* ---------- Level done ---------- */
 

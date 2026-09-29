@@ -9,8 +9,8 @@ IN PROGRESS — (a) pattern logic + tests, level 1 playable (drag/tap, star, tra
 rolls away, next train) · (b) a musical note per token + the 3-step hints, rows that
 break at period boundaries · (c) levels 2–4 (fruits; AAB/ABB/AABB; gap in the
 middle), side tray in landscape · (d) level 5 (whole missing period) and level 6
-(growing dots). Next: (e) level 7 free mode. Then a phone preview (same flow as Le
-Marché).
+(growing dots), then counting down too · (e) level 7 free mode. Next: phone
+preview for the playtest (same flow as Le Marché).
 
 ## Levels
 1 AB colours, gap at the end, 2 in the tray · 2 fruits, AB / ABC, 3 in the tray (one
@@ -18,7 +18,8 @@ fruit not in the train) · 3 colours, AAB / ABB / AABB · 4 fruits, AB / ABC / A
 gap in the middle, 4 in the tray · 5 colours, AB / ABC / AAB / ABB, the whole last
 period missing (3 periods = 6 or 9 wagons), 4 in the tray · 6 dots counting up or
 down by one: 1-2-3-?, 2-3-4-?, 1-2-3-4-?, 5-4-3-?, 4-3-2-?, 5-4-3-2-? (tray: the answer
-and its neighbours; never the same answer twice in a row). 5 trains each. Progress is saved by level `id` —
+and its neighbours; never the same answer twice in a row). 5 trains each · 7 free
+mode (no stars, done after the first train leaves). Progress is saved by level `id` —
 never renumber.
 
 ## Rules (owner's decisions, 2026-09-29)
@@ -41,7 +42,16 @@ never renumber.
   star, purple heart) — never colour alone.
 - Fruits: apple, banana, grapes, pear, watermelon (not strawberry: two red fruits).
 - Level 7 (free): the child's start IS the period; the locomotive repeats it as-is (no
-  period inference).
+  period inference). Owner's decisions (2026-09-29): colours only; start of 2–4
+  wagons; the start is kept after the train leaves. The start never has holes: a
+  token (tapped, or dropped anywhere on the train) goes into the leftmost empty start
+  wagon; tapping a start wagon takes it out and the ones on its right move left
+  (the voice says so when the start is full and after each train).
+  Flow: build → green locomotive button (dim until 2 wagons, wiggles when ready; too
+  early → boing + « au moins deux wagons ») → the whole train (`repeatStart`: 2 → 8,
+  3 → 9, 4 → 8 wagons) is laid out, each wagon plays its note in turn and the new
+  ones appear → it waits ~1 s, whistles, rolls away → comes back with the same start.
+  No hints, no stars.
 - Musical notes stay inside the game (own small Web Audio code), no change to
   `js/audio.js`.
 - 1 star per completed train, no bonus star, no crown. Wrong token = soft "boing",
@@ -68,7 +78,8 @@ never renumber.
 - `pattern.js` — pure logic, tested: `hasPeriod`, `repeats`, `fullPeriods`,
   `firstFullPeriod`, `dotCount` / `grows` (growing trains), `validFillings` (repeat or
   grow), `gapIndices`, `makePuzzle` (never the same train twice in a row; each puzzle
-  has `period`, 1 for growing trains), `firstEmpty`, and `fitTrain` (layout, see Rules).
+  has `period`, 1 for growing trains), `firstEmpty`, `addToStart` / `removeFromStart`
+  / `repeatStart` (free mode), and `fitTrain` (layout, see Rules).
 - `music.js` — the notes (`PITCH` per token; tests check every level token has one),
   the gap's knock, the whistle. Own lazy AudioContext.
 - `train.js` — screens and flow; `strings.js` (incl. `train.token.*` colour names),
@@ -79,7 +90,10 @@ never renumber.
   periods; exactly 3 per row at 360px); hints 2 + 3 on screen (levels 1 and 4); level 5
   filled out of order (last wagon first, then a wrong token on the middle one: the
   filled one stays, no star yet); level 6 counting down 5-4-3-2-? with hint 2 (orange circles); the screen after a
-  wrong token. Offline: wrong token → no star, right token (dragged) →
+  wrong token; level 7: a start of 4, « fill 3, take out the middle one → 2 side by
+  side, then a token dropped on the last slot lands in the leftmost empty one », and
+  the full 8-wagon train (the page's clock is frozen with `page.clock` so the check
+  sees it before it leaves). Offline: wrong token → no star, right token (dragged) →
   one star, a different train comes next.
 
 ## Layout

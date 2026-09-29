@@ -3,7 +3,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  MAX_WAGONS, hasPeriod, repeats, fullPeriods, validFillings, gapIndices, makePuzzle, firstEmpty, firstFullPeriod, grows, dotCount, MAX_DOTS, fitTrain, CAR_RATIO, CAR_MAX, CAR_MIN,
+  MAX_WAGONS, hasPeriod, repeats, fullPeriods, validFillings, gapIndices, makePuzzle, firstEmpty, firstFullPeriod, grows, dotCount, MAX_DOTS, fitTrain, CAR_RATIO, CAR_MAX, CAR_MIN, addToStart, removeFromStart, repeatStart,
 } from '../games/train/pattern.js';
 import { LEVELS } from '../games/train/levels.js';
 import { TOKENS } from '../games/train/art.js';
@@ -130,13 +130,31 @@ test('level 6: never the same answer twice in a row', () => {
   }
 });
 
+test('free mode: the start never has holes; the locomotive repeats it as-is', () => {
+  assert.deepEqual(addToStart([], 'red', 4), ['red']);
+  assert.deepEqual(addToStart(['red', 'blue', 'red'], 'blue', 4), ['red', 'blue', 'red', 'blue']);
+  assert.equal(addToStart(['a', 'b', 'c', 'd'], 'e', 4), null);      // full
+  // Fill 3, take out the middle one: the right one moves left.
+  assert.deepEqual(removeFromStart(['red', 'blue', 'yellow'], 1), ['red', 'yellow']);
+  assert.deepEqual(removeFromStart(['red', 'blue'], 0), ['blue']);
+  assert.deepEqual(repeatStart(['r', 'b']), ['r', 'b', 'r', 'b', 'r', 'b', 'r', 'b']);
+  assert.deepEqual(repeatStart(['r', 'b', 'y']), ['r', 'b', 'y', 'r', 'b', 'y', 'r', 'b', 'y']);
+  assert.equal(repeatStart(['a', 'b', 'c', 'd']).length, 8);
+  for (const start of [['a', 'b'], ['a', 'b', 'c'], ['a', 'a', 'b'], ['a', 'b', 'c', 'd']]) {
+    const train = repeatStart(start);
+    assert.ok(train.length <= MAX_WAGONS && train.length >= 2 * start.length);
+    assert.ok(hasPeriod(train, start.length));            // the start, repeated as-is
+    assert.deepEqual(train.slice(0, start.length), start);
+  }
+});
+
 test('firstEmpty', () => {
   assert.equal(firstEmpty(['a', null, null]), 1);
   assert.equal(firstEmpty(['a', 'b']), -1);
 });
 
 test('every level makes valid puzzles, never the same train twice in a row', () => {
-  for (const level of LEVELS) {
+  for (const level of LEVELS.filter((l) => !l.free)) {
     const rng = seeded(level.id * 7919);
     let previous = null;
     for (let n = 0; n < 300; n++) {
@@ -199,6 +217,11 @@ test('levels: ids unique, fields sane, tokens drawn', () => {
   const ids = LEVELS.map((l) => l.id);
   assert.equal(new Set(ids).size, ids.length);
   for (const level of LEVELS) {
+    if (level.free) {
+      assert.ok(level.start[0] >= 2 && level.start[1] <= 4 && level.start[0] <= level.start[1]);
+      for (const token of level.tokens) assert.ok(TOKENS[token] && PITCH[token], token);
+      continue;
+    }
     assert.ok(level.rounds >= 1);
     if (level.grow) assert.ok(level.before[0] >= 3, `level ${level.id}: at least 3 wagons before the gap`);
     for (const p of level.patterns ?? []) {

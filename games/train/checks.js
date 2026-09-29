@@ -32,6 +32,7 @@ async function openLevel(page, kit, n, { longest = false, extraLevel = null } = 
   const buttons = page.locator('.tr-level-btn');
   await kit.tap(page, n === 'last' ? buttons.last() : buttons.nth(n - 1));
   await page.locator('.tr-tray .tr-token').first().waitFor();
+  await page.waitForFunction(() => document.querySelector('.tr-train')); // (free mode too)
   await kit.settle(page); // the train has rolled in
 }
 
@@ -74,6 +75,17 @@ async function expectPeriodRows(page, period, expected) {
   if (expected && perRow !== expected) throw new Error(`${perRow} wagons per row, expected ${expected}`);
 }
 
+// Free mode: the start wagons, left to right (null = empty).
+async function readStart(page) {
+  return page.evaluate(() => [...document.querySelectorAll('.tr-train .tr-car')]
+    .map((el) => (el.classList.contains('tr-start') ? el.dataset.token : null)));
+}
+
+async function expectStart(page, expected) {
+  const got = await readStart(page);
+  if (got.join() !== expected.join()) throw new Error(`start is [${got}], expected [${expected}]`);
+}
+
 async function savedStars(page) {
   return page.evaluate(() => JSON.parse(localStorage.getItem('petits-labos')).profiles[0].rewards.stars);
 }
@@ -83,7 +95,8 @@ const token = (id) => `.tr-tray .tr-token[data-token="${id}"]`;
 export default {
   // Empty wagons are drop targets (and where a tapped token goes): ≥ 64px like any
   // touch target. Full wagons only play a note when tapped (optional): cells ≥ 56px.
-  touch: ['.tr-token', '.tr-level-btn', '.tr-continue', '.tr-car.tr-gap'],
+  // Free mode: start wagons are buttons (tap = take out) and the green "go" button.
+  touch: ['.tr-token', '.tr-level-btn', '.tr-continue', '.tr-car.tr-gap', '.tr-start', '.tr-go'],
   cells: '.tr-car',
   minCell: 56,
 
@@ -186,6 +199,48 @@ export default {
         ]);
         if (shown[0] !== 2 || shown[1] !== 1) throw new Error(`hints: ${shown[0]} outlined wagons, ${shown[1]} wiggling tokens`);
         await expectPeriodRows(page, 2);
+      },
+    },
+    {
+      name: 'level 7 (free), a start of 4 wagons',
+      async setup(page, kit) {
+        await openLevel(page, kit, 7);
+        for (const id of ['red', 'blue', 'yellow', 'green']) await kit.tap(page, token(id));
+        await kit.settle(page);
+        await expectStart(page, ['red', 'blue', 'yellow', 'green']);
+      },
+    },
+    {
+      // The start never has holes (owner's rule): fill 3, take out the middle one →
+      // 2 wagons side by side; then a token DROPPED on the last empty wagon still
+      // lands in the leftmost empty one.
+      name: 'level 7 (free), fill 3, take out the middle one, drop on the last slot',
+      async setup(page, kit) {
+        await openLevel(page, kit, 7);
+        for (const id of ['red', 'blue', 'yellow']) await kit.tap(page, token(id));
+        await expectStart(page, ['red', 'blue', 'yellow', null]);
+        await kit.tap(page, '.tr-car.tr-start[data-index="1"]');
+        await expectStart(page, ['red', 'yellow', null, null]);
+        await kit.drag(page, token('green'), '.tr-car[data-index="3"]');
+        await kit.settle(page);
+        await expectStart(page, ['red', 'yellow', 'green', null]);
+      },
+    },
+    {
+      // Start of 4 → the locomotive repeats it: 8 wagons. The page's clock is frozen
+      // and moved forward by hand, so the check sees the full train BEFORE it leaves.
+      name: 'level 7 (free), the full train (start of 4 → 8 wagons)',
+      async setup(page, kit) {
+        await openLevel(page, kit, 7);
+        for (const id of ['red', 'red', 'blue', 'yellow']) await kit.tap(page, token(id));
+        await page.clock.install();
+        await kit.tap(page, '.tr-go');
+        for (let i = 0; i < 20 && await page.locator('.tr-car.tr-hidden').count(); i++) await page.clock.runFor(200);
+        await kit.settle(page);
+        const { cars } = await readTrain(page);
+        if (cars.join() !== 'red,red,blue,yellow,red,red,blue,yellow') throw new Error(`train is [${cars}]`);
+        if (await page.locator('.tr-car.tr-hidden').count()) throw new Error('some wagons never appeared');
+        if (await page.locator('.tr-train.tr-leave').count()) throw new Error('the train left too early');
       },
     },
     {

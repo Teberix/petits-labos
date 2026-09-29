@@ -16,6 +16,9 @@
 //             one less) each wagon; uses `before` = [min, max] wagons before the gap
 //             (at least 3) and `steps` ([1] up, [-1] down, [1, -1] both) instead of
 //             patterns/wagons/gap. Two trains in a row never have the same answer.
+//   free      true → free mode: the child builds a start of `start` = [min, max]
+//             wagons from `tokens`, the locomotive repeats it (no stars; done after
+//             the first train leaves)
 //
 // pattern.js checks every train before it's shown: exactly one way to fill it, and at
 // least 2 full periods visible. tests/train.test.mjs generates many trains per level
@@ -41,4 +44,6 @@ export const LEVELS = [
   // Growing: one more dot each wagon, or one less (1 to 5 dots), 3 or 4 wagons before
   // the gap: 1-2-3-?, 2-3-4-?, 1-2-3-4-?, 5-4-3-?, 4-3-2-?, 5-4-3-2-?.
   { id: 6, grow: true, tokens: DOTS, before: [3, 4], steps: [1, -1], choices: 3, rounds: 5, intro: 'train.intro.grow' },
+  // Free mode: invent a start of 2 to 4 colour wagons; the locomotive repeats it.
+  { id: 7, free: true, tokens: COLORS, start: [2, 4] },
 ];

@@ -214,6 +214,27 @@ export function makePuzzle(level, rng = Math.random, previousKey = null) {
   throw new Error(`level ${level.id}: no puzzle found`);
 }
 
+// ---------- Free mode (level 7) ----------
+// The child's start IS the period: the locomotive repeats it as-is (owner's rule, no
+// period inference). The start never has holes.
+
+// The start with `token` added at the end, or null when it already has `max` wagons.
+export function addToStart(start, token, max) {
+  return start.length >= max ? null : [...start, token];
+}
+
+// The start without wagon `index`: the ones on its right move one place left.
+export function removeFromStart(start, index) {
+  return start.filter((_, i) => i !== index);
+}
+
+// The whole train: the start repeated as many whole times as fit in MAX_WAGONS
+// (start of 2 → 8 wagons, 3 → 9, 4 → 8).
+export function repeatStart(start, max = MAX_WAGONS) {
+  const length = Math.floor(max / start.length) * start.length;
+  return Array.from({ length }, (_, i) => start[i % start.length]);
+}
+
 // The first empty wagon (a tapped tray token goes there), or -1 when all are filled.
 export function firstEmpty(cars) {
   return cars.indexOf(null);
