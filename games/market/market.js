@@ -22,6 +22,15 @@
 // Hints get stronger with each "not enough": 1 → the price is said again,
 //          2 → the counter's ten-frame shows red circles to fill, 3 → the coins to use
 //          wiggle in the purse (no bonus star after that).
+// Free shop (last level, two players on one device, no stars, no hints): three phases,
+//          switched with the round-arrows button —
+//            sell:   6 goods; tapping one raises its price (1 → 10 → 1);
+//            buy:    tapping goods puts them in the basket (total ≤ 20 francs, more
+//                    bounces back), then pay with coins as usual;
+//            change: paid too much → the seller gives the change from the till, on the
+//                    level-5 screen (basket total in grey dots, a neutral outline up to
+//                    what was paid — up to 20, across both ten-frames).
+//          The first sale marks the level as done.
 // The money logic is in money.js, the level data in levels.js.
 import { h } from '../../js/dom.js';
 import { addStrings } from '../../js/i18n.js';
@@ -29,15 +38,14 @@ import { speak } from '../../js/audio.js';
 import { draggable } from '../../js/dragdrop.js';
 import {
   COINS, TRAY_MAX, total, compare, fewestCoins, fewestCoinList, hasChoice, frameDots, stacks,
-  removeOne, nextBasket, pickOther, pickSome, saleTarget,
+  removeOne, nextBasket, pickOther, pickSome, saleTarget, nextPrice, fitsInBasket,
 } from './money.js';
 import { pluralKey } from './plural.js';
 import { LEVELS } from './levels.js';
 import STRINGS from './strings.js';
 import * as art from './art.js';
 
-// The free shop (step e) is hidden until it is built.
-const PLAYABLE = LEVELS.filter((level) => !level.free);
+const PLAYABLE = LEVELS;
 
 const FLY_MS = 450;          // a coin flying between the counter, the seller and the purse
 const CHANGE_GAP_MS = 180;   // between two coins of change
@@ -151,16 +159,18 @@ function createGame(container, ctx) {
     const scene = h('div', { class: 'mk-scene' });
     const tray = h('div', { class: 'mk-tray', role: 'group', 'aria-label': t('market.tray') });
     const purse = h('div', { class: 'mk-purse' });
-    container.replaceChildren(h('div', { class: 'mk-play' }, scene, tray, purse));
+    const root = h('div', { class: 'mk-play' }, scene, tray, purse);
+    container.replaceChildren(root);
     play = {
       level,
       index: 0,
       perfectRun: true,  // every sale that left a choice got the bonus star
       hadChoice: false,  // at least one sale left a choice (else no crown: nothing to earn)
       saidFewer: false,  // "could you do it with fewer coins?" — once per level
-      els: { scene, tray, purse },
+      els: { root, scene, tray, purse },
     };
-    startSale();
+    if (level.free) startFree();
+    else startSale();
   }
 
   function startSale() {
@@ -235,7 +245,7 @@ function createGame(container, ctx) {
   }
 
   function setMood(mood) {
-    play.els.animal.dataset.mood = mood;
+    if (play.els.animal) play.els.animal.dataset.mood = mood; // (no animal in the free shop)
   }
 
   // ---------- Purse ----------
@@ -262,6 +272,7 @@ function createGame(container, ctx) {
       return el;
     });
     const label = t(sale.seller ? 'market.giveChange' : 'market.pay');
+    // (Free shop: the pay button is also the seller's "give change" button.)
     const payButton = h('button', {
       class: 'mk-pay', type: 'button', 'aria-label': label, title: label, html: art.ICON_PAY, onclick: pay,
     });
@@ -332,9 +343,12 @@ function createGame(container, ctx) {
     const lit = frameDots(tray);
     const offset = sale.seller ? sale.price : 0; // dots already taken by the price
     const goal = sale.showTarget ? offset + sale.target : 0;
+    // Free shop, giving change: a neutral outline up to what was paid (not a hint:
+    // it shows the size of the job, e.g. from 1 up to 20).
+    const bound = play.free?.phase === 'change' ? offset + sale.target : 0;
     const frame = (from) => h('span', { class: 'mk-frame' },
       Array.from({ length: 10 }, (_, i) => {
-        const isGoal = from + i < goal ? ' goal' : '';
+        const isGoal = (from + i < goal ? ' goal' : '') + (from + i < bound ? ' bound' : '');
         if (from + i < offset) return h('span', { class: `mk-dot on price${isGoal}` });
         const coinIndex = lit[from + i - offset];
         if (coinIndex === undefined) return h('span', { class: `mk-dot${isGoal}` });
@@ -347,7 +361,7 @@ function createGame(container, ctx) {
       h('span', { class: 'mk-pile' }, pile),
       h('span', { class: 'mk-sum' },
         h('span', { class: 'mk-total' }, String(sum)),
-        h('span', { class: `mk-frames${offset + sum > 10 ? ' two' : ''}` }, frame(0), frame(10))),
+        h('span', { class: `mk-frames${Math.max(offset + sum, bound) > 10 ? ' two' : ''}` }, frame(0), frame(10))),
     );
   }
 
@@ -373,7 +387,8 @@ function createGame(container, ctx) {
 
   // Every coin on the counter goes to the animal (the seller, or the customer's change).
   function coinsToAnimal() {
-    play.els.tray.querySelectorAll('.mk-stack').forEach((el) => fly(Number(el.dataset.value), el, play.els.animal));
+    const to = play.els.animal ?? play.els.scene; // free shop: towards the shop
+    play.els.tray.querySelectorAll('.mk-stack').forEach((el) => fly(Number(el.dataset.value), el, to));
     sale.tray = [];
     later(renderTray, 60); // after the flying copies are made
   }
@@ -386,6 +401,10 @@ function createGame(container, ctx) {
       sfx.boing();
       remark(t('market.emptyTray'));
       play.els.purse.querySelectorAll('.mk-coin').forEach((c) => restartAnimation(c, 'mk-wiggle'));
+      return;
+    }
+    if (play.level.free) {
+      freePay();
       return;
     }
     const { result, diff } = compare(total(sale.tray), sale.target);
@@ -479,6 +498,144 @@ function createGame(container, ctx) {
       if (play.index < play.level.rounds) startSale();
       else levelDone();
     }, CELEBRATE_MS + (bonus ? BONUS_STAR_DELAY : 0));
+  }
+
+  // ---------- Free shop: two players, one sells, one buys ----------
+  // play.free = { phase: 'sell' | 'buy' | 'change', goods: [{ item, price, inBasket }] }
+  // The shared parts (purse, counter, pay button) work as in the other levels; `sale`
+  // holds what the counter must reach (the basket total, or the change).
+
+  const basketTotal = () => total(play.free.goods.filter((g) => g.inBasket).map((g) => g.price));
+
+  function startFree() {
+    play.free = {
+      phase: 'sell',
+      // 6 different goods, all at 1 franc: the seller sets the prices.
+      goods: pickSome(art.ITEM_IDS, play.level.items).map((item) => ({ item, price: 1, inBasket: false })),
+      saidFull: false,
+    };
+    play.els.animal = null;
+    enterPhase('sell', `${t(play.level.intro)} ${t('market.free.toSeller')}`);
+  }
+
+  // `line` = the instruction to say (the repeat button replays it).
+  function enterPhase(phase, line) {
+    const { free } = play;
+    free.phase = phase;
+    play.els.root.dataset.phase = phase; // market.css hides the counter and purse while selling
+    if (phase === 'sell') free.goods.forEach((g) => { g.inBasket = false; });
+    const price = basketTotal();
+    sale = {
+      price,
+      target: phase === 'change' ? free.paid - price : price,
+      seller: phase === 'change', // the seller gives change: the price's grey dots come first
+      tray: [], misses: 0, showTarget: false, coinHint: false, saidFull: false, busy: false,
+    };
+    renderShop();
+    if (phase === 'sell') {
+      // Setting prices: no counter, no purse (the shop gets the whole screen).
+      stopInputs();
+      play.els.purse.replaceChildren();
+      play.els.tray.replaceChildren();
+    } else {
+      renderPurse();
+      renderTray();
+    }
+    ctx.speak(line);
+  }
+
+  function renderShop() {
+    const { free } = play;
+    const turn = free.phase === 'change' ? null : h('button', {
+      class: 'mk-turn', type: 'button', 'aria-label': t('market.free.turn'), title: t('market.free.turn'),
+      html: art.ICON_SWAP, onclick: switchRoles,
+    });
+    const goods = free.goods.map((good, i) => h('button', {
+      class: `mk-shop-item${good.inBasket ? ' in-basket' : ''}`,
+      type: 'button',
+      'data-index': i,
+      'aria-label': tn(`market.costs.${good.item}`, good.price),
+      onclick: (event) => tapGood(good, event.currentTarget),
+    },
+      h('span', { class: 'mk-shop-art', html: art.item(good.item) }),
+      priceTag(good.price)));
+    play.els.scene.replaceChildren(h('div', { class: 'mk-freeshop' }, turn, h('div', { class: 'mk-shop' }, goods)));
+  }
+
+  // Seller ⇄ buyer. Coins left on the counter go quietly back to the purse.
+  function switchRoles() {
+    if (sale.busy) return;
+    sfx.pop();
+    if (play.free.phase === 'sell') enterPhase('buy', t('market.free.toBuyer'));
+    else enterPhase('sell', t('market.free.toSeller'));
+  }
+
+  function tapGood(good, el) {
+    const { free } = play;
+    if (sale.busy) return;
+    if (free.phase === 'sell') {
+      good.price = nextPrice(good.price, play.level.prices[1]);
+      sfx.pop();
+    } else if (free.phase === 'buy') {
+      if (good.inBasket) {
+        good.inBasket = false;
+        sfx.plop();
+      } else if (!fitsInBasket(basketTotal(), good.price)) {
+        // The basket holds 20 francs at most: this one bounces back.
+        sfx.boing();
+        restartAnimation(el, 'mk-bounce');
+        if (!free.saidFull) remark(t('market.free.basketFull'));
+        free.saidFull = true;
+        return;
+      } else {
+        good.inBasket = true;
+        sfx.pop();
+      }
+      sale.price = sale.target = basketTotal();
+    } else {
+      return; // giving change: the goods wait
+    }
+    renderShop();
+    remark(tn(`market.costs.${good.item}`, good.price));
+  }
+
+  // The pay button in the free shop.
+  function freePay() {
+    const { free } = play;
+    if (free.phase === 'buy' && !free.goods.some((g) => g.inBasket)) {
+      sfx.boing();
+      remark(t('market.free.pickFirst'));
+      play.els.scene.querySelectorAll('.mk-shop-item').forEach((el) => restartAnimation(el, 'mk-wiggle'));
+      return;
+    }
+    const { result, diff } = compare(total(sale.tray), sale.target);
+    if (result === 'exact') freeSold();
+    else if (result === 'under' || free.phase === 'change') {
+      // Not the right amount yet (no animal here to wait kindly): a soft sound and a
+      // little nudge of the counter, with what's missing or what's too much.
+      sfx.plop();
+      restartAnimation(play.els.tray, 'mk-nudge');
+      remark(tn(result === 'under' ? 'market.more' : 'market.free.changeOver', diff));
+    } else {
+      // Paid too much: the seller takes the coins and now gives the change.
+      sale.busy = true;
+      free.paid = total(sale.tray);
+      sfx.pop();
+      coinsToAnimal();
+      later(() => enterPhase('change', tn('market.free.over', diff)), FLY_MS + 100);
+    }
+  }
+
+  // A sale in the free shop: a little party, no star (free play). The first one marks
+  // the level as done. Then the seller's turn again (prices stay).
+  function freeSold() {
+    sale.busy = true;
+    coinsToAnimal();
+    play.els.scene.querySelectorAll('.mk-shop-item.in-basket').forEach((el) => el.classList.add('mk-sold'));
+    sfx.chime();
+    remark(t('market.free.sold'));
+    markCompleted(play.level, false);
+    later(() => enterPhase('sell', t('market.free.toSeller')), CELEBRATE_MS);
   }
 
   // ---------- Level complete ----------

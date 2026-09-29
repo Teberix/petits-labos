@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   COINS, TRAY_MAX, total, canPay, fewestCoins, fewestCoinList, hasChoice, compare,
-  possibleBaskets, nextBasket, pickOther, pickSome, frameDots, stacks, removeOne, saleTarget,
+  possibleBaskets, nextBasket, pickOther, pickSome, frameDots, stacks, removeOne, saleTarget, nextPrice, fitsInBasket,
 } from '../games/market/money.js';
 import { pluralKey } from '../games/market/plural.js';
 import { LEVELS } from '../games/market/levels.js';
@@ -131,6 +131,19 @@ test('saleTarget: the price when buying, the change when selling', () => {
   for (const [price] of possibleBaskets(selling)) {
     const change = saleTarget(selling, price);
     assert.ok(change >= 1 && canPay(change, selling.coins), `price ${price}: change ${change}`);
+  }
+});
+
+test('free shop: prices cycle 1→10→1, the basket stays ≤ 20 francs', () => {
+  assert.equal(nextPrice(1), 2);
+  assert.equal(nextPrice(9), 10);
+  assert.equal(nextPrice(10), 1);
+  assert.equal(fitsInBasket(10, 10), true);   // exactly 20: fine
+  assert.equal(fitsInBasket(19, 2), false);   // 21: bounces back
+  assert.equal(fitsInBasket(0, 10), true);
+  // Any basket (≤ 20) paid with any counter (≤ 20) leaves change the till can give.
+  for (let price = 1; price <= TRAY_MAX; price++) {
+    for (let paid = price + 1; paid <= TRAY_MAX; paid++) assert.ok(canPay(paid - price, COINS));
   }
 });
 

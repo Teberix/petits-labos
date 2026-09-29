@@ -10,7 +10,21 @@ async function openLevel(page, kit, n) {
     return map && getComputedStyle(map).display === 'flex';
   });
   await kit.tap(page, page.locator('.mk-level-btn').nth(n - 1));
-  await page.locator('.mk-purse .mk-coin').first().waitFor();
+  // (The free shop starts with the seller setting prices: goods, no purse yet.)
+  await page.locator('.mk-purse .mk-coin, .mk-shop-item').first().waitFor();
+}
+
+// Free shop: the seller taps a good until it shows `price`.
+async function setPrice(page, kit, index, price) {
+  const good = page.locator('.mk-shop-item').nth(index);
+  for (let i = 0; i < 10 && Number(await good.locator('.mk-tag').getAttribute('data-price')) !== price; i++) {
+    await kit.tap(page, good);
+  }
+  if (Number(await good.locator('.mk-tag').getAttribute('data-price')) !== price) throw new Error(`good ${index}: price ${price} not reached`);
+}
+
+async function expectPhase(page, phase) {
+  await page.waitForFunction((p) => document.querySelector('.mk-play')?.dataset.phase === p, phase, { timeout: 5000 });
 }
 
 // Taps purse coins (by value) to put them on the counter.
@@ -53,7 +67,7 @@ async function waitHappySeller(page) {
 }
 
 export default {
-  touch: ['.mk-coin', '.mk-stack', '.mk-pay', '.mk-level-btn'],
+  touch: ['.mk-coin', '.mk-stack', '.mk-pay', '.mk-level-btn', '.mk-shop-item', '.mk-turn'],
 
   worstCases: [
     {
@@ -157,6 +171,74 @@ export default {
         for (let i = 0; i < 3; i++) await kit.tap(page, '.mk-pay');
         if (await page.locator('.mk-dot.goal').count() !== 5) throw new Error('expected 5 red circles (up to 5 francs)');
         if (!await page.locator('.mk-purse .mk-coin.mk-hint').count()) throw new Error('no wiggling coins');
+      },
+    },
+    {
+      // Free shop, seller: six goods, every price at 10 (the widest tags), full screen.
+      name: 'free shop, seller: every price at 10',
+      async setup(page, kit) {
+        await openLevel(page, kit, 6);
+        await expectPhase(page, 'sell');
+        for (let i = 0; i < 6; i++) await setPrice(page, kit, i, 10);
+      },
+    },
+    {
+      // Free shop, buyer: two goods at 10 = 20 in the basket; a third bounces back.
+      // Then 20 francs on the counter.
+      name: 'free shop, buyer: basket at 20, a third good bounces back',
+      async setup(page, kit) {
+        await openLevel(page, kit, 6);
+        await setPrice(page, kit, 0, 10);
+        await setPrice(page, kit, 1, 10);
+        await kit.tap(page, '.mk-turn');
+        await expectPhase(page, 'buy');
+        for (const i of [0, 1, 2]) await kit.tap(page, page.locator('.mk-shop-item').nth(i));
+        const inBasket = await page.locator('.mk-shop-item.in-basket').count();
+        if (inBasket !== 2) throw new Error(`${inBasket} goods in the basket, expected 2 (the third must bounce)`);
+        await putCoins(page, kit, [5, 5, 5, 5]);
+        await expectStacks(page, { 5: 4 }, 20);
+      },
+    },
+    {
+      // Free shop, change: price 1, paid 20 → the seller gives 19 in change. The grey
+      // price dot, then the change, with the outline up to 20 across both ten-frames.
+      name: 'free shop, change: price 1, paid 20',
+      async setup(page, kit) {
+        await openLevel(page, kit, 6); // every price starts at 1
+        await kit.tap(page, '.mk-turn');
+        await expectPhase(page, 'buy');
+        await kit.tap(page, page.locator('.mk-shop-item').nth(0));
+        await putCoins(page, kit, [5, 5, 5, 5]);
+        await kit.tap(page, '.mk-pay');
+        await expectPhase(page, 'change');
+        await page.locator('.mk-purse .mk-coin').first().waitFor();
+        await putCoins(page, kit, [5, 5, 5, 2, 2]);
+        await expectStacks(page, { 2: 2, 5: 3 }, 19);
+        const dots = await page.evaluate(() => ({
+          price: document.querySelectorAll('.mk-dot.price').length,
+          bound: document.querySelectorAll('.mk-dot.bound').length,
+          two: document.querySelector('.mk-frames')?.classList.contains('two'),
+        }));
+        if (dots.price !== 1 || dots.bound !== 20 || !dots.two) throw new Error(`frames: ${JSON.stringify(dots)}, expected 1 price dot, 20 outlined, two frames`);
+      },
+    },
+    {
+      // Free shop: exact change completes the sale, and it's the seller's turn again.
+      name: 'free shop, exact change → the seller\'s turn again',
+      async setup(page, kit) {
+        await openLevel(page, kit, 6);
+        await setPrice(page, kit, 0, 3);
+        await kit.tap(page, '.mk-turn');
+        await kit.tap(page, page.locator('.mk-shop-item').nth(0));
+        await putCoins(page, kit, [5]);
+        await kit.tap(page, '.mk-pay');
+        await expectPhase(page, 'change');
+        await page.locator('.mk-purse .mk-coin').first().waitFor();
+        await putCoins(page, kit, [2]);
+        await kit.tap(page, '.mk-pay');
+        await page.waitForFunction(() => document.querySelector('.mk-play')?.dataset.phase === 'sell', null, { timeout: 8000 });
+        const done = await page.evaluate(() => JSON.parse(localStorage.getItem('petits-labos')).profiles[0].games.market?.completed ?? []);
+        if (!done.includes(6)) throw new Error('free shop not marked done after the first sale');
       },
     },
     {

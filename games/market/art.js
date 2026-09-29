@@ -104,6 +104,8 @@ export const ICON_PAY = `<svg viewBox="0 0 24 24" aria-hidden="true">
   <path d="M2 13.5h3.5l4 2.5h5.2a1.8 1.8 0 0 1 0 3.6H10.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
   <path d="M14.7 16l4.8-2.6a1.7 1.7 0 0 1 2 2.6L16 20.5H9.5l-4-1.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>`;
+// Free shop: switch roles (seller ⇄ buyer) — two arrows going round.
+export const ICON_SWAP = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h13l-3.5-3.5M20 15H7l3.5 3.5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 export const ICON_NEXT = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M12 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 
 export const ICON_CROWN = `<svg viewBox="0 0 48 36" aria-hidden="true">

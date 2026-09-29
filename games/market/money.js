@@ -68,6 +68,17 @@ export function saleTarget(level, price) {
   return level.seller ? level.paidWith - price : price;
 }
 
+// Free shop: tapping a price tag raises the price by 1, and after `max` it starts again at 1.
+export function nextPrice(price, max = 10) {
+  return price >= max ? 1 : price + 1;
+}
+
+// Free shop: can an item go into the basket? The basket total stays ≤ 20 francs (what
+// the counter can hold, so it can always be paid).
+export function fitsInBasket(basketTotal, price) {
+  return basketTotal + price <= TRAY_MAX;
+}
+
 // Every basket a level can ask for: a list of prices (one per item). One-item levels:
 // each price of the range. Several items: every combination whose total is in
 // `level.total` (the order of the items doesn't matter, so [1,2] but not [2,1]).

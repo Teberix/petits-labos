@@ -163,7 +163,77 @@
 }
 .mk-tag-num { font-size: clamp(1.3rem, 10cqh, 2.6rem); font-weight: 800; line-height: 1; color: var(--ink); }
 .mk-tag-dots { display: grid; grid-template-columns: repeat(5, auto); gap: 3px; }
-.mk-tag-dot { width: clamp(6px, 2.4cqh, 11px); aspect-ratio: 1; border-radius: 50%; background: #E8453C; }
+/* Neutral grey dots (red is only for hints). */
+.mk-tag-dot { width: clamp(6px, 2.4cqh, 11px); aspect-ratio: 1; border-radius: 50%; background: #A8A2B8; }
+
+/* ---------- Free shop ---------- */
+
+/* Selling: no counter, no purse — the shop takes the whole screen. */
+.mk-play[data-phase="sell"] .mk-tray, .mk-play[data-phase="sell"] .mk-purse { display: none; }
+
+/* [role button] above a 3 × 2 grid of goods (each good = a big button: picture + tag). */
+.mk-freeshop {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 0.5rem;
+}
+.mk-turn {
+  justify-self: center;
+  width: calc(var(--mk-unit) * 1.1);
+  height: calc(var(--mk-unit) * 1.1);
+  display: grid;
+  place-items: center;
+  padding: calc(var(--mk-unit) * 0.2);
+  border: none;
+  border-radius: 50%;
+  background: var(--primary);
+  color: #fff;
+  box-shadow: var(--shadow);
+}
+.mk-turn svg { width: 100%; height: 100%; }
+.mk-turn:active { transform: translateY(0.2rem); box-shadow: none; }
+.mk-shop {
+  grid-row: 2; /* even when there's no role button (giving change) */
+  min-height: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+  padding: 0.5rem;
+  border-radius: 1.25rem;
+  background: #C98B54;
+  box-shadow: inset 0 0.4rem 0 #E0A874;
+  container-type: size; /* the tags inside size themselves on the shop (cqh) */
+}
+.mk-shop-item {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  padding: 0.25rem;
+  border: none;
+  border-radius: 1rem;
+  background: #FFF7EC;
+  box-shadow: 0 0.25rem 0 rgba(43, 33, 65, 0.2);
+}
+.mk-shop-art { flex: 1 1 0; min-height: 0; width: 100%; display: grid; place-items: center; }
+.mk-shop-art svg { display: block; height: 100%; max-width: 100%; }
+/* In the shop the tag is narrow: the numeral above its dots (10 dots = 2 rows of 5). */
+.mk-shop-item .mk-tag { flex: none; flex-direction: column; padding: 0.15rem 0.4rem; gap: 0.15rem; box-shadow: none; }
+.mk-shop-item .mk-tag-num { font-size: clamp(1rem, 8cqh, 2rem); }
+.mk-shop-item .mk-tag-dot { width: clamp(5px, 2cqh, 9px); }
+/* In the basket: a green ring (tap again to put it back). */
+.mk-shop-item.in-basket { background: #E3F8EA; box-shadow: 0 0 0 0.3rem var(--green); }
+.mk-shop-item:active { transform: translateY(0.15rem); }
+/* Sold: the goods in the basket hop for joy. */
+.mk-shop-item.mk-sold { animation: mk-hop 0.5s ease-in-out 4; }
+/* Not the right amount yet: the counter gives a little sideways nudge. */
+.mk-nudge { animation: mk-nudge 0.4s ease-in-out; }
 
 /* ---------- Purse ---------- */
 
@@ -291,6 +361,8 @@
 /* Hint 2: the price as red circles to fill. */
 .mk-dot.goal { box-shadow: inset 0 0 0 3px #E8453C; animation: mk-goal 1s ease-in-out infinite; }
 .mk-dot.goal.on { box-shadow: inset 0 0 0 3px #E8453C; animation: none; }
+/* Free shop, giving change: a neutral outline up to what was paid (not a hint). */
+.mk-dot.bound:not(.on) { box-shadow: inset 0 0 0 3px #A8A2B8; }
 .mk-tray.drop-hover { background: #F0D2AE; }
 .mk-purse.drop-hover { background: #FFF0DD; border-radius: 1.25rem; }
 
@@ -352,5 +424,6 @@
 @keyframes mk-goal { 50% { box-shadow: inset 0 0 0 3px #E8453C, 0 0 0 3px #FFC9C4; } }
 @keyframes mk-sold { 40% { transform: translateY(-25%) scale(1.1); } to { transform: translateY(90%) scale(0.3); opacity: 0; } }
 @keyframes mk-sold-away { 40% { transform: translateY(-25%) scale(1.1); } to { transform: translateX(-120%) scale(0.3); opacity: 0; } }
+@keyframes mk-nudge { 25% { transform: translateX(-0.4rem); } 75% { transform: translateX(0.4rem); } }
 @keyframes mk-pulse { 50% { transform: scale(1.08); } }
 @keyframes mk-bounce { 35% { transform: translateY(-35%); } 65% { transform: translateY(6%); } 85% { transform: translateY(-4%); } }
