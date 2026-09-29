@@ -11,6 +11,13 @@ export const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const FILES = ['index.html', 'manifest.webmanifest'];
 const FOLDERS = ['css', 'js', 'games', 'icons'];
 
+// Dev-only files that live next to the app code but must never reach a device:
+// each game's layout/offline checks (games/<id>/checks.js) and notes (*.md).
+export function isDevOnly(path) {
+  const name = path.split('/').at(-1);
+  return name === 'checks.js' || name.endsWith('.md');
+}
+
 function walk(dir) {
   return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
     const full = join(dir, entry.name);
@@ -21,8 +28,15 @@ function walk(dir) {
 export function listAppFiles() {
   const files = FOLDERS.flatMap((folder) => walk(join(ROOT, folder)))
     .map((full) => relative(ROOT, full).split(sep).join('/'))
+    .filter((path) => !isDevOnly(path))
     .sort();
   return ['./', ...FILES, ...files];
+}
+
+// The PRECACHE list as currently written in sw.js (without './').
+export function readPrecache() {
+  const block = readFileSync(join(ROOT, 'sw.js'), 'utf8').match(/const PRECACHE = \[([\s\S]*?)\];/)[1];
+  return [...block.matchAll(/'([^']+)'/g)].map((m) => m[1]).filter((f) => f !== './');
 }
 
 const START = '// PRECACHE:START';

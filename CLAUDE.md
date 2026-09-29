@@ -5,15 +5,21 @@ Android tablet/phone. Learning through play, never through pressure. The owner i
 Claude Code with this project: **keep code simple, readable, and commented where the logic
 isn't obvious.**
 
+Each game has its own notes in `games/<id>/CLAUDE.md` (read them when working on it).
+Roadmap and status: `GAMES.md` (one game at a time; DONE only after the owner confirms a
+playtest).
+
 ## Hard rules
 
 **Tech**
-- Plain HTML/CSS/JS (ES modules OK), no framework, no build step, no npm dependencies at runtime.
+- Plain HTML/CSS/JS (ES modules OK), no framework, no build step. **No dependencies in
+  the app**; dev tools may use Playwright (devDependency only, never loaded by the app).
 - No external network calls, no ads, no purchases, no analytics, no data collection.
   All data lives in `localStorage` on the device.
 - No external assets: art = inline SVG/CSS, sounds = Web Audio API, voice = `speechSynthesis`.
 - **Public repo: no personal data.** Daughters' names/avatars exist only on the device —
-  never in code, fixtures, screenshots, or commit messages.
+  never in code, fixtures, screenshots, or commit messages (enforced by the gate's privacy
+  check, from the git-ignored `tools/private-words.txt`).
 
 **Offline-first & updates (non-negotiable)**
 - After first load the app is 100% playable offline, indefinitely. Service worker is
@@ -39,7 +45,8 @@ isn't obvious.**
 - Phone + tablet, portrait + landscape. Relative units, CSS grid/flexbox. Rearrange layout
   rather than shrinking touch targets below 64px. Respect safe areas
   (`env(safe-area-inset-*)`). No orientation lock unless a game truly requires it.
-- Test at minimum: 360px phone, large phone, 10" tablet — both orientations.
+- Checked by the gate at 7 sizes: 360×640, 640×360, 412×915, 915×412, 800×1280, 1280×800
+  (touch) and 1366×657 (laptop, mouse).
 
 **i18n**
 - All UI strings in dictionaries (`fr`, `es`, `en`). Default: French.
@@ -55,29 +62,12 @@ isn't obvious.**
 - Shared utilities: i18n, audio (sfx + speech), storage (+ migrations), drag-and-drop
   helper, rewards (stars/stickers shown in a per-profile "collection" screen), parent gate.
 
-## Game 1 — "La Potion" (colour mixing)
-
-A creature asks for a potion (target colour + icon). Child drags ingredients into the
-cauldron, stirs, sees the result. Match → happy creature + reward.
-
-Levels (unlock gradually, per profile):
-1. Primary colours — pick the one correct ingredient.
-2. Two primaries → secondary colour (cause and effect).
-3. Quantities change the shade (2 yellow + 1 red = orange-yellow). Counting 1–5.
-4. Lighten/darken with white/black ("what happens if…?").
-5. Free lab: no target, unlimited mixing, result named aloud.
-
-Rules:
-- Mixing is **subtractive / paint-like** (red+blue=purple, yellow+blue=green), not RGB
-  additive. Simple, predictable model, documented in code.
-- "Empty cauldron" button always available.
-- After 2 wrong attempts: visual hint (correct ingredients flash).
-- Level data lives in a config file — levels are editable without touching game logic.
-
 ## How to work
 
-- Build in small steps; after each: self-verify (open locally, console errors, touch,
-  offline), then report briefly what was done and how to test it.
+- Build in small steps. New game: `/new-game <n>` (design → OK → steps).
+- **Verification = `/gate`** (`tools/gate.mjs` + the `kid-ux-reviewer` / `pwa-guardian`
+  subagents). Don't re-verify manually what the gate covers; report only failures and
+  what the gate can't check (e.g. real touch feel, voice quality).
 - Ask only on real blockers/ambiguity. Don't add unrequested features — propose them.
 
 ## Code map
@@ -91,7 +81,7 @@ js/storage.js          localStorage document, schema version + MIGRATIONS
 js/i18n.js, js/i18n/   t(), addStrings(); fr/es/en dictionaries
 js/audio.js            Web Audio sfx + speechSynthesis (prefers local voices)
 js/parentgate.js       3 s press-and-hold button
-js/dragdrop.js         draggable(el, { targets, onDrop, onTap, canDrag }) — pointer events, ghost copy
+js/dragdrop.js         draggable(el, { targets, onDrop(target, point), onTap, canDrag }) — pointer events, ghost copy
 js/rewards.js          stars + stickers (shared by all games): addStar, flyStar, showSticker, starBadge
 js/stickers.js         the 24 album stickers (SVG) — names in js/i18n as sticker.<id>
 js/ui.js, dom.js, icons.js   top bar, repeat button, h() DOM helper, shell SVG icons
@@ -99,52 +89,25 @@ js/screens/            profiles, hub, game (mounts a game + builds ctx), parent,
 games/registry.js      one line per game
 games/<id>/meta.js     id, titleKey, strings, tile icon (loaded eagerly by the hub)
 games/<id>/<id>.js     default export { mount(container, ctx), unmount() } (lazy-loaded)
-tools/                 dev-only Node scripts, zero dependencies (never loaded by the app)
+games/<id>/checks.js   dev-only: worst-case screens + offline interaction for the gate
+games/<id>/CLAUDE.md   dev-only: that game's notes
+tools/                 dev-only Node scripts (never loaded by the app)
 tests/                 dev-only unit tests: node --test tests/*.test.mjs
+.claude/               settings.json (permissions), agents/ (reviewers), commands/ (/gate, /new-game)
 ```
-
-La Potion (`games/potion/`) — 10 levels: 1 primaries · 2 secondaries · 3 review · 4 counting
-1–5 · 5 shades (2+1 drops) · 6 light/dark (white, black) · 7 3-ingredient recipes · 8 free lab
-(done after the first named mix) · 9 colour detective (shade, no recipe) · 10 4–5 drop recipes.
-Wrong amounts of the right colours → "Almost! Add a little more X!" (`missingIngredient()`).
-Progress is saved by level `id` — never renumber existing levels.
-`levels.js` = level config (edit freely, documented at top),
-`mixing.js` = RYB paint model + `matches()` (modes `ratio` with tolerance, `counts` exact —
-level 3 must use `counts`), `strings.js` = all lines it speaks, `art.js` = SVG,
-`potion.css` = its own stylesheet (loaded by the game, relative to the module).
-Don't use `requestAnimationFrame` for game logic/timers (it pauses in some webviews) —
-use `setTimeout` + CSS animations.
-
-Robot Codeur (`games/robot/`) — 10 levels: 1 straight · 2 corners · 3 rocks · 4 one star ·
-5 two stars + rocks · 6 loop intro · 7 loop + arrow · 8 two loops · 9 loops + rocks + stars ·
-10 free mode (build the grid, then program it; no stars; done after the first success).
-Arrow cards (absolute directions only) + a "repeat ×N" block holding ONE arrow (×2–×5, tap
-the number to change it; 2 slots) → program strip → ▶ run / ⏭ one step. Tap a strip card
-to remove it; ⌫ removes the last card; 🗑 clears all. A bump = a "bug": funny reaction,
-robot goes home, program stays, the faulty card turns orange. Hints: after 2 bugs the next
-correct cell shines, after 4 the whole path shows as footprints. Cards stop at the station
-(extra cards ignored). Bonus star when solved with the fewest cards (a repeat block counts
-1 + its arrow) and without the footprints hint; all puzzles of a level with the bonus →
-crown on the level map. "Could you do it with fewer cards?" is said at most once per level.
-`levels.js` = text-drawn maps (`R G # * .`, max 5×5) + `slots` (≤ 10 arrows only, ≤ 8 with
-repeat: the strip must stay 2 rows of 5 on a 360px phone). **Never hand-write the fewest
-card count** — `fewestCards()` in `program.js` computes it. `program.js` = pure
-interpreter (`run()` → events, `shortestPath()`, `nextCorrectStep()`, `solveWithin()`),
-tested in `tests/robot.test.mjs` (every puzzle solvable, bonus reachable, loop levels
-unsolvable without repeat). Layout: palette row / strip / buttons are one column 5 cards
-wide, under the board (portrait) or beside it (landscape). All CSS classes start with
-`rb-`. Short landscape shrinks the top bar via `:has(.rb-play)` (only while a level is on
-screen).
 
 Conventions:
 - **All URLs relative** (`./sw.js`, `css/base.css`) — the app lives at `/petits-labos/`.
 - **New/removed app file → `node tools/update-precache.mjs`** (release does it too).
-  `serve.mjs` warns at startup if the list is stale.
+  Dev-only files (`checks.js`, `*.md`) are never precached (`isDevOnly()` in
+  `tools/precache.mjs`).
 - Game contract and `ctx` fields are documented at the top of `js/screens/game.js`.
-- Game-specific strings go in the game's `meta.js` (`strings`), not in `js/i18n/`.
+- Game-specific strings go in the game's `strings.js` / `meta.js`, not in `js/i18n/`.
 - Updates are applied only at safe moments: app launch, entering hub/profiles, or the app
   returning to the foreground on hub/profiles. Never while a game is mounted.
 - Storage format change → bump `SCHEMA_VERSION` + add a migration in `js/storage.js`.
+- Don't use `requestAnimationFrame` for game logic/timers (it stops in some webviews and
+  background tabs) — use `setTimeout` + CSS animations.
 - Rewards: 1 star per success (games call `ctx.rewards.star(el)`), a random new sticker
   every 5 stars (`ctx.rewards.showSticker` — await it before moving on). No scores,
   never take stars away. Free-play modes give no stars.
@@ -152,6 +115,24 @@ Conventions:
   especially efficient solution (Robot Codeur: fewest cards), and mark a level done that
   way with a crown. Always positive: a normal success still gets its star, nothing is
   ever shown as a failure, and "try to do better" is said at most once per level.
+
+## Verification (the gate)
+
+```bash
+node tools/gate.mjs                 # everything: unit + privacy + layout + offline (~1.5 min)
+node tools/gate.mjs --game robot    # layout/offline for one game (during a build step)
+node tools/gate.mjs --only unit,privacy
+```
+- `check-layout.mjs`: every game × its `checks.js` worst cases × 7 sizes (touch contexts,
+  laptop with mouse). No page scroll, touch targets ≥ 64px / on screen / not overlapping,
+  grid cells ≥ the game's `minCell`. Failure screenshots → `tools/.check-output/`.
+- `check-offline.mjs`: service worker active, every PRECACHE file cached and no dev-only
+  file, nothing fails to load; then server stopped + network cut, each game's `offline()`
+  interaction must succeed.
+- `check-privacy.mjs`: words from `tools/private-words.txt` (git-ignored; `word @ file` =
+  allowed in that file only) in committed/staged/untracked files and commit messages; the
+  list itself must never be tracked; no network calls/URLs in app code.
+- Needs once: `npm install` + `npx playwright install chromium`.
 
 ## Local dev
 
@@ -165,29 +146,21 @@ node tools/serve.mjs --lan    # also on the WiFi: prints http://<this-pc-ip>:808
   offline/updates don't. Hidden files/folders (`.git`, `.claude`…) are never served.
 - The service worker caches everything, so edits don't show on reload. During development
   use **`http://localhost:8080/petits-labos/?nosw`**: it unregisters the SW and clears
-  caches (localhost only). Drop `?nosw` to test offline/update behaviour.
+  caches (localhost only).
 - Icons: `node tools/make-icons.mjs` regenerates `icons/` (SVG + 192/512/maskable PNGs)
   from the shape list in that script — pure Node, no packages.
-- Offline test: load once without `?nosw`, stop the server, reload.
 
 ## Release routine
 
 Repo: https://github.com/Teberix/petits-labos — live app: https://teberix.github.io/petits-labos/
 (setup done 2026-09-28; commits use the repo-local GitHub noreply email, never the personal one).
 
-One-time setup (already done, kept for reference):
-```bash
-gh repo create petits-labos --public --source . --push
-gh api -X POST repos/{owner}/petits-labos/pages -f "source[branch]=main" -f "source[path]=/"
-```
-The app is then at `https://<github-user>.github.io/petits-labos/`.
-
-Each release:
 ```bash
 node tools/release.mjs            # patch: 0.1.0 → 0.1.1
 node tools/release.mjs minor      # new level/game: 0.1.1 → 0.2.0
 ```
-It bumps `VERSION` in `sw.js` + `js/version.js`, refreshes PRECACHE, commits everything
-("Release vX.Y.Z"), tags, and pushes `main`. Pages redeploys in ~1 min; devices download
-the new version in the background and switch at their next safe moment.
-Before releasing: check `git status` for anything that shouldn't be public.
+It runs the **full gate first and refuses if it fails** (nothing changed). Then it bumps
+`VERSION` in `sw.js` + `js/version.js`, refreshes PRECACHE, commits tracked changes + new
+files under the app/tool/test/config paths only (prints the list, and what it left out),
+tags, and pushes `main`. Pages redeploys in ~1 min; devices download the new version in
+the background and switch at their next safe moment.

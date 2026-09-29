@@ -1,4 +1,5 @@
-// Release: bump VERSION → refresh the precache list → commit → tag → push.
+// Release: full gate (tools/gate.mjs — refuses if it fails) → bump VERSION → refresh the
+// precache list → commit (tracked changes + new files under the release paths only) → tag → push.
 // GitHub Pages redeploys automatically after the push; installed apps pick up the
 // new version in the background and switch to it at their next safe moment.
 //
@@ -7,8 +8,8 @@
 //   node tools/release.mjs major      0.2.0 → 1.0.0
 //   node tools/release.mjs 1.2.3      explicit version
 //   add --no-push to commit + tag locally only
-import { execFileSync } from 'node:child_process';
-import { readFileSync, writeFileSync } from 'node:fs';
+import { execFileSync, spawnSync } from 'node:child_process';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { ROOT, writePrecache } from './precache.mjs';
 
@@ -31,6 +32,11 @@ try {
 }
 const branch = git('branch', '--show-current');
 if (branch !== 'main') fail(`Releases are made from "main" (you are on "${branch}").`);
+
+// ---- The full gate must pass before anything is changed ----
+console.log('Running the full gate (tools/gate.mjs)…');
+const gate = spawnSync(process.execPath, [join(ROOT, 'tools', 'gate.mjs')], { cwd: ROOT, stdio: 'inherit' });
+if (gate.status !== 0) fail('The gate failed — no release. Nothing was changed.');
 
 // ---- New version number ----
 const SW = join(ROOT, 'sw.js');
@@ -57,8 +63,19 @@ const files = writePrecache();
 console.log(`Version ${current} → ${next} (${files.length} files precached)`);
 
 // ---- Commit, tag, push ----
-git('add', '-A');
-console.log(git('status', '--short') || '(no other changes)');
+// Only what belongs in the repo: changes to tracked files, plus NEW files under these
+// paths. Anything else new (a stray export, a private note…) is left out and listed.
+const RELEASE_PATHS = [
+  'index.html', 'manifest.webmanifest', 'sw.js', 'css', 'js', 'games', 'icons', 'tools', 'tests',
+  'README.md', 'CLAUDE.md', 'GAMES.md', 'package.json', 'package-lock.json', '.gitignore',
+  '.claude/settings.json', '.claude/agents', '.claude/commands',
+];
+git('add', '-u');
+git('add', '--', ...RELEASE_PATHS.filter((p) => existsSync(join(ROOT, p))));
+console.log('Will be committed:');
+console.log(git('diff', '--cached', '--name-status').replace(/^/gm, '  ') || '  (only the version bump)');
+const leftOut = git('ls-files', '--others', '--exclude-standard');
+if (leftOut) console.log(`Left out (new files outside the release paths):\n${leftOut.replace(/^/gm, '  ')}`);
 git('commit', '-m', `Release v${next}`);
 git('tag', '-a', `v${next}`, '-m', `Release v${next}`);
 console.log(`✓ Committed and tagged v${next}`);

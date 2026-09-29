@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "defaultMode": "acceptEdits",
+    "allow": [
+      "Bash(node --test *)",
+      "Bash(npm test *)",
+      "Bash(npm run gate *)",
+      "Bash(node tools/serve.mjs *)",
+      "Bash(node tools/update-precache.mjs *)",
+      "Bash(node tools/gate.mjs *)",
+      "Bash(node tools/check-layout.mjs *)",
+      "Bash(node tools/check-offline.mjs *)",
+      "Bash(node tools/check-privacy.mjs *)",
+      "Bash(git status *)",
+      "Bash(git diff *)",
+      "Bash(git log *)",
+      "PowerShell(node --test *)",
+      "PowerShell(npm test *)",
+      "PowerShell(npm run gate *)",
+      "PowerShell(node tools/serve.mjs *)",
+      "PowerShell(node tools/update-precache.mjs *)",
+      "PowerShell(node tools/gate.mjs *)",
+      "PowerShell(node tools/check-layout.mjs *)",
+      "PowerShell(node tools/check-offline.mjs *)",
+      "PowerShell(node tools/check-privacy.mjs *)",
+      "PowerShell(git status *)",
+      "PowerShell(git diff *)",
+      "PowerShell(git log *)"
+    ],
+    "ask": [
+      "Bash(node tools/release.mjs *)",
+      "Bash(git commit *)",
+      "Bash(git push *)",
+      "Bash(npm install *)",
+      "Bash(npm i *)",
+      "Bash(npm ci *)",
+      "Bash(npx playwright install *)",
+      "PowerShell(node tools/release.mjs *)",
+      "PowerShell(git commit *)",
+      "PowerShell(git push *)",
+      "PowerShell(npm install *)",
+      "PowerShell(npm i *)",
+      "PowerShell(npm ci *)",
+      "PowerShell(npx playwright install *)"
+    ]
+  }
+}

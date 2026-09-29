@@ -3,3 +3,8 @@ node_modules/
 Thumbs.db
 *.log
 .claude/settings.local.json
+
+# Local only: words that must never be committed (kids' names…) — see tools/check-privacy.mjs
+tools/private-words.txt
+# Screenshots of failed layout checks
+tools/.check-output/
