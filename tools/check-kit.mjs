@@ -36,6 +36,15 @@ export const SIZES = [
 ];
 
 export const MIN_TOUCH = 64;
+
+// Timeouts, so a broken game makes the gate FAIL instead of hanging forever.
+// ACTION_TIMEOUT: max wait for one Playwright action (tap, waitFor, goto…); Playwright's
+// own default is 30 s, far too long when a checks.js taps 20 coins in a row.
+// NAV_TIMEOUT: page loads (goto/reload) get more, a slow PC can take >10 s to load one.
+// STEP_TIMEOUT: max time for one whole worst-case setup or one offline() interaction.
+export const ACTION_TIMEOUT = 10_000;
+export const NAV_TIMEOUT = 30_000;
+export const STEP_TIMEOUT = 60_000;
 export const SHELL_TOUCH = ['.top-bar button'];
 export const OUTPUT_DIR = join(ROOT, 'tools', '.check-output');
 
@@ -113,6 +122,8 @@ export async function newContext(browser, size, { serviceWorkers = 'block' } = {
     deviceScaleFactor: 1,
     serviceWorkers,
   });
+  context.setDefaultTimeout(ACTION_TIMEOUT); // every page of this context
+  context.setDefaultNavigationTimeout(NAV_TIMEOUT);
   await context.addInitScript((data) => {
     if (!localStorage.getItem('petits-labos')) localStorage.setItem('petits-labos', data);
   }, JSON.stringify(TEST_PROFILE));
@@ -127,6 +138,26 @@ export function watchErrors(page) {
   page.on('requestfailed', (req) => errors.push(`request failed: ${req.url()} (${req.failure()?.errorText})`));
   page.on('response', (res) => { if (res.status() >= 400) errors.push(`HTTP ${res.status()}: ${res.url()}`); });
   return errors;
+}
+
+// Runs `promise` but gives up after `ms`: rejects with a "timed out" error (err.timedOut
+// = true). The step itself keeps running in the background until its page is closed.
+export function withTimeout(promise, ms, what) {
+  let timer;
+  const timeout = new Promise((_, reject) => {
+    timer = setTimeout(() => {
+      const err = new Error(`${what} timed out after ${ms / 1000} s`);
+      err.timedOut = true;
+      reject(err);
+    }, ms);
+  });
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
+}
+
+// One-line failure message: the error's first line + the errors watchErrors() saw
+// meanwhile (a JS error in the game is usually WHY a tap/wait failed).
+export function describeFailure(err, errors) {
+  return err.message.split('\n')[0] + (errors.length ? ` [${errors.join(' | ')}]` : '');
 }
 
 // ---------- Actions games use in their checks ----------

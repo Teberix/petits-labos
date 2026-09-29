@@ -7,7 +7,8 @@
 //    offline() interaction (games/<id>/checks.js). Everything must come from the cache.
 import { chromium } from 'playwright';
 import {
-  SIZES, isMain, kit, loadGameChecks, newContext, screenshotPath, selectedGames, startServer, watchErrors,
+  SIZES, STEP_TIMEOUT, describeFailure, isMain, kit, loadGameChecks, newContext, screenshotPath,
+  selectedGames, startServer, watchErrors, withTimeout,
 } from './check-kit.mjs';
 import { isDevOnly, listAppFiles, precacheIsUpToDate, readPrecache } from './precache.mjs';
 
@@ -55,17 +56,19 @@ export async function checkOffline(args = []) {
         failures.push(`${game.id}: no offline() in games/${game.id}/checks.js`);
         continue;
       }
+      console.log(`  … offline: ${game.id}`); // progress line, so a slow run isn't silent
       const offlinePage = await context.newPage();
       const offlineErrors = watchErrors(offlinePage);
       try {
         await offlinePage.goto(server.base);
-        await checks.offline(offlinePage, kit);
+        await withTimeout(checks.offline(offlinePage, kit), STEP_TIMEOUT, 'offline()');
         played++;
+        failures.push(...offlineErrors.map((e) => `${game.id} offline: ${e}`));
       } catch (err) {
-        failures.push(`${game.id}: offline interaction failed — ${err.message.split('\n')[0]}`);
+        // The page errors are part of the message (they're usually the cause).
+        failures.push(`${game.id}: offline interaction failed — ${describeFailure(err, offlineErrors)}`);
         await offlinePage.screenshot({ path: screenshotPath(game.id, 'offline') }).catch(() => {});
       }
-      failures.push(...offlineErrors.map((e) => `${game.id} offline: ${e}`));
       await offlinePage.close();
     }
   } catch (err) {
