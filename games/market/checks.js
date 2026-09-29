@@ -34,7 +34,7 @@ async function expectStacks(page, expected, sum) {
 }
 
 export default {
-  touch: ['.mk-coin', '.mk-stack', '.mk-level-btn'],
+  touch: ['.mk-coin', '.mk-stack', '.mk-pay', '.mk-level-btn'],
 
   worstCases: [
     {
@@ -78,18 +78,21 @@ export default {
       },
     },
     {
-      name: 'level 4, two items + a mix of coins',
+      // (Level 3 prices are 3–10, so one coin of 1 franc is never enough.)
+      name: 'level 3, all hints on screen (red circles + wiggling coins)',
       async setup(page, kit) {
-        await openLevel(page, kit, 4);
-        if (await page.locator('.mk-item').count() !== 2) throw new Error('expected 2 items');
-        await putCoins(page, kit, [5, 2, 1, 1]);
-        await expectStacks(page, { 1: 2, 2: 1, 5: 1 }, 9);
+        await openLevel(page, kit, 3);
+        await putCoins(page, kit, [1]);
+        for (let i = 0; i < 3; i++) await kit.tap(page, '.mk-pay');
+        if (!await page.locator('.mk-dot.goal').count()) throw new Error('no red circles');
+        if (!await page.locator('.mk-purse .mk-coin.mk-hint').count()) throw new Error('no wiggling coins');
+        if (await page.locator('.mk-customer').getAttribute('data-mood') !== 'wait') throw new Error('customer not waiting');
       },
     },
   ],
 
-  // Level 2: a 2-franc coin and a 1-franc coin make 3 on the counter; tapping the
-  // 2-franc stack gives that coin back (not the 1 put down last).
+  // Level 2: take back a specific value, then pay the exact price (2 + 1 + 1…) and
+  // wait for the happy customer.
   async offline(page, kit) {
     await openLevel(page, kit, 2);
     const price = Number(await page.locator('.mk-tag').first().getAttribute('data-price'));
@@ -98,5 +101,9 @@ export default {
     await expectStacks(page, { 1: 1, 2: 1 }, 3);
     await takeBack(page, kit, 2);
     await expectStacks(page, { 1: 1 }, 1);
+    await putCoins(page, kit, Array(price - 1).fill(1));
+    await expectStacks(page, { 1: price }, price);
+    await kit.tap(page, '.mk-pay');
+    await page.waitForFunction(() => document.querySelector('.mk-customer')?.dataset.mood === 'happy', null, { timeout: 5000 });
   },
 };

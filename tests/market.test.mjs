@@ -97,6 +97,14 @@ test('every basket of every buying level can be paid, with a total of 10 at most
   }
 });
 
+test('too much: the customer can always give the extra back with the level\'s coins', () => {
+  for (const level of LEVELS.filter((l) => !l.seller && !l.free)) {
+    for (let diff = 1; diff < TRAY_MAX; diff++) {
+      assert.ok(canPay(diff, level.coins), `level ${level.id}: ${diff} back`);
+    }
+  }
+});
+
 test('level 4 asks for two items; every total from 3 to 10 can come up', () => {
   const level = LEVELS.find((l) => l.items === 2);
   const totals = new Set(possibleBaskets(level).map(total));

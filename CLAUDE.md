@@ -69,6 +69,8 @@ playtest).
   subagents). Don't re-verify manually what the gate covers; report only failures and
   what the gate can't check (e.g. real touch feel, voice quality).
 - Ask only on real blockers/ambiguity. Don't add unrequested features — propose them.
+- Windows: commit with a message file (`git commit -F <file>`); never pipe the message
+  through PowerShell (a here-string piped to `git commit -F -` is taken as a pathspec).
 
 ## Code map
 

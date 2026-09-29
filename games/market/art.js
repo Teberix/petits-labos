@@ -96,7 +96,15 @@ export function item(id) {
   return `<svg viewBox="0 0 100 100" aria-hidden="true">${ITEMS[id]}</svg>`;
 }
 
-// ---------- Level map icons ----------
+// ---------- Buttons and level map icons ----------
+
+// Pay: a hand giving a coin.
+export const ICON_PAY = `<svg viewBox="0 0 24 24" aria-hidden="true">
+  <circle cx="15" cy="6" r="4" fill="#FFD23F" stroke="#E0A800" stroke-width="1.5"/>
+  <path d="M2 13.5h3.5l4 2.5h5.2a1.8 1.8 0 0 1 0 3.6H10.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M14.7 16l4.8-2.6a1.7 1.7 0 0 1 2 2.6L16 20.5H9.5l-4-1.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>`;
+export const ICON_NEXT = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M12 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 
 export const ICON_CROWN = `<svg viewBox="0 0 48 36" aria-hidden="true">
   <path d="M4 12l10 8 10-16 10 16 10-8-4 22H8z" fill="#FFC83D" stroke="#E0A800" stroke-width="3" stroke-linejoin="round"/>
