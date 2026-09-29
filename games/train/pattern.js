@@ -86,6 +86,14 @@ export function validFillings(cars, gaps, choices) {
   return found;
 }
 
+// Where the first period with no gap starts (the one hint 2 outlines), or -1.
+export function firstFullPeriod(cars, p) {
+  for (let start = 0; start + p <= cars.length; start += p) {
+    if (cars.slice(start, start + p).every((c) => c !== null)) return start;
+  }
+  return -1;
+}
+
 // ---------- Making puzzles ----------
 
 // Where the empty wagons go:
@@ -151,19 +159,37 @@ export const CAR_RATIO = 1.3; // a wagon is 1.3 × as tall as it is wide (cargo 
 export const CAR_MAX = 150;   // px: wagons don't get bigger than this on big screens
 export const CAR_MIN = 64;    // px: a comfortable drop target
 
-// How to lay out `count` cars (locomotive included) in a width × height box: the
-// FEWEST rows whose wagons are still ≥ CAR_MIN (long rows read like a sentence, so
-// the pattern stays easy to see), else the rows giving the biggest wagons.
-// Returns { rows, perRow, size } (size in px).
-export function fitTrain(count, width, height, gap) {
-  let best = null;
-  for (let rows = 1; rows <= 4; rows++) {
-    const perRow = Math.ceil(count / rows);
-    const byWidth = (width - (perRow - 1) * gap) / perRow;
+// How to lay out a train of `wagons` wagons with pattern period `period` in a
+// width × height box. The locomotive has its own column on the left; each row holds
+// `perRow` wagons (rows after the first start under the first wagon, so the columns
+// line up). Preference, in order:
+//   1. rows that break at period boundaries (AAB AAB / AAB — perRow a multiple of the
+//      period, or the whole train in one row), with wagons ≥ CAR_MIN;
+//   2. any rows with wagons ≥ CAR_MIN;
+//   3. the biggest wagons possible (period boundaries first if that costs < 1px).
+// Within 1 and 2: the fewest rows (long rows read like a sentence), then the biggest
+// wagons. Returns { rows, perRow, size } (size in px).
+export function fitTrain(wagons, period, width, height, gap) {
+  const options = [];
+  for (let perRow = wagons; perRow >= 1; perRow--) {
+    const rows = Math.ceil(wagons / perRow);
+    const columns = perRow + 1; // + the locomotive's column
+    const byWidth = (width - (columns - 1) * gap) / columns;
     const byHeight = (height - (rows - 1) * gap) / rows / CAR_RATIO;
-    const option = { rows, perRow, size: Math.min(byWidth, byHeight, CAR_MAX) };
-    if (option.size >= CAR_MIN) return option;
-    if (!best || option.size > best.size) best = option;
+    options.push({
+      rows, perRow, size: Math.min(byWidth, byHeight, CAR_MAX),
+      aligned: perRow % period === 0 || perRow === wagons,
+    });
   }
-  return best;
+  const byRowsThenSize = (a, b) => a.rows - b.rows || b.size - a.size;
+  const big = options.filter((o) => o.size >= CAR_MIN).sort(byRowsThenSize);
+  let pick = big.find((o) => o.aligned) ?? big[0];
+  if (!pick) {
+    // Nothing reaches CAR_MIN: the biggest wagons — and among layouts giving (almost)
+    // that size, period boundaries first, then the fewest rows.
+    const biggest = Math.max(...options.map((o) => o.size));
+    const close = options.filter((o) => o.size >= biggest - 1).sort(byRowsThenSize);
+    pick = close.find((o) => o.aligned) ?? close[0];
+  }
+  return { rows: pick.rows, perRow: pick.perRow, size: pick.size };
 }

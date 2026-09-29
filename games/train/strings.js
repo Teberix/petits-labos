@@ -1,5 +1,6 @@
 // Everything "Le Train des Suites" says, in fr / es / en.
 // (The title is in meta.js: the hub needs it before the game loads.)
+// train.token.* = the colour names the "singing train" hint says (one per token in art.js).
 export default {
   fr: {
     'train.chooseLevel': 'Choisis un niveau !',
@@ -16,6 +17,12 @@ export default {
     'train.right.3': 'Oui ! C’est le bon wagon !',
     'train.levelDone': 'Bravo ! Tous les trains sont partis !',
     'train.continue': 'Continuer',
+    'train.hintSing': 'Écoute le train : {list}… et après ?',
+    'train.hintPeriod': 'Regarde les wagons entourés : c’est ça qui se répète !',
+    'train.hintToken': 'Essaie le wagon qui danse !',
+    // Token names (a colour; each colour also has its own shape).
+    'train.token.red': 'rouge', 'train.token.blue': 'bleu', 'train.token.yellow': 'jaune',
+    'train.token.green': 'vert', 'train.token.purple': 'violet',
   },
   es: {
     'train.chooseLevel': '¡Elige un nivel!',
@@ -32,6 +39,11 @@ export default {
     'train.right.3': '¡Sí! ¡Es el vagón correcto!',
     'train.levelDone': '¡Bravo! ¡Todos los trenes han salido!',
     'train.continue': 'Continuar',
+    'train.hintSing': 'Escucha el tren: {list}… ¿y después?',
+    'train.hintPeriod': '¡Mira los vagones marcados: eso es lo que se repite!',
+    'train.hintToken': '¡Prueba el vagón que baila!',
+    'train.token.red': 'rojo', 'train.token.blue': 'azul', 'train.token.yellow': 'amarillo',
+    'train.token.green': 'verde', 'train.token.purple': 'morado',
   },
   en: {
     'train.chooseLevel': 'Choose a level!',
@@ -48,5 +60,10 @@ export default {
     'train.right.3': 'Yes! That’s the right wagon!',
     'train.levelDone': 'Well done! All the trains have left!',
     'train.continue': 'Continue',
+    'train.hintSing': 'Listen to the train: {list}… and then?',
+    'train.hintPeriod': 'Look at the circled wagons: that’s what repeats!',
+    'train.hintToken': 'Try the wagon that’s dancing!',
+    'train.token.red': 'red', 'train.token.blue': 'blue', 'train.token.yellow': 'yellow',
+    'train.token.green': 'green', 'train.token.purple': 'purple',
   },
 };

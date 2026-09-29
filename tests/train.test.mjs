@@ -3,11 +3,12 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  MAX_WAGONS, hasPeriod, repeats, fullPeriods, validFillings, gapIndices, makePuzzle, firstEmpty, fitTrain, CAR_RATIO, CAR_MAX,
+  MAX_WAGONS, hasPeriod, repeats, fullPeriods, validFillings, gapIndices, makePuzzle, firstEmpty, firstFullPeriod, fitTrain, CAR_RATIO, CAR_MAX, CAR_MIN,
 } from '../games/train/pattern.js';
 import { LEVELS } from '../games/train/levels.js';
 import { TOKENS } from '../games/train/art.js';
 import STRINGS from '../games/train/strings.js';
+import { PITCH } from '../games/train/music.js';
 
 // A tiny repeatable random generator, so every run tests the same trains.
 function seeded(seed) {
@@ -52,6 +53,13 @@ test('validFillings finds every repeating way to fill the gaps', () => {
   assert.deepEqual(validFillings(['r', 'b', 'r', 'b', null, null], [4, 5], ['b', 'r']), [{ 4: 'r', 5: 'b' }]);
   // All red: only red fits (red-red-red-blue doesn't repeat).
   assert.equal(validFillings(['r', 'r', 'r', null], [3], ['r', 'b']).length, 1);
+});
+
+test('firstFullPeriod: where hint 2 outlines', () => {
+  assert.equal(firstFullPeriod(['a', 'b', 'a', 'b', 'a', null], 2), 0);
+  assert.equal(firstFullPeriod(['a', null, 'a', 'b', 'a', 'b'], 2), 2);
+  assert.equal(firstFullPeriod(['a', null, 'c', 'a', 'b', 'c'], 3), 3);
+  assert.equal(firstFullPeriod([null, 'b'], 2), -1);
 });
 
 test('gapIndices', () => {
@@ -102,17 +110,28 @@ test('AABB cannot be a whole-period gap (12 wagons > 9)', () => {
   assert.throws(() => makePuzzle(level, seeded(1)), /no puzzle/);
 });
 
-test('fitTrain: the biggest wagons that fit, wrapping onto rows when narrow', () => {
-  // Phone portrait: 10 cars (9 wagons + locomotive) → several rows, wagons ≥ 64px.
-  const portrait = fitTrain(10, 330, 400, 6);
-  assert.ok(portrait.rows >= 2 && portrait.size >= 64, JSON.stringify(portrait));
+test('fitTrain: rows break at period boundaries while wagons stay >= 64px', () => {
+  // 360x640 phone portrait (track about 330 x 420): AAB x 3 -> AAB / AAB / AAB.
+  const aab = fitTrain(9, 3, 330, 420, 6);
+  assert.equal(aab.perRow, 3, JSON.stringify(aab));
+  assert.ok(aab.size >= CAR_MIN);
+  // AB, 7 wagons: whole periods per row (or all in one row).
+  const ab = fitTrain(7, 2, 330, 420, 6);
+  assert.ok(ab.perRow % 2 === 0 || ab.perRow === 7, JSON.stringify(ab));
+  assert.ok(ab.size >= CAR_MIN);
+  // Small landscape phone (no layout reaches 64px): same biggest size, whole periods.
+  assert.equal(fitTrain(9, 3, 610, 160, 6).perRow, 6);
   // Wide landscape: one row.
-  assert.equal(fitTrain(7, 1200, 300, 6).rows, 1);
+  assert.equal(fitTrain(9, 3, 1200, 300, 6).rows, 1);
+  // Period 5 in a 290px-wide box: 5 wagons per row would be < 64px, so the rows
+  // don't follow the periods (any rows with wagons >= 64px).
+  const any = fitTrain(9, 5, 290, 600, 6);
+  assert.ok(any.size >= CAR_MIN && any.perRow % 5 !== 0, JSON.stringify(any));
   // Whatever the box, the train fits in it.
-  for (const [count, w, h] of [[7, 330, 400], [10, 600, 180], [10, 1300, 500], [4, 2000, 2000]]) {
-    const { rows, perRow, size } = fitTrain(count, w, h, 6);
-    assert.ok(rows * perRow >= count);
-    assert.ok(perRow * size + (perRow - 1) * 6 <= w + 0.01);
+  for (const [wagons, period, w, h] of [[6, 2, 330, 400], [9, 3, 600, 180], [9, 3, 1300, 500], [3, 3, 2000, 2000], [9, 2, 200, 200]]) {
+    const { rows, perRow, size } = fitTrain(wagons, period, w, h, 6);
+    assert.ok(rows * perRow >= wagons);
+    assert.ok((perRow + 1) * size + perRow * 6 <= w + 0.01);
     assert.ok(rows * size * CAR_RATIO + (rows - 1) * 6 <= h + 0.01);
     assert.ok(size <= CAR_MAX);
   }
@@ -128,7 +147,11 @@ test('levels: ids unique, fields sane, tokens drawn', () => {
       assert.ok(level.choices >= letters, `level ${level.id}: tray smaller than pattern ${p}`);
       assert.ok(level.tokens.length >= level.choices, `level ${level.id}: not enough tokens`);
     }
-    for (const token of level.tokens) assert.ok(TOKENS[token], `level ${level.id}: no art for ${token}`);
+    for (const token of level.tokens) {
+      assert.ok(TOKENS[token], `level ${level.id}: no art for ${token}`);
+      assert.ok(PITCH[token], `level ${level.id}: no note for ${token}`);
+      for (const lang of ['fr', 'es', 'en']) assert.ok(STRINGS[lang][`train.token.${token}`], `${lang}: no name for ${token}`);
+    }
   }
 });
 

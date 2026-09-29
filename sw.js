@@ -50,6 +50,7 @@ const PRECACHE = [
   'games/train/art.js',
   'games/train/levels.js',
   'games/train/meta.js',
+  'games/train/music.js',
   'games/train/pattern.js',
   'games/train/strings.js',
   'games/train/train.css',

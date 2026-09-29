@@ -6,25 +6,34 @@
 //         more rows on a narrow screen). Empty wagons show a "?". Under the train, a
 //         tray of tokens: drag one into an empty wagon, or tap it (it goes into the
 //         first empty wagon).
-//           right token → it snaps in; when every wagon is full the train whistles,
-//                         rolls away, +1 star, and the next train rolls in;
+//           right token → it snaps in (with its note); when every wagon is full the
+//                         train plays its tune, whistles, rolls away, +1 star, and
+//                         the next train rolls in;
 //           wrong token → a soft "boing", the empty wagon wobbles, the token bounces
 //                         back to the tray. Never counted against the child.
 // Tray tokens are sources: the same token can be used for several wagons.
+// Music: every token has its own note (music.js); tapping a wagon plays it, so the
+//        pattern is also a tune.
+// Hints, stronger after each wrong token (per train):
+//        1 → the train "sings": wagons light up one by one with their notes (the gap
+//            knocks), then the voice names them: « rouge, bleu, rouge… et après ? »
+//        2 → the first full period is outlined (the part that repeats)
+//        3 → the right token wiggles in the tray
 // The puzzles (and their checks: one answer only, 2 full periods visible) are made in
 // pattern.js; the level data is in levels.js.
 import { h } from '../../js/dom.js';
 import { addStrings } from '../../js/i18n.js';
 import { speak } from '../../js/audio.js';
 import { draggable } from '../../js/dragdrop.js';
-import { makePuzzle, firstEmpty, fitTrain } from './pattern.js';
+import { makePuzzle, firstEmpty, firstFullPeriod, fitTrain } from './pattern.js';
+import { playNote, knock, whistle } from './music.js';
 import { LEVELS } from './levels.js';
 import STRINGS from './strings.js';
 import * as art from './art.js';
 
-const PLACE_MS = 700;        // enjoy the full train before it leaves
+const SING_MS = 450;         // between two notes of the "singing train" hint
+const PARTY_MS = 170;        // between two notes of a full train's tune
 const LEAVE_MS = 1300;       // the train rolling away (matches .tr-leave in train.css)
-const CELEBRATE_MS = PLACE_MS + LEAVE_MS;
 
 function loadStylesheet() {
   if (document.querySelector('link[data-game="train"]')) return;
@@ -120,7 +129,8 @@ function createGame(container, ctx) {
   // ---------- Playing a level ----------
 
   let play = null;    // { level, index, els }
-  let puzzle = null;  // the current train (see pattern.js) + { cars (filled so far), misses, busy }
+  let puzzle = null;  // the current train (see pattern.js) + { cars (filled so far),
+                      //   misses, showPeriod (hint 2), tokenHint (hint 3), busy }
 
   function playLevel(level) {
     stopInputs();
@@ -136,7 +146,7 @@ function createGame(container, ctx) {
 
   function startTrain() {
     const made = makePuzzle(play.level, Math.random, puzzle?.key ?? null);
-    puzzle = { ...made, cars: [...made.cars], misses: 0, busy: false };
+    puzzle = { ...made, cars: [...made.cars], misses: 0, showPeriod: false, tokenHint: false, busy: false };
     renderTrain(true);
     renderTray();
 
@@ -150,17 +160,26 @@ function createGame(container, ctx) {
 
   // ---------- The train ----------
 
+  // A wagon. Tapping a full one plays its note (just for fun: not a button, the tray
+  // tokens are the things to use).
   function carEl(token, index) {
     const empty = token === null;
-    return h('div', {
+    const el = h('div', {
       class: `tr-car${empty ? ' tr-gap' : ''}`,
       'data-index': index,
       'data-token': token ?? '',
       'aria-label': empty ? t('train.empty') : null,
+      onclick: empty ? null : () => {
+        playNote(token);
+        restartAnimation(el, 'tr-sing');
+      },
     },
       h('div', { class: 'tr-cargo', html: empty ? null : art.token(token) }, empty ? '?' : null),
       h('div', { class: 'tr-wheels', html: art.WHEELS }));
+    return el;
   }
+
+  const carAt = (index) => play.els.track.querySelector(`.tr-car[data-index="${index}"]`);
 
   function renderTrain(arriving) {
     const loco = h('div', { class: 'tr-loco', html: art.LOCOMOTIVE });
@@ -169,16 +188,25 @@ function createGame(container, ctx) {
     play.els.track.replaceChildren(train);
     play.els.train = train;
     fit();
+    if (puzzle.showPeriod) markPeriod();
   }
 
-  // Sizes the wagons to fill the track area (see fitTrain).
+  // Sizes the wagons to fill the track area and places them in rows that break at
+  // the end of a period when possible (see fitTrain). The locomotive has the first
+  // column; the other rows start under the first wagon, so the periods line up.
   function fit() {
     const { track, train } = play?.els ?? {};
     if (!track || !train) return;
     const gap = parseFloat(getComputedStyle(train).columnGap) || 0;
-    const { perRow, size } = fitTrain(puzzle.cars.length + 1, track.clientWidth, track.clientHeight, gap);
-    train.style.setProperty('--per-row', perRow);
+    const { perRow, size } = fitTrain(puzzle.cars.length, puzzle.pattern.length, track.clientWidth, track.clientHeight, gap);
+    train.dataset.perRow = perRow; // (read by checks.js)
+    train.style.setProperty('--columns', perRow + 1);
     train.style.setProperty('--car', `${Math.floor(size)}px`);
+    train.querySelectorAll('.tr-car').forEach((car) => {
+      const i = Number(car.dataset.index);
+      car.style.gridRow = String(Math.floor(i / perRow) + 1);
+      car.style.gridColumn = String((i % perRow) + 2);
+    });
   }
 
   const gapEls = () => [...play.els.track.querySelectorAll('.tr-car.tr-gap')];
@@ -188,9 +216,15 @@ function createGame(container, ctx) {
   function renderTray() {
     trayCleanups.forEach((stop) => stop());
     trayCleanups = [];
+    // Hint 3: the token for the first empty wagon wiggles.
+    const hinted = puzzle.tokenHint ? puzzle.answer[firstEmpty(puzzle.cars)] : null;
     const tokens = puzzle.choices.map((id) => {
       const el = h('button', {
-        class: 'tr-token', type: 'button', 'data-token': id, html: art.token(id),
+        class: `tr-token${id === hinted ? ' tr-hint' : ''}`,
+        type: 'button',
+        'data-token': id,
+        'aria-label': t(`train.token.${id}`),
+        html: art.token(id),
       });
       trayCleanups.push(draggable(el, {
         targets: gapEls,
@@ -207,41 +241,92 @@ function createGame(container, ctx) {
 
   function place(token, index, trayEl) {
     if (puzzle.busy || index < 0 || puzzle.cars[index] !== null) return;
-    const car = play.els.track.querySelector(`.tr-car[data-index="${index}"]`);
+    const car = carAt(index);
     if (puzzle.answer[index] !== token) {
-      // Not a mistake to count: a soft sound, the wagon wobbles, the token hops back.
-      puzzle.misses++;
-      sfx.boing();
-      restartAnimation(car, 'tr-wiggle');
-      restartAnimation(trayEl, 'tr-bounce');
-      remark(t(`train.wrong.${((puzzle.misses - 1) % 3) + 1}`));
+      wrongToken(car, trayEl);
       return;
     }
     puzzle.cars[index] = token;
     const filled = carEl(token, index);
     filled.classList.add('tr-pop-in');
     car.replaceWith(filled);
-    sfx.pop();
-    if (firstEmpty(puzzle.cars) === -1) trainDone(filled);
+    fit();
+    if (puzzle.showPeriod) markPeriod();
+    playNote(token);
+    if (firstEmpty(puzzle.cars) === -1) trainDone();
+    else if (puzzle.tokenHint) renderTray(); // the wiggle moves to the next wagon's token
   }
 
-  function trainDone(lastCar) {
-    puzzle.busy = true;
-    sfx.chime();
-    remark(t(`train.right.${pickOne(3)}`));
-    // 1 star per train. Every 5th star also brings a sticker.
-    const sticker = ctx.rewards.star(lastCar);
+  // Not a mistake to count: a soft sound, the wagon wobbles, the token hops back —
+  // and the hints get stronger each time.
+  function wrongToken(car, trayEl) {
+    puzzle.misses++;
+    sfx.boing();
+    restartAnimation(car, 'tr-wiggle');
+    restartAnimation(trayEl, 'tr-bounce');
+    if (puzzle.misses === 1) {
+      singHint();
+    } else if (puzzle.misses === 2) {
+      puzzle.showPeriod = true;
+      markPeriod();
+      remark(t('train.hintPeriod'));
+    } else if (!puzzle.tokenHint) {
+      puzzle.tokenHint = true;
+      renderTray();
+      remark(t('train.hintToken'));
+    } else {
+      remark(t(`train.wrong.${pickOne(3)}`));
+    }
+  }
+
+  // ---------- Hints ----------
+
+  // Hint 1: the train "sings" — each wagon lights up with its note, the empty one
+  // knocks; then the voice names the wagons up to the first empty one.
+  function singHint() {
+    const current = puzzle;
+    puzzle.cars.forEach((token, i) => later(() => {
+      if (puzzle !== current) return; // (that train already left)
+      restartAnimation(carAt(i), 'tr-sing');
+      if (token) playNote(token);
+      else knock();
+    }, 300 + i * SING_MS));
     later(() => {
-      sfx.fanfare();
+      if (puzzle !== current) return;
+      const names = puzzle.cars.slice(0, firstEmpty(puzzle.cars)).map((token) => t(`train.token.${token}`));
+      remark(t('train.hintSing', { list: names.join(', ') }));
+    }, 300 + puzzle.cars.length * SING_MS);
+  }
+
+  // Hint 2: outline the first period that has no empty wagon (the part that repeats).
+  function markPeriod() {
+    const p = puzzle.pattern.length;
+    const start = firstFullPeriod(puzzle.cars, p);
+    for (let i = start; i < start + p; i++) carAt(i)?.classList.add('tr-period');
+  }
+
+  // The full train plays its tune (every wagon, quickly), whistles and rolls away.
+  function trainDone() {
+    puzzle.busy = true;
+    remark(t(`train.right.${pickOne(3)}`));
+    // 1 star per train (it flies from the locomotive). Every 5th star also brings a sticker.
+    const sticker = ctx.rewards.star(play.els.train.querySelector('.tr-loco'));
+    const tuneMs = 300 + puzzle.cars.length * PARTY_MS;
+    puzzle.cars.forEach((token, i) => later(() => {
+      restartAnimation(carAt(i), 'tr-sing');
+      playNote(token);
+    }, 300 + i * PARTY_MS));
+    later(() => {
+      whistle();
       play.els.train.classList.add('tr-leave');
-    }, PLACE_MS);
+    }, tuneMs + 200);
     later(async () => {
       if (sticker) await ctx.rewards.showSticker(sticker);
       if (destroyed) return;
       play.index++;
       if (play.index < play.level.rounds) startTrain();
       else levelDone();
-    }, CELEBRATE_MS);
+    }, tuneMs + 200 + LEAVE_MS);
   }
 
   // ---------- Level complete ----------
