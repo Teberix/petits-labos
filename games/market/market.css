@@ -73,7 +73,7 @@
 
 /* ---------- The stall ---------- */
 
-/* A size container, so the customer and the items can use its width (cqw) and height (cqh). */
+/* A size container, so the animal and the items can use its width (cqw) and height (cqh). */
 .mk-scene {
   grid-area: scene;
   justify-self: stretch;
@@ -93,9 +93,9 @@
   height: 100%;
   padding-inline: 2cqw;
 }
-/* The customer stands behind the counter, the goods are on it. */
-.mk-customer { position: relative; z-index: 0; flex: none; width: min(80cqh, 42cqw); margin-bottom: 4cqh; }
-.mk-customer svg { display: block; width: 100%; height: auto; }
+/* The animal (the seller) stands behind the counter, the goods are on it. */
+.mk-animal { position: relative; z-index: 0; flex: none; width: min(80cqh, 42cqw); margin-bottom: 4cqh; }
+.mk-animal svg { display: block; width: 100%; height: auto; }
 .mk-counter {
   position: absolute;
   z-index: 1;
@@ -116,7 +116,7 @@
 .mk-mouth-happy, .mk-mouth-wait { display: none; }
 [data-mood="happy"] .mk-mouth-neutral, [data-mood="wait"] .mk-mouth-neutral { display: none; }
 [data-mood="happy"] .mk-mouth-happy, [data-mood="wait"] .mk-mouth-wait { display: inline; }
-.mk-customer[data-mood="happy"] svg { animation: mk-hop 0.5s ease-in-out 3; }
+.mk-animal[data-mood="happy"] svg { animation: mk-hop 0.5s ease-in-out 3; }
 
 /* Price tag: numeral + dots in rows of 5. */
 .mk-tag {
@@ -261,11 +261,11 @@
 .mk-tray.drop-hover { background: #F0D2AE; }
 .mk-purse.drop-hover { background: #FFF0DD; border-radius: 1.25rem; }
 
-/* Coins flying between the counter, the customer and the purse. */
+/* Coins flying between the counter, the seller and the purse. */
 .mk-fly { position: fixed; z-index: 900; pointer-events: none; transition: transform 0.45s ease-in-out; }
 .mk-fly svg { display: block; width: 100%; height: 100%; }
 
-/* Sold: the items hop over to the customer's side. */
+/* Sold: the items hop down towards the child's purse. */
 .mk-item.mk-sold { animation: mk-sold 0.8s ease-in forwards; }
 
 /* ---------- Level done ---------- */
@@ -280,8 +280,8 @@
   padding: var(--gap);
   --mk-unit: clamp(64px, 10vmin, 84px);
 }
-.mk-done-customer { width: clamp(6rem, 30vmin, 12rem); animation: mk-hop 0.6s ease-in-out infinite; }
-.mk-done-customer svg, .mk-done-crown svg { display: block; width: 100%; height: auto; }
+.mk-done-animal { width: clamp(6rem, 30vmin, 12rem); animation: mk-hop 0.6s ease-in-out infinite; }
+.mk-done-animal svg, .mk-done-crown svg { display: block; width: 100%; height: auto; }
 .mk-done-crown { width: clamp(4rem, 16vmin, 7rem); animation: mk-pulse 1.2s ease-in-out infinite; }
 .mk-continue {
   width: calc(var(--mk-unit) * 1.3);
@@ -313,6 +313,6 @@
 @keyframes mk-pop-in { from { transform: scale(0.4); } }
 @keyframes mk-hint { 25% { transform: translateY(-12%) rotate(-8deg); } 75% { transform: translateY(-12%) rotate(8deg); } }
 @keyframes mk-goal { 50% { box-shadow: inset 0 0 0 3px #E8453C, 0 0 0 3px #FFC9C4; } }
-@keyframes mk-sold { 40% { transform: translateY(-25%) scale(1.1); } to { transform: translate(-60%, -10%) scale(0.3); opacity: 0; } }
+@keyframes mk-sold { 40% { transform: translateY(-25%) scale(1.1); } to { transform: translateY(90%) scale(0.3); opacity: 0; } }
 @keyframes mk-pulse { 50% { transform: scale(1.08); } }
 @keyframes mk-bounce { 35% { transform: translateY(-35%); } 65% { transform: translateY(6%); } 85% { transform: translateY(-4%); } }

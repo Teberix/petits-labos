@@ -82,7 +82,7 @@ export function possibleBaskets(level) {
   return baskets;
 }
 
-// The next customer's basket: never the same total as the previous customer.
+// The next sale's basket: never the same total as the previous sale.
 // (Its items are shuffled so the cheaper one isn't always on the left.)
 export function nextBasket(level, previousTotal = null, rng = Math.random) {
   const all = possibleBaskets(level);

@@ -1,18 +1,19 @@
-// "Le Marché" — an animal customer comes to the stall; the child pays for the item
-// with Swiss franc coins from her purse.
+// "Le Marché" — the child buys at an animal's market stall and pays with Swiss franc
+// coins from her purse. (Levels 1–4: the animal is the seller.)
 //
-// Flow:     level map → level (5 customers) → level done → map
-// Customer: the price is shown (numeral + dots) and said aloud → the child drags (or
-//           taps) coins onto the counter, which shows the running total (numeral +
-//           ten-frames) → the green "pay" button:
-//             exact      → happy customer, the coins go to the customer, star;
-//             too much   → never a mistake: the customer takes the coins and gives the
-//                          extra back ("2 francs de trop !"), then it's a sale too;
-//             not enough → the customer waits kindly ("encore 1 franc").
+// Flow:     level map → level (5 sales) → level done → map
+// Sale:     the seller says the price, which is also shown (numeral + dots) → the child
+//           drags (or taps) coins onto the counter, which shows the running total
+//           (numeral + ten-frames) → the green "pay" button:
+//             exact      → happy seller, the coins go to the seller, star;
+//             too much   → never a mistake: the seller takes the coins and gives the
+//                          extra back ("2 francs de trop"), the sale is done — but a
+//                          star only comes with the exact amount;
+//             not enough → the seller waits kindly ("encore 1 franc").
 // On the counter, coins are grouped in one stack per value ("×7"); tapping a stack (or
 // dragging it back to the purse) gives one coin of that value back.
-// Rewards: 1 star per sale, +1 bonus star when it was paid exactly with the fewest
-//          coins possible (computed in money.js) — only offered when the price leaves a
+// Rewards: 1 star per exact payment, +1 bonus star when it used the fewest coins
+//          possible (computed in money.js) — only offered when the price leaves a
 //          real choice. Every such sale of a level with the bonus → crown.
 // Hints get stronger with each "not enough": 1 → the price is said again,
 //          2 → the counter's ten-frame shows red circles to fill, 3 → the coins to use
@@ -35,9 +36,9 @@ import * as art from './art.js';
 // they are built.
 const PLAYABLE = LEVELS.filter((level) => !level.seller && !level.free && !(level.items > 1));
 
-const FLY_MS = 450;          // a coin flying between the counter, the customer and the purse
+const FLY_MS = 450;          // a coin flying between the counter, the seller and the purse
 const CHANGE_GAP_MS = 180;   // between two coins of change
-const CELEBRATE_MS = 2600;   // time to enjoy a sale before the next customer
+const CELEBRATE_MS = 2600;   // time to enjoy a sale before the next sale
 const BONUS_STAR_DELAY = 450;
 const MISSES_BEFORE_TARGET = 2; // "not enough" twice → red circles to fill on the counter
 const MISSES_BEFORE_COINS = 3;  // three times → the coins to use wiggle in the purse
@@ -63,7 +64,7 @@ function createGame(container, ctx) {
   // A sentence with an amount in it, in the right singular/plural form.
   const tn = (key, n) => t(pluralKey(key, n, ctx.lang), { n });
 
-  // ctx.speak = an instruction (the repeat button replays it: the customer's order).
+  // ctx.speak = an instruction (the repeat button replays it: the seller's offer).
   // remark = a short reaction ("this coin is worth 2") the repeat button must NOT keep.
   const remark = (text) => speak(text, ctx.lang);
 
@@ -140,7 +141,7 @@ function createGame(container, ctx) {
   // ---------- Playing a level ----------
 
   let play = null;  // the level being played + the screen parts
-  let sale = null;  // the current customer (see startCustomer)
+  let sale = null;  // the current sale (see startSale)
 
   function playLevel(level) {
     stopInputs();
@@ -156,10 +157,10 @@ function createGame(container, ctx) {
       saidFewer: false,  // "could you do it with fewer coins?" — once per level
       els: { scene, tray, purse },
     };
-    startCustomer();
+    startSale();
   }
 
-  function startCustomer() {
+  function startSale() {
     const { level } = play;
     const prices = nextBasket(level, sale?.price ?? null);
     const items = pickSome(art.ITEM_IDS.filter((id) => id !== sale?.basket[0].item), prices.length);
@@ -178,7 +179,9 @@ function createGame(container, ctx) {
     renderPurse();
     renderTray();
 
-    let line = `${t(`market.want.${sale.basket[0].item}`)} ${tn('market.price', sale.price)}`;
+    // "Bonjour ! La pomme coûte 3 francs." — one whole sentence per item and plural form.
+    // (Step c: two-item baskets will say both prices.)
+    let line = tn(`market.offer.${sale.basket[0].item}`, sale.price);
     if (play.index === 0) {
       if (level.id === PLAYABLE[0].id) line += ' ' + t('market.howTo');
       if (level.intro) line += ' ' + t(level.intro);
@@ -186,7 +189,7 @@ function createGame(container, ctx) {
     ctx.speak(line);
   }
 
-  // ---------- The stall: customer, counter, items with their price tags ----------
+  // ---------- The stall: the seller, counter, items with their price tags ----------
 
   // Price tag: the numeral and one dot per franc (in rows of 5, like a ten-frame).
   function priceTag(price) {
@@ -197,17 +200,17 @@ function createGame(container, ctx) {
   }
 
   function renderScene() {
-    const customer = h('div', { class: 'mk-customer', 'data-mood': 'neutral', html: art.animal(sale.animal) });
+    const seller = h('div', { class: 'mk-animal', 'data-mood': 'neutral', html: art.animal(sale.animal) });
     const goods = sale.basket.map(({ item, price }) => h('div', { class: 'mk-item' },
       h('div', { class: 'mk-item-art', html: art.item(item) }),
       priceTag(price)));
     play.els.scene.replaceChildren(
-      h('div', { class: 'mk-stall' }, customer, h('div', { class: 'mk-counter' }), h('div', { class: 'mk-goods' }, goods)));
-    play.els.customer = customer;
+      h('div', { class: 'mk-stall' }, seller, h('div', { class: 'mk-counter' }), h('div', { class: 'mk-goods' }, goods)));
+    play.els.animal = seller;
   }
 
   function setMood(mood) {
-    play.els.customer.dataset.mood = mood;
+    play.els.animal.dataset.mood = mood;
   }
 
   // ---------- Purse ----------
@@ -248,7 +251,7 @@ function createGame(container, ctx) {
 
   function addCoin(value, button) {
     // The counter holds 20 francs at most: a coin that would go over bounces back
-    // into the purse (the soft "can't" sound; "the counter is full" once per customer).
+    // into the purse (the soft "can't" sound; "the counter is full" once per sale).
     if (total(sale.tray) + value > TRAY_MAX) {
       sfx.boing();
       restartAnimation(button, 'mk-bounce');
@@ -339,9 +342,9 @@ function createGame(container, ctx) {
     }, delay);
   }
 
-  // Every coin on the counter goes to the customer.
-  function coinsToCustomer() {
-    play.els.tray.querySelectorAll('.mk-stack').forEach((el) => fly(Number(el.dataset.value), el, play.els.customer));
+  // Every coin on the counter goes to the seller.
+  function coinsToSeller() {
+    play.els.tray.querySelectorAll('.mk-stack').forEach((el) => fly(Number(el.dataset.value), el, play.els.animal));
     sale.tray = [];
     later(renderTray, 60); // after the flying copies are made
   }
@@ -362,19 +365,24 @@ function createGame(container, ctx) {
     else notEnough(diff);
   }
 
-  // Too much is not a mistake: the customer takes the coins and gives the extra back
-  // (it flies to the purse), then it's a sale — but never with the bonus star.
+  // Too much is not a mistake: the seller takes the coins and gives the extra back
+  // (it flies to the purse with a happy sound), then the sale is done — without a
+  // star (owner's decision: stars only for the exact amount).
   function tooMuch(diff) {
     sale.busy = true;
     sfx.pop();
-    coinsToCustomer();
+    coinsToSeller();
     remark(tn('market.tooMuch', diff));
     const change = fewestCoinList(diff, play.level.coins);
-    change.forEach((value, i) => fly(value, play.els.customer, purseCoin(value), FLY_MS + 300 + i * CHANGE_GAP_MS));
+    change.forEach((value, i) => {
+      const delay = FLY_MS + 300 + i * CHANGE_GAP_MS;
+      fly(value, play.els.animal, purseCoin(value), delay);
+      later(sfx.twinkle, delay + FLY_MS); // each coin of change lands in the purse
+    });
     later(() => sold(true), FLY_MS * 2 + 600 + change.length * CHANGE_GAP_MS);
   }
 
-  // Not enough: the customer waits kindly. Hints get stronger each time.
+  // Not enough: the seller waits kindly. Hints get stronger each time.
   function notEnough(diff) {
     sale.misses++;
     setMood('wait');
@@ -398,7 +406,7 @@ function createGame(container, ctx) {
   function sold(overpaid) {
     sale.busy = true;
     const coinCount = sale.tray.length;
-    if (!overpaid) coinsToCustomer();
+    if (!overpaid) coinsToSeller();
     setMood('happy');
     play.els.scene.querySelectorAll('.mk-item').forEach((el) => el.classList.add('mk-sold'));
     sfx.chime();
@@ -416,13 +424,14 @@ function createGame(container, ctx) {
       play.saidFewer = true; // said at most once per level: the crown does the rest
       remark(t('market.fewer'));
     } else if (!overpaid) {
-      // (After too much, the customer is still saying how much it was: no talking over it.)
+      // (After too much, the seller is still saying how much it was: no talking over it.)
       remark(t(`market.thanks.${pickOne(3)}`));
     }
 
-    // Every 5th star also brings a sticker (so two stars can bring one).
-    const stickers = [ctx.rewards.star(play.els.customer)];
-    if (bonus) later(() => stickers.push(ctx.rewards.star(play.els.customer)), BONUS_STAR_DELAY);
+    // A star only for the exact amount. Every 5th star also brings a sticker (so two
+    // stars can bring one).
+    const stickers = overpaid ? [] : [ctx.rewards.star(play.els.animal)];
+    if (bonus) later(() => stickers.push(ctx.rewards.star(play.els.animal)), BONUS_STAR_DELAY);
 
     later(async () => {
       for (const sticker of stickers.filter(Boolean)) {
@@ -431,7 +440,7 @@ function createGame(container, ctx) {
       }
       if (destroyed) return;
       play.index++;
-      if (play.index < play.level.customers) startCustomer();
+      if (play.index < play.level.rounds) startSale();
       else levelDone();
     }, CELEBRATE_MS + (bonus ? BONUS_STAR_DELAY : 0));
   }
@@ -445,7 +454,7 @@ function createGame(container, ctx) {
     sfx.fanfare();
     container.replaceChildren(h('div', { class: 'mk-done' },
       perfect ? h('div', { class: 'mk-done-crown', html: art.ICON_CROWN }) : null,
-      h('div', { class: 'mk-done-customer', 'data-mood': 'happy', html: art.animal(sale.animal) }),
+      h('div', { class: 'mk-done-animal', 'data-mood': 'happy', html: art.animal(sale.animal) }),
       h('button', {
         class: 'mk-continue', type: 'button', 'aria-label': t('market.continue'),
         html: art.ICON_NEXT, onclick: () => { sfx.pop(); showLevels(); },

@@ -79,7 +79,7 @@ test('levels: ids, coins and prices follow the rules', () => {
     assert.ok(level.coins.length && level.coins.every((c) => COINS.includes(c)), `level ${level.id}: known coins`);
     const [min, max] = level.prices;
     assert.ok(min >= 1 && min <= max && max <= 10, `level ${level.id}: prices 1–10`);
-    if (!level.free) assert.ok(level.customers >= 1, `level ${level.id}: has customers`);
+    if (!level.free) assert.ok(level.rounds >= 1, `level ${level.id}: has rounds`);
   }
 });
 
@@ -123,9 +123,9 @@ test('seller level: one 5-franc coin, prices 1–4, all the change can be given 
   }
 });
 
-test('the free shop gives no stars: it has no customers to count', () => {
+test('the free shop gives no stars: it has no rounds to count', () => {
   const level = LEVELS.find((l) => l.free);
-  assert.ok(level && level.customers === undefined);
+  assert.ok(level && level.rounds === undefined);
 });
 
 test('nextBasket: never the same total twice in a row', () => {
@@ -134,7 +134,7 @@ test('nextBasket: never the same total twice in a row', () => {
     let previous = null;
     for (let i = 0; i < 200; i++) {
       const basket = nextBasket(level, previous, rng);
-      assert.notEqual(total(basket), previous, `level ${level.id}, customer ${i}`);
+      assert.notEqual(total(basket), previous, `level ${level.id}, sale ${i}`);
       previous = total(basket);
     }
   }
@@ -167,6 +167,8 @@ test('strings: the same keys in fr, es and en, and a line for every item', async
   assert.deepEqual(Object.keys(STRINGS.es).sort(), fr);
   assert.deepEqual(Object.keys(STRINGS.en).sort(), fr);
   const { ITEM_IDS } = await import('../games/market/art.js');
-  for (const id of ITEM_IDS) assert.ok(STRINGS.fr[`market.want.${id}`], `market.want.${id}`);
+  for (const id of ITEM_IDS) {
+    for (const form of ['one', 'other']) assert.ok(STRINGS.fr[`market.offer.${id}.${form}`], `market.offer.${id}.${form}`);
+  }
   for (const level of LEVELS) if (level.intro) assert.ok(STRINGS.fr[level.intro], level.intro);
 });

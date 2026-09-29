@@ -33,6 +33,19 @@ async function expectStacks(page, expected, sum) {
   }
 }
 
+// The test player's stars, as saved on the device.
+async function savedStars(page) {
+  return page.evaluate(() => JSON.parse(localStorage.getItem('petits-labos')).profiles[0].rewards.stars);
+}
+
+async function priceShown(page) {
+  return Number(await page.locator('.mk-tag').first().getAttribute('data-price'));
+}
+
+async function waitHappySeller(page) {
+  await page.waitForFunction(() => document.querySelector('.mk-animal')?.dataset.mood === 'happy', null, { timeout: 8000 });
+}
+
 export default {
   touch: ['.mk-coin', '.mk-stack', '.mk-pay', '.mk-level-btn'],
 
@@ -86,16 +99,17 @@ export default {
         for (let i = 0; i < 3; i++) await kit.tap(page, '.mk-pay');
         if (!await page.locator('.mk-dot.goal').count()) throw new Error('no red circles');
         if (!await page.locator('.mk-purse .mk-coin.mk-hint').count()) throw new Error('no wiggling coins');
-        if (await page.locator('.mk-customer').getAttribute('data-mood') !== 'wait') throw new Error('customer not waiting');
+        if (await page.locator('.mk-animal').getAttribute('data-mood') !== 'wait') throw new Error('seller not waiting');
       },
     },
   ],
 
-  // Level 2: take back a specific value, then pay the exact price (2 + 1 + 1…) and
-  // wait for the happy customer.
+  // Level 2: take back a specific value, then pay the exact price (1 + 1 + …): happy
+  // seller and one more star. Then the next sale: pay 1 franc too much → the sale is
+  // done (happy seller) but no star.
   async offline(page, kit) {
     await openLevel(page, kit, 2);
-    const price = Number(await page.locator('.mk-tag').first().getAttribute('data-price'));
+    let price = await priceShown(page);
     if (!(price >= 2 && price <= 6)) throw new Error(`unexpected price ${price}`);
     await putCoins(page, kit, [2, 1]);
     await expectStacks(page, { 1: 1, 2: 1 }, 3);
@@ -103,7 +117,20 @@ export default {
     await expectStacks(page, { 1: 1 }, 1);
     await putCoins(page, kit, Array(price - 1).fill(1));
     await expectStacks(page, { 1: price }, price);
+    const before = await savedStars(page);
     await kit.tap(page, '.mk-pay');
-    await page.waitForFunction(() => document.querySelector('.mk-customer')?.dataset.mood === 'happy', null, { timeout: 5000 });
+    await waitHappySeller(page);
+    if (await savedStars(page) !== before + 1) throw new Error('exact payment: expected one more star');
+
+    // Next sale (new seller, calm again).
+    await page.waitForFunction(() => document.querySelector('.mk-animal')?.dataset.mood === 'neutral'
+      && !document.querySelector('.mk-stack'), null, { timeout: 10000 });
+    price = await priceShown(page);
+    await putCoins(page, kit, Array(price + 1).fill(1));
+    const stars = await savedStars(page);
+    await kit.tap(page, '.mk-pay');
+    await waitHappySeller(page);
+    await kit.wait(page, 500);
+    if (await savedStars(page) !== stars) throw new Error('too much: expected no star');
   },
 };
