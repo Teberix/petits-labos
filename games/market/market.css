@@ -140,6 +140,11 @@
 .mk-stall:has(.mk-item + .mk-item) .mk-animal { left: 1cqw; width: 54cqh; bottom: 19cqh; }
 .mk-item-art svg { display: block; width: 100%; height: auto; }
 
+/* Seller level: the customer's coin lies on the counter, in front of it. */
+.mk-paid { position: absolute; z-index: 2; left: 28cqw; bottom: 5cqh; width: 24cqh; filter: drop-shadow(0 0.2rem 0 rgba(43, 33, 65, 0.25)); }
+.mk-paid svg { display: block; width: 100%; height: auto; }
+.mk-paid.mk-gone { visibility: hidden; }
+
 /* Moods: one mouth per mood. */
 .mk-mouth-happy, .mk-mouth-wait { display: none; }
 [data-mood="happy"] .mk-mouth-neutral, [data-mood="wait"] .mk-mouth-neutral { display: none; }
@@ -295,6 +300,9 @@
 
 /* Sold: the items hop down towards the child's purse. */
 .mk-item.mk-sold { animation: mk-sold 0.8s ease-in forwards; }
+.mk-item.mk-sold-away { animation: mk-sold-away 0.8s ease-in forwards; } /* seller level: to the customer */
+/* Seller level: the price's dots, already in the ten-frame (the change counts on from them). */
+.mk-dot.on.price { background: #E8453C; }
 
 /* ---------- Level done ---------- */
 
@@ -342,5 +350,6 @@
 @keyframes mk-hint { 25% { transform: translateY(-12%) rotate(-8deg); } 75% { transform: translateY(-12%) rotate(8deg); } }
 @keyframes mk-goal { 50% { box-shadow: inset 0 0 0 3px #E8453C, 0 0 0 3px #FFC9C4; } }
 @keyframes mk-sold { 40% { transform: translateY(-25%) scale(1.1); } to { transform: translateY(90%) scale(0.3); opacity: 0; } }
+@keyframes mk-sold-away { 40% { transform: translateY(-25%) scale(1.1); } to { transform: translateX(-120%) scale(0.3); opacity: 0; } }
 @keyframes mk-pulse { 50% { transform: scale(1.08); } }
 @keyframes mk-bounce { 35% { transform: translateY(-35%); } 65% { transform: translateY(6%); } 85% { transform: translateY(-4%); } }

@@ -10,6 +10,10 @@
 //                          extra back ("2 francs de trop"), the sale is done — but a
 //                          star only comes with the exact amount;
 //             not enough → the seller waits kindly ("encore 1 franc").
+// Seller level (roles swapped): the animal is the customer, pays with one 5-franc coin,
+//           and the child gives the change from the till (the purse). Same button,
+//           same reactions; the ten-frame starts with the price's dots so the change
+//           is "counting up to 5".
 // On the counter, coins are grouped in one stack per value ("×7"); tapping a stack (or
 // dragging it back to the purse) gives one coin of that value back.
 // Rewards: 1 star per exact payment, +1 bonus star when it used the fewest coins
@@ -25,15 +29,15 @@ import { speak } from '../../js/audio.js';
 import { draggable } from '../../js/dragdrop.js';
 import {
   COINS, TRAY_MAX, total, compare, fewestCoins, fewestCoinList, hasChoice, frameDots, stacks,
-  removeOne, nextBasket, pickOther, pickSome,
+  removeOne, nextBasket, pickOther, pickSome, saleTarget,
 } from './money.js';
 import { pluralKey } from './plural.js';
 import { LEVELS } from './levels.js';
 import STRINGS from './strings.js';
 import * as art from './art.js';
 
-// Seller (step d) and free shop (step e) levels are hidden until they are built.
-const PLAYABLE = LEVELS.filter((level) => !level.seller && !level.free);
+// The free shop (step e) is hidden until it is built.
+const PLAYABLE = LEVELS.filter((level) => !level.free);
 
 const FLY_MS = 450;          // a coin flying between the counter, the seller and the purse
 const CHANGE_GAP_MS = 180;   // between two coins of change
@@ -167,6 +171,8 @@ function createGame(container, ctx) {
       animal: pickOther(art.ANIMAL_IDS, sale?.animal),
       basket: prices.map((price, i) => ({ item: items[i], price })),
       price: total(prices),
+      target: saleTarget(level, total(prices)), // what must end up on the counter
+      seller: Boolean(level.seller),            // roles swapped: the child gives change
       tray: [],           // the coins on the counter, in the order they were put down
       misses: 0,          // "not enough" so far (for the hints)
       showTarget: false,  // hint 2: red circles to fill on the counter
@@ -178,7 +184,7 @@ function createGame(container, ctx) {
     renderPurse();
     renderTray();
 
-    let line = `${t('market.hello')} ${pricesLine()}`;
+    let line = `${t('market.hello')} ${orderLine()}`;
     if (play.index === 0) {
       if (level.id === PLAYABLE[0].id) line += ' ' + t('market.howTo');
       if (level.intro) line += ' ' + t(level.intro);
@@ -193,6 +199,15 @@ function createGame(container, ctx) {
     const lines = sale.basket.map(({ item, price }) => tn(`market.costs.${item}`, price));
     if (sale.basket.length > 1) lines.push(t('market.inTotal'));
     return lines.join(' ');
+  }
+
+  // What the animal says after "Bonjour !". Buying: the price(s). Seller level (the
+  // animal is the customer): "Je voudrais la pomme. La pomme coûte 3 francs. Je te
+  // donne 5 francs, tu me rends la monnaie ?"
+  function orderLine() {
+    if (!sale.seller) return pricesLine();
+    const { item } = sale.basket[0];
+    return [t(`market.wants.${item}`), pricesLine(), tn('market.pays', play.level.paidWith)].join(' ');
   }
 
   // ---------- The stall: the seller, counter, items with their price tags ----------
@@ -210,9 +225,14 @@ function createGame(container, ctx) {
     const goods = sale.basket.map(({ item, price }) => h('div', { class: 'mk-item' },
       h('div', { class: 'mk-item-art', html: art.item(item) }),
       priceTag(price)));
-    play.els.scene.replaceChildren(
-      h('div', { class: 'mk-stall' }, seller, h('div', { class: 'mk-counter' }), h('div', { class: 'mk-goods' }, goods)));
+    // Seller level: the customer's coin (e.g. 5 francs) lies on the counter, in front of it.
+    const paid = sale.seller
+      ? h('div', { class: 'mk-paid', 'data-value': play.level.paidWith, html: art.coin(play.level.paidWith) })
+      : null;
+    play.els.scene.replaceChildren(h('div', { class: `mk-stall${sale.seller ? ' mk-selling' : ''}` },
+      seller, h('div', { class: 'mk-counter' }), paid, h('div', { class: 'mk-goods' }, goods)));
     play.els.animal = seller;
+    play.els.paid = paid;
   }
 
   function setMood(mood) {
@@ -224,7 +244,7 @@ function createGame(container, ctx) {
   function renderPurse() {
     purseCleanups.forEach((stop) => stop());
     purseCleanups = [];
-    const hinted = sale.coinHint ? fewestCoinList(sale.price, play.level.coins) : [];
+    const hinted = sale.coinHint ? fewestCoinList(sale.target, play.level.coins) : [];
     const coins = COINS.filter((value) => play.level.coins.includes(value)).map((value) => {
       const el = h('button', {
         class: `mk-coin mk-coin-${value}${hinted.includes(value) ? ' mk-hint' : ''}`,
@@ -242,9 +262,9 @@ function createGame(container, ctx) {
       }));
       return el;
     });
+    const label = t(sale.seller ? 'market.giveChange' : 'market.pay');
     const payButton = h('button', {
-      class: 'mk-pay', type: 'button', 'aria-label': t('market.pay'), title: t('market.pay'),
-      html: art.ICON_PAY, onclick: pay,
+      class: 'mk-pay', type: 'button', 'aria-label': label, title: label, html: art.ICON_PAY, onclick: pay,
     });
     play.els.purse.replaceChildren(...coins, payButton);
   }
@@ -283,7 +303,9 @@ function createGame(container, ctx) {
 
   // The counter: one stack per coin value (a coin + "×7"), the total, and two
   // ten-frames (the second one only shows above 10). Each coin lights as many dots as
-  // it's worth, in its colour. Hint 2 outlines the price in red circles.
+  // it's worth, in its colour. Hint 2 outlines the goal in red circles.
+  // Seller level: the price is already in the frame (red dots), and the change fills
+  // up from there — so giving change is counting up from the price to 5.
   // `added` = the value just put down (its stack pops in).
   function renderTray(added = null) {
     trayCleanups.forEach((stop) => stop());
@@ -309,11 +331,13 @@ function createGame(container, ctx) {
       return el;
     });
     const lit = frameDots(tray);
-    const goal = sale.showTarget ? sale.price : 0;
+    const offset = sale.seller ? sale.price : 0; // dots already taken by the price
+    const goal = sale.showTarget ? offset + sale.target : 0;
     const frame = (from) => h('span', { class: 'mk-frame' },
       Array.from({ length: 10 }, (_, i) => {
-        const coinIndex = lit[from + i];
         const isGoal = from + i < goal ? ' goal' : '';
+        if (from + i < offset) return h('span', { class: `mk-dot on price${isGoal}` });
+        const coinIndex = lit[from + i - offset];
         if (coinIndex === undefined) return h('span', { class: `mk-dot${isGoal}` });
         return h('span', {
           class: `mk-dot on${coinIndex % 2 ? ' alt' : ''}${isGoal}`,
@@ -324,7 +348,7 @@ function createGame(container, ctx) {
       h('span', { class: 'mk-pile' }, pile),
       h('span', { class: 'mk-sum' },
         h('span', { class: 'mk-total' }, String(sum)),
-        h('span', { class: `mk-frames${sum > 10 ? ' two' : ''}` }, frame(0), frame(10))),
+        h('span', { class: `mk-frames${offset + sum > 10 ? ' two' : ''}` }, frame(0), frame(10))),
     );
   }
 
@@ -348,8 +372,8 @@ function createGame(container, ctx) {
     }, delay);
   }
 
-  // Every coin on the counter goes to the seller.
-  function coinsToSeller() {
+  // Every coin on the counter goes to the animal (the seller, or the customer's change).
+  function coinsToAnimal() {
     play.els.tray.querySelectorAll('.mk-stack').forEach((el) => fly(Number(el.dataset.value), el, play.els.animal));
     sale.tray = [];
     later(renderTray, 60); // after the flying copies are made
@@ -365,20 +389,21 @@ function createGame(container, ctx) {
       play.els.purse.querySelectorAll('.mk-coin').forEach((c) => restartAnimation(c, 'mk-wiggle'));
       return;
     }
-    const { result, diff } = compare(total(sale.tray), sale.price);
+    const { result, diff } = compare(total(sale.tray), sale.target);
     if (result === 'exact') sold(false);
     else if (result === 'over') tooMuch(diff);
     else notEnough(diff);
   }
 
-  // Too much is not a mistake: the seller takes the coins and gives the extra back
+  // Too much is not a mistake: the animal takes the coins and gives the extra back
   // (it flies to the purse with a happy sound), then the sale is done — without a
-  // star (owner's decision: stars only for the exact amount).
+  // star (owner's decision: stars only for the exact amount). Seller level: too much
+  // change, and the honest customer gives the extra back.
   function tooMuch(diff) {
     sale.busy = true;
     sfx.pop();
-    coinsToSeller();
-    remark(tn('market.tooMuch', diff));
+    coinsToAnimal();
+    remark(tn(sale.seller ? 'market.changeTooMuch' : 'market.tooMuch', diff));
     const change = fewestCoinList(diff, play.level.coins);
     change.forEach((value, i) => {
       const delay = FLY_MS + 300 + i * CHANGE_GAP_MS;
@@ -402,25 +427,31 @@ function createGame(container, ctx) {
     } else if (sale.misses >= MISSES_BEFORE_TARGET && !sale.showTarget) {
       sale.showTarget = true;
       renderTray();
-      remark(t('market.hintTarget'));
+      remark(t(sale.seller ? 'market.hintChange' : 'market.hintTarget'));
     } else {
       // Hint 1: what's missing, and the price(s) again.
-      remark(`${tn('market.more', diff)} ${pricesLine()}`);
+      remark(`${tn('market.more', diff)} ${orderLine()}`);
     }
   }
 
   function sold(overpaid) {
     sale.busy = true;
     const coinCount = sale.tray.length;
-    if (!overpaid) coinsToSeller();
+    if (!overpaid) coinsToAnimal();
     setMood('happy');
-    play.els.scene.querySelectorAll('.mk-item').forEach((el) => el.classList.add('mk-sold'));
+    // Buying: the goods come to the child. Selling: they go to the customer, and the
+    // customer's coin goes into the till (the purse).
+    play.els.scene.querySelectorAll('.mk-item').forEach((el) => el.classList.add(sale.seller ? 'mk-sold-away' : 'mk-sold'));
+    if (sale.seller) {
+      fly(play.level.paidWith, play.els.paid, play.els.purse);
+      play.els.paid.classList.add('mk-gone');
+    }
     sfx.chime();
 
     // Bonus star: paid exactly with the fewest coins possible (only when there was a
     // choice, and not after the coin hint).
-    const choice = hasChoice(sale.price, play.level.coins);
-    const fewest = fewestCoins(sale.price, play.level.coins);
+    const choice = hasChoice(sale.target, play.level.coins);
+    const fewest = fewestCoins(sale.target, play.level.coins);
     const bonus = choice && !overpaid && !sale.coinHint && coinCount === fewest;
     if (choice) play.hadChoice = true;
     if (choice && !bonus) play.perfectRun = false;

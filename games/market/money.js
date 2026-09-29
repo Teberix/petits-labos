@@ -62,6 +62,12 @@ export function compare(paid, price) {
   return paid > price ? { result: 'over', diff: paid - price } : { result: 'under', diff: price - paid };
 }
 
+// What the child must put on the counter: the price when she buys; the change when
+// she is the seller (the customer paid with one `paidWith` coin).
+export function saleTarget(level, price) {
+  return level.seller ? level.paidWith - price : price;
+}
+
 // Every basket a level can ask for: a list of prices (one per item). One-item levels:
 // each price of the range. Several items: every combination whose total is in
 // `level.total` (the order of the items doesn't matter, so [1,2] but not [2,1]).

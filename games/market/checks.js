@@ -123,6 +123,43 @@ export default {
       },
     },
     {
+      // Seller level: the customer's 5-franc coin on the counter, the price's dots
+      // already in the ten-frame, and the exact change given with 1 and 2 franc coins.
+      name: 'level 5 (seller), exact change on the counter',
+      async setup(page, kit) {
+        await openLevel(page, kit, 5);
+        const price = await priceShown(page);
+        if (!(price >= 1 && price <= 4)) throw new Error(`unexpected price ${price}`);
+        if (!await page.locator('.mk-paid[data-value="5"]').count()) throw new Error('no 5-franc coin from the customer');
+        const priceDots = await page.locator('.mk-dot.price').count();
+        if (priceDots !== price) throw new Error(`${priceDots} price dots, expected ${price}`);
+        const change = 5 - price;
+        const coins = [...Array(Math.floor(change / 2)).fill(2), ...(change % 2 ? [1] : [])];
+        await putCoins(page, kit, coins);
+        const want = {};
+        for (const c of coins) want[c] = (want[c] ?? 0) + 1;
+        await expectStacks(page, want, change);
+      },
+    },
+    {
+      // Seller level, all hints (red circles up to 5, wiggling coins). One coin of
+      // 1 franc must not be the exact change, so a sale with change 1 is done first.
+      name: 'level 5 (seller), all hints on screen',
+      async setup(page, kit) {
+        await openLevel(page, kit, 5);
+        if (await priceShown(page) === 4) {
+          await putCoins(page, kit, [1]);
+          await kit.tap(page, '.mk-pay');
+          await waitHappySeller(page);
+          await page.waitForFunction(() => document.querySelector('.mk-animal')?.dataset.mood === 'neutral', null, { timeout: 10000 });
+        }
+        await putCoins(page, kit, [1]);
+        for (let i = 0; i < 3; i++) await kit.tap(page, '.mk-pay');
+        if (await page.locator('.mk-dot.goal').count() !== 5) throw new Error('expected 5 red circles (up to 5 francs)');
+        if (!await page.locator('.mk-purse .mk-coin.mk-hint').count()) throw new Error('no wiggling coins');
+      },
+    },
+    {
       // (Level 3 prices are 3–10, so one coin of 1 franc is never enough.)
       name: 'level 3, all hints on screen (red circles + wiggling coins)',
       async setup(page, kit) {

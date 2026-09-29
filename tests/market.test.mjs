@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   COINS, TRAY_MAX, total, canPay, fewestCoins, fewestCoinList, hasChoice, compare,
-  possibleBaskets, nextBasket, pickOther, pickSome, frameDots, stacks, removeOne,
+  possibleBaskets, nextBasket, pickOther, pickSome, frameDots, stacks, removeOne, saleTarget,
 } from '../games/market/money.js';
 import { pluralKey } from '../games/market/plural.js';
 import { LEVELS } from '../games/market/levels.js';
@@ -123,6 +123,17 @@ test('seller level: one 5-franc coin, prices 1–4, all the change can be given 
   }
 });
 
+test('saleTarget: the price when buying, the change when selling', () => {
+  const buying = LEVELS.find((l) => l.id === 3);
+  const selling = LEVELS.find((l) => l.seller);
+  assert.equal(saleTarget(buying, 7), 7);
+  assert.equal(saleTarget(selling, 3), 2);
+  for (const [price] of possibleBaskets(selling)) {
+    const change = saleTarget(selling, price);
+    assert.ok(change >= 1 && canPay(change, selling.coins), `price ${price}: change ${change}`);
+  }
+});
+
 test('the free shop gives no stars: it has no rounds to count', () => {
   const level = LEVELS.find((l) => l.free);
   assert.ok(level && level.rounds === undefined);
@@ -169,6 +180,7 @@ test('strings: the same keys in fr, es and en, and a line for every item', async
   const { ITEM_IDS } = await import('../games/market/art.js');
   for (const id of ITEM_IDS) {
     for (const form of ['one', 'other']) assert.ok(STRINGS.fr[`market.costs.${id}.${form}`], `market.costs.${id}.${form}`);
+    assert.ok(STRINGS.fr[`market.wants.${id}`], `market.wants.${id}`); // seller level
   }
   for (const level of LEVELS) if (level.intro) assert.ok(STRINGS.fr[level.intro], level.intro);
 });
