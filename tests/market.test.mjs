@@ -179,8 +179,6 @@ test('strings: the same keys in fr, es and en, and a line for every item', async
   assert.deepEqual(Object.keys(STRINGS.en).sort(), fr);
   const { ITEM_IDS } = await import('../games/market/art.js');
   for (const id of ITEM_IDS) {
-    for (const form of ['one', 'other']) assert.ok(STRINGS.fr[`market.costs.${id}.${form}`], `market.costs.${id}.${form}`);
-    assert.ok(STRINGS.fr[`market.wants.${id}`], `market.wants.${id}`); // seller level
-  }
+    for (const form of ['one', 'other']) assert.ok(STRINGS.fr[`market.costs.${id}.${form}`], `market.costs.${id}.${form}`);  }
   for (const level of LEVELS) if (level.intro) assert.ok(STRINGS.fr[level.intro], level.intro);
 });

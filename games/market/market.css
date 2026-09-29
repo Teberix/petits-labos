@@ -301,8 +301,9 @@
 /* Sold: the items hop down towards the child's purse. */
 .mk-item.mk-sold { animation: mk-sold 0.8s ease-in forwards; }
 .mk-item.mk-sold-away { animation: mk-sold-away 0.8s ease-in forwards; } /* seller level: to the customer */
-/* Seller level: the price's dots, already in the ten-frame (the change counts on from them). */
-.mk-dot.on.price { background: #E8453C; }
+/* Seller level: the price's dots, already in the ten-frame (the change counts on from
+   them). Neutral grey: red is only for the hint circles. */
+.mk-dot.on.price { background: #A8A2B8; }
 
 /* ---------- Level done ---------- */
 

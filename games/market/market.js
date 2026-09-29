@@ -184,7 +184,8 @@ function createGame(container, ctx) {
     renderPurse();
     renderTray();
 
-    let line = `${t('market.hello')} ${orderLine()}`;
+    // Buying: "Bonjour ! La pomme coûte 3 francs." Selling: the customer's line only.
+    let line = sale.seller ? orderLine() : `${t('market.hello')} ${orderLine()}`;
     if (play.index === 0) {
       if (level.id === PLAYABLE[0].id) line += ' ' + t('market.howTo');
       if (level.intro) line += ' ' + t(level.intro);
@@ -201,13 +202,11 @@ function createGame(container, ctx) {
     return lines.join(' ');
   }
 
-  // What the animal says after "Bonjour !". Buying: the price(s). Seller level (the
-  // animal is the customer): "Je voudrais la pomme. La pomme coûte 3 francs. Je te
-  // donne 5 francs, tu me rends la monnaie ?"
+  // What the animal says. Buying: the price(s). Seller level (the animal is the
+  // customer): "La pomme coûte 3 francs. Voici 5 francs. Tu me rends la monnaie ?"
   function orderLine() {
     if (!sale.seller) return pricesLine();
-    const { item } = sale.basket[0];
-    return [t(`market.wants.${item}`), pricesLine(), tn('market.pays', play.level.paidWith)].join(' ');
+    return `${pricesLine()} ${tn('market.pays', play.level.paidWith)}`;
   }
 
   // ---------- The stall: the seller, counter, items with their price tags ----------
