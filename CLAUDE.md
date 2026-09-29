@@ -115,6 +115,27 @@ level 3 must use `counts`), `strings.js` = all lines it speaks, `art.js` = SVG,
 Don't use `requestAnimationFrame` for game logic/timers (it pauses in some webviews) —
 use `setTimeout` + CSS animations.
 
+Robot Codeur (`games/robot/`) — 10 levels: 1 straight · 2 corners · 3 rocks · 4 one star ·
+5 two stars + rocks · 6 loop intro · 7 loop + arrow · 8 two loops · 9 loops + rocks + stars ·
+10 free mode (build the grid, then program it; no stars; done after the first success).
+Arrow cards (absolute directions only) + a "repeat ×N" block holding ONE arrow (×2–×5, tap
+the number to change it; 2 slots) → program strip → ▶ run / ⏭ one step. Tap a strip card
+to remove it; ⌫ removes the last card; 🗑 clears all. A bump = a "bug": funny reaction,
+robot goes home, program stays, the faulty card turns orange. Hints: after 2 bugs the next
+correct cell shines, after 4 the whole path shows as footprints. Cards stop at the station
+(extra cards ignored). Bonus star when solved with the fewest cards (a repeat block counts
+1 + its arrow) and without the footprints hint; all puzzles of a level with the bonus →
+crown on the level map. "Could you do it with fewer cards?" is said at most once per level.
+`levels.js` = text-drawn maps (`R G # * .`, max 5×5) + `slots` (≤ 10 arrows only, ≤ 8 with
+repeat: the strip must stay 2 rows of 5 on a 360px phone). **Never hand-write the fewest
+card count** — `fewestCards()` in `program.js` computes it. `program.js` = pure
+interpreter (`run()` → events, `shortestPath()`, `nextCorrectStep()`, `solveWithin()`),
+tested in `tests/robot.test.mjs` (every puzzle solvable, bonus reachable, loop levels
+unsolvable without repeat). Layout: palette row / strip / buttons are one column 5 cards
+wide, under the board (portrait) or beside it (landscape). All CSS classes start with
+`rb-`. Short landscape shrinks the top bar via `:has(.rb-play)` (only while a level is on
+screen).
+
 Conventions:
 - **All URLs relative** (`./sw.js`, `css/base.css`) — the app lives at `/petits-labos/`.
 - **New/removed app file → `node tools/update-precache.mjs`** (release does it too).
@@ -126,13 +147,22 @@ Conventions:
 - Storage format change → bump `SCHEMA_VERSION` + add a migration in `js/storage.js`.
 - Rewards: 1 star per success (games call `ctx.rewards.star(el)`), a random new sticker
   every 5 stars (`ctx.rewards.showSticker` — await it before moving on). No scores,
-  no ratings, never take stars away. Free-play modes give no stars.
+  never take stars away. Free-play modes give no stars.
+  Exception (owner's decision, 2026-09-28): a game may give **+1 bonus star** for an
+  especially efficient solution (Robot Codeur: fewest cards), and mark a level done that
+  way with a crown. Always positive: a normal success still gets its star, nothing is
+  ever shown as a failure, and "try to do better" is said at most once per level.
 
 ## Local dev
 
 ```bash
 node tools/serve.mjs          # → http://localhost:8080/petits-labos/ (same sub-path as Pages)
+node tools/serve.mjs --lan    # also on the WiFi: prints http://<this-pc-ip>:8080/petits-labos/
 ```
+- Default = this computer only. `--lan` listens on all interfaces for tablet playtests
+  (Windows may ask to allow Node through the firewall). Over the LAN there is **no
+  service worker** (browsers only allow it on localhost/HTTPS): play-testing works,
+  offline/updates don't. Hidden files/folders (`.git`, `.claude`…) are never served.
 - The service worker caches everything, so edits don't show on reload. During development
   use **`http://localhost:8080/petits-labos/?nosw`**: it unregisters the SW and clears
   caches (localhost only). Drop `?nosw` to test offline/update behaviour.

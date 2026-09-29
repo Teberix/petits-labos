@@ -1,0 +1,303 @@
+/* "Robot Codeur" — layout + animations. All classes start with rb- so nothing
+   clashes with other games' stylesheets (they stay loaded after a game closes).
+
+   Portrait:   [ board  ]        Landscape:  [board | palette ]
+               [palette ]                    [board | strip   ]
+               [ strip  ]                    [board | controls]
+               [controls]
+   Palette, strip and buttons are always one column 5 cards wide (--rb-row): on a
+   360px phone that's exactly the screen width. The strip is at most 2 rows.
+   Cards and buttons never go below 64px; the board takes whatever space is left
+   (its cells can shrink — they're never dragged). Nothing scrolls during play. */
+
+.rb-play, .rb-levels, .rb-done {
+  --rb-card: clamp(64px, 11vmin, 88px);
+  --rb-gap: 0.375rem;
+  --rb-row: calc(5 * var(--rb-card) + 4 * 0.25rem + 0.5rem);
+}
+
+/* ---------- Level map ---------- */
+
+.rb-levels {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto; /* many levels on a small landscape phone: scroll the MAP, never the game */
+  display: flex;
+  flex-wrap: wrap;
+  align-content: center;
+  justify-content: center;
+  gap: var(--gap);
+  padding: var(--gap);
+}
+.rb-level-btn {
+  position: relative;
+  width: clamp(6rem, 24vmin, 10rem);
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  border: none;
+  border-radius: 1.5rem;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+.rb-level-btn:active { transform: translateY(0.2rem); box-shadow: none; }
+.rb-level-btn.done { background: #E7F8EE; }
+.rb-level-btn.locked { opacity: 0.55; }
+.rb-level-num { font-size: clamp(2rem, 8vmin, 3.5rem); font-weight: 800; color: #3C8DC4; }
+.rb-level-lock { position: absolute; bottom: 0.6rem; width: 1.8rem; height: 1.8rem; color: var(--ink-soft); }
+/* Crown: every puzzle of the level solved with the fewest cards. */
+.rb-level-crown { position: absolute; top: -0.9rem; width: 2.8rem; filter: drop-shadow(0 0.15rem 0 rgba(0, 0, 0, 0.15)); }
+.rb-level-crown svg, .rb-done-crown svg { display: block; width: 100%; height: auto; }
+.rb-done-crown { width: clamp(4rem, 16vmin, 7rem); animation: rb-pulse 1.2s ease-in-out infinite; }
+
+/* ---------- Play layout ---------- */
+
+.rb-play {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr) auto auto auto;
+  grid-template-areas: "board" "palette" "strip" "controls";
+  justify-items: center;
+  gap: var(--rb-gap);
+  padding: 0 0.5rem 0.5rem;
+}
+@media (orientation: landscape) {
+  .rb-play {
+    grid-template-columns: minmax(0, 1fr) auto;
+    /* The empty rows above and below keep the right column vertically centred. */
+    grid-template-rows: minmax(0, 1fr) auto auto auto minmax(0, 1fr);
+    grid-template-areas: "board ." "board palette" "board strip" "board controls" "board .";
+    column-gap: var(--gap);
+    padding-inline: var(--gap);
+  }
+}
+
+/* Short landscape screens (phones on their side): every pixel of height counts, so
+   while a level is on screen the top bar shrinks to 64px buttons. (:has() keeps that
+   change to this game only, even though this stylesheet stays loaded.) */
+@media (orientation: landscape) and (max-height: 420px) {
+  #app[data-screen="game"]:has(.rb-play) .top-bar { padding-block: 0.25rem; }
+  #app[data-screen="game"]:has(.rb-play) .top-bar .icon-btn { width: 64px; height: 64px; padding: 0.8rem; }
+}
+
+/* The board is as big as its area allows, keeping square cells. The area is a size
+   container, so the board can use its width (cqw) and height (cqh). */
+.rb-board-area {
+  grid-area: board;
+  justify-self: stretch; /* the other items are centred; this one takes the full width */
+  min-width: 0;
+  min-height: 0;
+  container-type: size;
+  display: grid;
+  place-items: center;
+}
+.rb-board {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(var(--cols), 1fr);
+  grid-template-rows: repeat(var(--rows), 1fr);
+  width: min(100cqw, calc(100cqh * var(--cols) / var(--rows)));
+  aspect-ratio: var(--cols) / var(--rows);
+  border: 0.3rem solid #B9DDB4;
+  border-radius: 1rem;
+  overflow: hidden;
+  background: #EAF6E9;
+}
+.rb-cell { position: relative; }
+.rb-cell.odd { background: #DDF0DB; }
+.rb-thing { position: absolute; inset: 8%; pointer-events: none; }
+.rb-thing svg { display: block; width: 100%; height: 100%; }
+.rb-robot svg { display: block; width: 88%; height: 88%; }
+
+/* The robot sits above the cells; --x/--y (set by robot.js) are in cells. */
+.rb-robot {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 2;
+  width: calc(100% / var(--cols));
+  height: calc(100% / var(--rows));
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  transform: translate(calc(var(--x) * 100%), calc(var(--y) * 100%));
+  transition: transform 0.42s ease-in-out;
+}
+.rb-robot.rb-instant { transition: none; }
+.rb-robot.rb-slow { transition-duration: 0.8s; }
+.rb-pupils { transform: translate(calc(var(--lx, 0) * 4px), calc(var(--ly, 0) * 3px)); transition: transform 0.2s; }
+
+/* Moods: one mouth per mood. */
+.rb-mouth-happy, .rb-mouth-oops { display: none; }
+[data-mood="happy"] .rb-mouth-neutral, [data-mood="oops"] .rb-mouth-neutral { display: none; }
+[data-mood="happy"] .rb-mouth-happy, [data-mood="oops"] .rb-mouth-oops { display: inline; }
+.rb-robot[data-mood="happy"] svg { animation: rb-hop 0.5s ease-in-out 3; }
+
+/* Bump: lunge towards the obstacle (--dx/--dy), bounce back, wobble. */
+.rb-robot.rb-bump svg { animation: rb-bump 0.55s ease-out; }
+.rb-robot.rb-shrug svg { animation: rb-shake 0.5s ease-in-out; }
+
+/* Success: the station glows and the antenna light blinks. */
+.rb-charging .rb-station { animation: rb-glow 0.6s ease-in-out infinite alternate; }
+.rb-charging .rb-bulb { animation: rb-blink 0.3s steps(2) infinite; }
+
+.rb-star.collected { animation: rb-collect 0.45s ease-in forwards; }
+
+/* Hints. */
+.rb-cell.rb-hint-next { background: #FFF1B8; animation: rb-cell-glow 1s ease-in-out infinite; }
+.rb-cell.rb-hint-path { background: #FFF8D9; }
+.rb-feet { inset: 10%; animation: rb-feet-in 0.4s ease-out both; }
+
+/* ---------- Cards ---------- */
+
+.rb-card, .rb-slot {
+  width: var(--rb-card);
+  height: var(--rb-card);
+  flex: none;
+  border-radius: 1rem;
+}
+.rb-card {
+  display: grid;
+  place-items: center;
+  padding: calc(var(--rb-card) * 0.18); /* (a % padding would follow the container's width) */
+  background: var(--card);
+  box-shadow: 0 0.3rem 0 rgba(43, 33, 65, 0.2);
+  cursor: grab;
+  transition: transform 0.15s;
+}
+.rb-card svg { width: 100%; height: 100%; pointer-events: none; }
+.rb-card.drag-source { opacity: 0.4; }
+.rb-card.drag-ghost { filter: drop-shadow(0 0.5rem 0.4rem rgba(0, 0, 0, 0.25)); }
+.rb-card.rb-running { transform: scale(1.1); box-shadow: 0 0 0 0.3rem #FFD34D; }
+.rb-card.rb-bug { box-shadow: 0 0 0 0.35rem #FF7A00; animation: rb-shake 0.5s ease-in-out 2; }
+.rb-card.rb-pop-in { animation: rb-pop-in 0.25s ease-out; }
+.rb-slot { border: 3px dashed #D6CCE8; }
+
+/* Palette: one row of cards (up to 5). */
+.rb-palette {
+  grid-area: palette;
+  width: var(--rb-row);
+  display: flex;
+  justify-content: center;
+  gap: 0.25rem;
+  border-radius: 1.25rem;
+}
+/* Free mode building pieces: white cards with the picture. */
+.rb-thing-card { background: var(--surface); padding: calc(var(--rb-card) * 0.1); }
+
+/* Program strip: 5 slots per row, 2 rows at most (levels.js keeps slots ≤ 10). */
+.rb-strip {
+  grid-area: strip;
+  width: var(--rb-row);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  padding: 0.25rem;
+  border-radius: 1.25rem;
+  background: #F1EBFA;
+}
+.rb-strip.drop-hover, .rb-palette.drop-hover { background: #E2D6F7; }
+.rb-strip.rb-dim { opacity: 0.45; }
+
+/* Repeat block: [×N card][place for one arrow], exactly 2 slots wide. */
+.rb-block {
+  display: flex;
+  gap: 0.25rem;
+  border-radius: 1rem;
+  background: #CFF0F0;
+  box-shadow: 0 0 0 0.2rem #16A3A3; /* a frame that takes no room */
+}
+.rb-repeat-head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.2rem;
+  padding: 0;
+  color: #fff;
+}
+.rb-times { font-size: calc(var(--rb-card) * 0.36); font-weight: 800; line-height: 1; }
+.rb-dots { display: flex; flex-wrap: wrap; justify-content: center; gap: 3px; max-width: 80%; }
+.rb-dot { width: 7px; height: 7px; border-radius: 50%; background: rgba(255, 255, 255, 0.45); }
+.rb-dot.on { background: #FFD34D; }
+.rb-inner {
+  width: var(--rb-card);
+  height: var(--rb-card);
+  border-radius: 1rem;
+}
+.rb-inner:empty { border: 3px dashed #16A3A3; }
+.rb-inner.drop-hover { background: #9FE0E0; }
+
+/* ---------- Buttons ---------- */
+
+.rb-controls {
+  grid-area: controls;
+  width: var(--rb-row);
+  display: flex;
+  justify-content: space-evenly;
+  align-items: center;
+}
+.rb-tool {
+  width: var(--rb-card);
+  height: var(--rb-card);
+  flex: none;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  border: none;
+  border-radius: 50%;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  color: #3B3355;
+}
+.rb-tool svg { width: 100%; height: 100%; }
+.rb-tool:active { transform: translateY(0.2rem); box-shadow: none; }
+.rb-run { background: var(--green); color: #fff; }
+
+/* ---------- Level done ---------- */
+
+.rb-done {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--gap);
+  padding: var(--gap);
+}
+.rb-done-scene { display: flex; align-items: flex-end; gap: 0.5rem; }
+.rb-done-robot { width: clamp(6rem, 28vmin, 12rem); animation: rb-hop 0.6s ease-in-out infinite; }
+.rb-done-station { width: clamp(4rem, 18vmin, 8rem); animation: rb-glow 0.6s ease-in-out infinite alternate; }
+.rb-done-robot svg, .rb-done-station svg { display: block; width: 100%; height: auto; }
+.rb-continue {
+  width: calc(var(--rb-card) * 1.3);
+  height: calc(var(--rb-card) * 1.3);
+  padding: 1rem;
+  border: none;
+  border-radius: 50%;
+  background: var(--green);
+  color: #fff;
+  box-shadow: var(--shadow);
+  animation: rb-pulse 1.2s ease-in-out infinite;
+}
+.rb-continue svg { width: 100%; height: 100%; }
+
+.rb-wiggle { animation: rb-shake 0.4s ease-in-out; }
+
+/* ---------- Keyframes ---------- */
+@keyframes rb-hop { 50% { transform: translateY(-14%); } }
+@keyframes rb-shake { 25% { transform: rotate(-7deg); } 75% { transform: rotate(7deg); } }
+@keyframes rb-bump {
+  35% { transform: translate(calc(var(--dx) * 28%), calc(var(--dy) * 28%)); }
+  55% { transform: translate(calc(var(--dx) * -6%), calc(var(--dy) * -6%)) rotate(-8deg); }
+  75% { transform: rotate(6deg); }
+}
+@keyframes rb-glow { from { filter: drop-shadow(0 0 0 #FFD34D); } to { filter: drop-shadow(0 0 0.7rem #FFD34D); } }
+@keyframes rb-blink { 50% { fill: #FFD34D; } }
+@keyframes rb-collect { to { transform: scale(1.8) translateY(-30%); opacity: 0; } }
+@keyframes rb-cell-glow { 50% { box-shadow: inset 0 0 0 0.3rem #FFC83D; } }
+@keyframes rb-feet-in { from { opacity: 0; transform: scale(0.4); } }
+@keyframes rb-pop-in { from { transform: scale(0.5); } }
+@keyframes rb-pulse { 50% { transform: scale(1.08); } }

@@ -2,7 +2,8 @@
 //
 //   const stop = draggable(jarElement, {
 //     targets: () => [cauldronElement],      // where it can be dropped
-//     onDrop: (target) => { … },             // dropped on a target
+//     onDrop: (target, point) => { … },      // dropped on a target; point = { x, y }
+//                                            // where the finger was lifted
 //     onTap: () => { … },                    // touched without moving (optional)
 //     canDrag: () => !busy,                  // optional
 //   });
@@ -90,7 +91,7 @@ export function draggable(el, { targets, onDrop, onTap, canDrag = () => true }) 
       }
       if (hovered && up.type === 'pointerup') {
         ghost.remove();
-        onDrop(hovered);
+        onDrop(hovered, { x: up.clientX, y: up.clientY });
         return;
       }
       // Missed: the ghost flies back home, then disappears.

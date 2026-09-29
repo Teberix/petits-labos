@@ -5,7 +5,9 @@
 //   { mount(container, ctx) { … }, unmount() { … } }
 // `ctx` is described in js/screens/game.js.
 import potion from './potion/meta.js';
+import robot from './robot/meta.js';
 
 export const GAMES = [
   { ...potion, load: () => import('./potion/potion.js') },
+  { ...robot, load: () => import('./robot/robot.js') },
 ];
