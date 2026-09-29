@@ -97,6 +97,32 @@ export default {
       },
     },
     {
+      // Two items side by side (random prices 1–6), and a mix of coins.
+      name: 'level 4, two items + a mix of coins',
+      async setup(page, kit) {
+        await openLevel(page, kit, 4);
+        if (await page.locator('.mk-item').count() !== 2) throw new Error('expected 2 items');
+        await putCoins(page, kit, [5, 2, 1, 1]);
+        await expectStacks(page, { 1: 2, 2: 1, 5: 1 }, 9);
+        // The two price tags must not overlap each other or the seller's face.
+        const overlap = await page.evaluate(() => {
+          const [a, b] = [...document.querySelectorAll('.mk-tag')].map((el) => el.getBoundingClientRect());
+          return a.right > b.left && b.right > a.left && a.bottom > b.top && b.bottom > a.top;
+        });
+        if (overlap) throw new Error('price tags overlap');
+      },
+    },
+    {
+      // Level 4: 1 franc is never enough (totals are 3–10): all hints, two items.
+      name: 'level 4, all hints on screen',
+      async setup(page, kit) {
+        await openLevel(page, kit, 4);
+        await putCoins(page, kit, [1]);
+        for (let i = 0; i < 3; i++) await kit.tap(page, '.mk-pay');
+        if (!await page.locator('.mk-dot.goal').count()) throw new Error('no red circles');
+      },
+    },
+    {
       // (Level 3 prices are 3–10, so one coin of 1 franc is never enough.)
       name: 'level 3, all hints on screen (red circles + wiggling coins)',
       async setup(page, kit) {

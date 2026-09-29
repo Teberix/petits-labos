@@ -32,9 +32,8 @@ import { LEVELS } from './levels.js';
 import STRINGS from './strings.js';
 import * as art from './art.js';
 
-// Two-item baskets (step c), seller (step d) and free shop (step e) are hidden until
-// they are built.
-const PLAYABLE = LEVELS.filter((level) => !level.seller && !level.free && !(level.items > 1));
+// Seller (step d) and free shop (step e) levels are hidden until they are built.
+const PLAYABLE = LEVELS.filter((level) => !level.seller && !level.free);
 
 const FLY_MS = 450;          // a coin flying between the counter, the seller and the purse
 const CHANGE_GAP_MS = 180;   // between two coins of change
@@ -179,14 +178,21 @@ function createGame(container, ctx) {
     renderPurse();
     renderTray();
 
-    // "Bonjour ! La pomme coûte 3 francs." — one whole sentence per item and plural form.
-    // (Step c: two-item baskets will say both prices.)
-    let line = tn(`market.offer.${sale.basket[0].item}`, sale.price);
+    let line = `${t('market.hello')} ${pricesLine()}`;
     if (play.index === 0) {
       if (level.id === PLAYABLE[0].id) line += ' ' + t('market.howTo');
       if (level.intro) line += ' ' + t(level.intro);
     }
     ctx.speak(line);
+  }
+
+  // "La pomme coûte 2 francs." — one whole sentence per item (and plural form). Two
+  // items: both sentences, then "Ça fait combien en tout ?" (the child adds them up:
+  // the total is never said or shown, except by the red-circles hint).
+  function pricesLine() {
+    const lines = sale.basket.map(({ item, price }) => tn(`market.costs.${item}`, price));
+    if (sale.basket.length > 1) lines.push(t('market.inTotal'));
+    return lines.join(' ');
   }
 
   // ---------- The stall: the seller, counter, items with their price tags ----------
@@ -398,8 +404,8 @@ function createGame(container, ctx) {
       renderTray();
       remark(t('market.hintTarget'));
     } else {
-      // Hint 1: what's missing, and the price again.
-      remark(`${tn('market.more', diff)} ${tn('market.price', sale.price)}`);
+      // Hint 1: what's missing, and the price(s) again.
+      remark(`${tn('market.more', diff)} ${pricesLine()}`);
     }
   }
 

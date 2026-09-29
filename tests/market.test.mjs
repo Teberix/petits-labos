@@ -149,10 +149,10 @@ test('pickOther / pickSome', () => {
 });
 
 test('plural forms: the right sentence for 1 and for several, in every language', () => {
-  assert.equal(pluralKey('market.price', 1, 'fr'), 'market.price.one');
-  assert.equal(pluralKey('market.price', 2, 'fr'), 'market.price.other');
-  assert.equal(pluralKey('market.price', 1, 'es'), 'market.price.one');
-  assert.equal(pluralKey('market.price', 10, 'en'), 'market.price.other');
+  assert.equal(pluralKey('market.more', 1, 'fr'), 'market.more.one');
+  assert.equal(pluralKey('market.more', 2, 'fr'), 'market.more.other');
+  assert.equal(pluralKey('market.more', 1, 'es'), 'market.more.one');
+  assert.equal(pluralKey('market.more', 10, 'en'), 'market.more.other');
   for (const lang of ['fr', 'es', 'en']) {
     for (const key of Object.keys(STRINGS[lang]).filter((k) => k.endsWith('.one'))) {
       const other = key.replace(/\.one$/, '.other');
@@ -168,7 +168,7 @@ test('strings: the same keys in fr, es and en, and a line for every item', async
   assert.deepEqual(Object.keys(STRINGS.en).sort(), fr);
   const { ITEM_IDS } = await import('../games/market/art.js');
   for (const id of ITEM_IDS) {
-    for (const form of ['one', 'other']) assert.ok(STRINGS.fr[`market.offer.${id}.${form}`], `market.offer.${id}.${form}`);
+    for (const form of ['one', 'other']) assert.ok(STRINGS.fr[`market.costs.${id}.${form}`], `market.costs.${id}.${form}`);
   }
   for (const level of LEVELS) if (level.intro) assert.ok(STRINGS.fr[level.intro], level.intro);
 });

@@ -132,9 +132,12 @@
   align-items: flex-end;
 }
 .mk-item { position: relative; display: flex; justify-content: center; }
-.mk-item .mk-tag { position: absolute; top: calc(100% + 6cqh); white-space: nowrap; }
+.mk-item .mk-tag { position: absolute; top: calc(100% + 6cqh); left: 50%; transform: translateX(-50%); white-space: nowrap; }
 .mk-item-art { width: 32cqh; }
-.mk-goods:has(.mk-item + .mk-item) .mk-item-art { width: 25cqh; } /* two items: a bit smaller */
+/* Two items: a bit smaller, and the seller steps to the left to make room. */
+.mk-stall:has(.mk-item + .mk-item) .mk-item-art { width: 25cqh; }
+.mk-stall:has(.mk-item + .mk-item) .mk-goods { right: 6cqw; gap: 10cqw; }
+.mk-stall:has(.mk-item + .mk-item) .mk-animal { left: 1cqw; width: 54cqh; bottom: 19cqh; }
 .mk-item-art svg { display: block; width: 100%; height: auto; }
 
 /* Moods: one mouth per mood. */
@@ -147,13 +150,13 @@
 .mk-tag {
   display: flex;
   align-items: center;
-  gap: 0.4rem;
-  padding: 0.25rem 0.6rem;
+  gap: 2cqh;
+  padding: 1.5cqh 3cqh;
   border-radius: 0.8rem;
   background: #FFFDF6;
   box-shadow: 0 0.2rem 0 rgba(43, 33, 65, 0.2);
 }
-.mk-tag-num { font-size: clamp(1.4rem, 9cqh, 2.6rem); font-weight: 800; line-height: 1; color: var(--ink); }
+.mk-tag-num { font-size: clamp(1.3rem, 10cqh, 2.6rem); font-weight: 800; line-height: 1; color: var(--ink); }
 .mk-tag-dots { display: grid; grid-template-columns: repeat(5, auto); gap: 3px; }
 .mk-tag-dot { width: clamp(6px, 2.4cqh, 11px); aspect-ratio: 1; border-radius: 50%; background: #E8453C; }
 
