@@ -73,7 +73,8 @@
 
 /* ---------- The stall ---------- */
 
-/* A size container, so the animal and the items can use its width (cqw) and height (cqh). */
+/* The scene area is a size container: the stall inside keeps a fixed 4:3 shape and is
+   as big as the area allows (like a picture). */
 .mk-scene {
   grid-area: scene;
   justify-self: stretch;
@@ -83,18 +84,30 @@
   display: grid;
   place-items: center;
 }
+/* The stall is itself a size container: everything in it is placed in % of the
+   stall (cqw/cqh below = the stall's width/height), so the animal, the counter and
+   the goods keep the same arrangement on every screen.
+     top:    striped awning (0–14%)
+     middle: the animal, behind the counter (only its shoulders are hidden)
+     bottom: the counter (68–100%), with the goods standing on it, tags in front */
 .mk-stall {
   position: relative;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  gap: 2cqw;
-  width: 100%;
-  height: 100%;
-  padding-inline: 2cqw;
+  width: min(100cqw, 133cqh);
+  aspect-ratio: 4 / 3;
+  container-type: size;
 }
-/* The animal (the seller) stands behind the counter, the goods are on it. */
-.mk-animal { position: relative; z-index: 0; flex: none; width: min(80cqh, 42cqw); margin-bottom: 4cqh; }
+.mk-stall::before {
+  content: "";
+  position: absolute;
+  left: 2%;
+  right: 2%;
+  top: 0;
+  height: 14%;
+  border-radius: 0 0 1rem 1rem;
+  background: repeating-linear-gradient(90deg, #FF6F59 0 12.5%, #FFF7EC 12.5% 25%);
+  box-shadow: 0 0.25rem 0 rgba(43, 33, 65, 0.12);
+}
+.mk-animal { position: absolute; z-index: 0; left: 6cqw; bottom: 16cqh; width: 62cqh; }
 .mk-animal svg { display: block; width: 100%; height: auto; }
 .mk-counter {
   position: absolute;
@@ -102,14 +115,26 @@
   left: 0;
   right: 0;
   bottom: 0;
-  height: 26cqh;
+  height: 32cqh;
   border-radius: 1rem;
   background: #C98B54;
   box-shadow: inset 0 0.4rem 0 #E0A874;
 }
-.mk-goods { position: relative; z-index: 2; display: flex; gap: 2cqw; align-items: flex-end; padding-bottom: 3cqh; }
-.mk-item { display: flex; flex-direction: column; align-items: center; gap: 1cqh; }
-.mk-item-art { width: min(34cqh, 22cqw); }
+/* The goods stand ON the counter (their bottom = the counter's top edge); each price
+   tag hangs on the counter's front, under its item. */
+.mk-goods {
+  position: absolute;
+  z-index: 2;
+  right: 7cqw;
+  bottom: 29cqh;
+  display: flex;
+  gap: 8cqw;
+  align-items: flex-end;
+}
+.mk-item { position: relative; display: flex; justify-content: center; }
+.mk-item .mk-tag { position: absolute; top: calc(100% + 6cqh); white-space: nowrap; }
+.mk-item-art { width: 32cqh; }
+.mk-goods:has(.mk-item + .mk-item) .mk-item-art { width: 25cqh; } /* two items: a bit smaller */
 .mk-item-art svg { display: block; width: 100%; height: auto; }
 
 /* Moods: one mouth per mood. */

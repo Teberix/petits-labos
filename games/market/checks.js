@@ -3,6 +3,12 @@
 
 async function openLevel(page, kit, n) {
   await kit.openGame(page, 'market');
+  // Wait for market.css (loaded when the game mounts): before it applies, the level
+  // buttons aren't where they end up, and a tap can land next to them.
+  await page.waitForFunction(() => {
+    const map = document.querySelector('.mk-levels');
+    return map && getComputedStyle(map).display === 'flex';
+  });
   await kit.tap(page, page.locator('.mk-level-btn').nth(n - 1));
   await page.locator('.mk-purse .mk-coin').first().waitFor();
 }
