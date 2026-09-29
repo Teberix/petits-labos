@@ -6,8 +6,10 @@
 // `ctx` is described in js/screens/game.js.
 import potion from './potion/meta.js';
 import robot from './robot/meta.js';
+import market from './market/meta.js';
 
 export const GAMES = [
   { ...potion, load: () => import('./potion/potion.js') },
   { ...robot, load: () => import('./robot/robot.js') },
+  { ...market, load: () => import('./market/market.js') },
 ];

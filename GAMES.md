@@ -7,8 +7,8 @@ owner confirms it was playtested with the kids.
 |---|---|---|---|
 | 1 | La Potion | colours, cause/effect, counting | DONE |
 | 2 | Robot Codeur | sequencing, then loops | DONE |
-| 3 | Lettres Magiques | letters/sounds/first words (FR/ES/EN) | planned |
-| 4 | Le Marché | counting, addition, CHF coins | planned |
+| 3 | Lettres Magiques | letters/sounds/first words (FR/ES/EN) | POSTPONED (owner will do it later; letter sounds need recorded audio — system voices only say letter names) |
+| 4 | Le Marché | counting, addition, CHF coins | IN PROGRESS |
 | 5 | Le Train des Suites | patterns/logic | planned |
 | 6 | La Balance | heavier/lighter, equality | planned |
 | 7 | Qui mange qui ? | food chains, habitats | planned |

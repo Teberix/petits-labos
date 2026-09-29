@@ -1,0 +1,253 @@
+/* "Le Marché" — layout + animations. All classes start with mk- so nothing clashes
+   with other games' stylesheets (they stay loaded after a game closes).
+
+   Portrait:   [ scene ]          Landscape:  [scene | tray ]
+               [ tray  ]                      [scene | purse]
+               [ purse ]
+   Tray (the counter) and purse are one column (--mk-col) wide: on a 360px phone that's
+   the screen width minus the margins. Purse coins never go below 64px (1 franc) and are
+   bigger when they're worth more; the scene takes whatever space is left. On the
+   counter, coins are grouped in stacks per value (tap a stack = one coin back).
+   Nothing scrolls during play. */
+
+.mk-play, .mk-levels {
+  --mk-unit: clamp(64px, 10vmin, 84px);
+  --mk-col: calc(var(--mk-unit) * 5.2);
+}
+
+/* ---------- Level map ---------- */
+
+.mk-levels {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto; /* many levels on a small landscape phone: scroll the MAP, never the game */
+  display: flex;
+  flex-wrap: wrap;
+  align-content: center;
+  justify-content: center;
+  gap: var(--gap);
+  padding: var(--gap);
+}
+.mk-level-btn {
+  position: relative;
+  width: clamp(6rem, 24vmin, 10rem);
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  border: none;
+  border-radius: 1.5rem;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+.mk-level-btn:active { transform: translateY(0.2rem); box-shadow: none; }
+.mk-level-btn.done { background: #FFF0DD; }
+.mk-level-btn.locked { opacity: 0.55; }
+.mk-level-num { font-size: clamp(2rem, 8vmin, 3.5rem); font-weight: 800; color: #E8743C; }
+.mk-level-lock { position: absolute; bottom: 0.6rem; width: 1.8rem; height: 1.8rem; color: var(--ink-soft); }
+.mk-level-crown { position: absolute; top: -0.9rem; width: 2.8rem; filter: drop-shadow(0 0.15rem 0 rgba(0, 0, 0, 0.15)); }
+.mk-level-crown svg { display: block; width: 100%; height: auto; }
+
+/* ---------- Play layout ---------- */
+
+.mk-play {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr) auto auto;
+  grid-template-areas: "scene" "tray" "purse";
+  justify-items: center;
+  gap: 0.5rem;
+  padding: 0 0.5rem 0.5rem;
+}
+@media (orientation: landscape) {
+  .mk-play {
+    grid-template-columns: minmax(0, 1fr) auto;
+    /* The empty rows above and below keep the right column vertically centred. */
+    grid-template-rows: minmax(0, 1fr) auto auto minmax(0, 1fr);
+    grid-template-areas: "scene ." "scene tray" "scene purse" "scene .";
+    column-gap: var(--gap);
+    padding-inline: var(--gap);
+  }
+}
+
+/* ---------- The stall ---------- */
+
+/* A size container, so the customer and the items can use its width (cqw) and height (cqh). */
+.mk-scene {
+  grid-area: scene;
+  justify-self: stretch;
+  min-width: 0;
+  min-height: 0;
+  container-type: size;
+  display: grid;
+  place-items: center;
+}
+.mk-stall {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 2cqw;
+  width: 100%;
+  height: 100%;
+  padding-inline: 2cqw;
+}
+/* The customer stands behind the counter, the goods are on it. */
+.mk-customer { position: relative; z-index: 0; flex: none; width: min(80cqh, 42cqw); margin-bottom: 4cqh; }
+.mk-customer svg { display: block; width: 100%; height: auto; }
+.mk-counter {
+  position: absolute;
+  z-index: 1;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 26cqh;
+  border-radius: 1rem;
+  background: #C98B54;
+  box-shadow: inset 0 0.4rem 0 #E0A874;
+}
+.mk-goods { position: relative; z-index: 2; display: flex; gap: 2cqw; align-items: flex-end; padding-bottom: 3cqh; }
+.mk-item { display: flex; flex-direction: column; align-items: center; gap: 1cqh; }
+.mk-item-art { width: min(34cqh, 22cqw); }
+.mk-item-art svg { display: block; width: 100%; height: auto; }
+
+/* Moods: one mouth per mood. */
+.mk-mouth-happy, .mk-mouth-wait { display: none; }
+[data-mood="happy"] .mk-mouth-neutral, [data-mood="wait"] .mk-mouth-neutral { display: none; }
+[data-mood="happy"] .mk-mouth-happy, [data-mood="wait"] .mk-mouth-wait { display: inline; }
+.mk-customer[data-mood="happy"] svg { animation: mk-hop 0.5s ease-in-out 3; }
+
+/* Price tag: numeral + dots in rows of 5. */
+.mk-tag {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 0.8rem;
+  background: #FFFDF6;
+  box-shadow: 0 0.2rem 0 rgba(43, 33, 65, 0.2);
+}
+.mk-tag-num { font-size: clamp(1.4rem, 9cqh, 2.6rem); font-weight: 800; line-height: 1; color: var(--ink); }
+.mk-tag-dots { display: grid; grid-template-columns: repeat(5, auto); gap: 3px; }
+.mk-tag-dot { width: clamp(6px, 2.4cqh, 11px); aspect-ratio: 1; border-radius: 50%; background: #E8453C; }
+
+/* ---------- Purse ---------- */
+
+.mk-purse {
+  grid-area: purse;
+  width: var(--mk-col);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+}
+/* Coin sizes: bigger = worth more (1 franc is the 64px minimum on small screens). */
+.mk-coin-1 { --size: var(--mk-unit); }
+.mk-coin-2 { --size: calc(var(--mk-unit) * 1.18); }
+.mk-coin-5 { --size: calc(var(--mk-unit) * 1.4); }
+.mk-coin {
+  width: var(--size);
+  height: var(--size);
+  flex: none;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: none;
+  filter: drop-shadow(0 0.25rem 0 rgba(43, 33, 65, 0.2));
+}
+.mk-coin svg { display: block; width: 100%; height: 100%; pointer-events: none; }
+.mk-coin:active { transform: translateY(0.15rem); }
+
+/* ---------- Counter (tray) ---------- */
+
+.mk-tray {
+  grid-area: tray;
+  width: var(--mk-col);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem;
+  border-radius: 1.25rem;
+  background: #F6E3CC;
+  box-shadow: inset 0 0 0 0.2rem #E0B98C;
+  color: var(--ink);
+}
+/* The coins on the counter: one stack per value (3 at most), each as big as the purse
+   coin (≥ 64px), with "×N" when there are several. The row keeps the height of the
+   biggest coin, so the counter doesn't jump when the first coin lands. */
+.mk-pile {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  min-height: calc(var(--mk-unit) * 1.4);
+}
+.mk-stack {
+  position: relative;
+  width: var(--size);
+  height: var(--size);
+  flex: none;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: none;
+}
+.mk-stack-coin svg { display: block; width: 100%; height: 100%; pointer-events: none; }
+/* Several coins: two coin edges peek out below, like a real pile. */
+.mk-stack.many .mk-stack-coin svg { filter: drop-shadow(0 3px 0 #8B95A5) drop-shadow(0 3px 0 #A9B1BE); }
+.mk-stack-count {
+  position: absolute;
+  top: -0.3rem;
+  right: -0.7rem;
+  padding: 0.1rem 0.4rem;
+  border-radius: 1rem;
+  background: var(--ink);
+  color: #fff;
+  font-size: calc(var(--mk-unit) * 0.28);
+  font-weight: 800;
+  line-height: 1.2;
+  pointer-events: none;
+}
+.mk-stack:active { transform: translateY(0.15rem); }
+.mk-pop-in { animation: mk-pop-in 0.25s ease-out; }
+
+.mk-sum { display: flex; align-items: center; gap: 0.6rem; }
+.mk-total {
+  min-width: 2.2ch;
+  font-size: calc(var(--mk-unit) * 0.6);
+  font-weight: 800;
+  line-height: 1;
+  text-align: center;
+}
+.mk-frames { display: flex; gap: 0.4rem; }
+.mk-frames:not(.two) .mk-frame + .mk-frame { display: none; } /* 11–20: the second frame appears */
+.mk-frame {
+  display: grid;
+  grid-template-columns: repeat(5, calc(var(--mk-unit) * 0.2));
+  gap: 3px;
+  padding: 4px;
+  border-radius: 0.5rem;
+  background: #fff;
+}
+.mk-dot { aspect-ratio: 1; border-radius: 50%; box-shadow: inset 0 0 0 2px #E3D6C4; }
+.mk-dot.on { background: var(--dot); box-shadow: none; }
+.mk-dot.on.alt { filter: brightness(0.8); } /* neighbouring coins of the same value stay apart */
+
+.mk-wiggle { animation: mk-shake 0.4s ease-in-out; }
+/* A coin that doesn't fit on the full counter: hops towards it and falls back. */
+.mk-bounce { animation: mk-bounce 0.5s ease-out; }
+
+/* Short landscape screens (phones on their side): while a level is on screen the top
+   bar shrinks to 64px buttons. (:has() keeps that change to this game only.) */
+@media (orientation: landscape) and (max-height: 420px) {
+  #app[data-screen="game"]:has(.mk-play) .top-bar { padding-block: 0.25rem; }
+  #app[data-screen="game"]:has(.mk-play) .top-bar .icon-btn { width: 64px; height: 64px; padding: 0.8rem; }
+}
+
+/* ---------- Keyframes ---------- */
+@keyframes mk-hop { 50% { transform: translateY(-10%); } }
+@keyframes mk-shake { 25% { transform: rotate(-7deg); } 75% { transform: rotate(7deg); } }
+@keyframes mk-pop-in { from { transform: scale(0.4); } }
+@keyframes mk-bounce { 35% { transform: translateY(-35%); } 65% { transform: translateY(6%); } 85% { transform: translateY(-4%); } }
