@@ -6,8 +6,8 @@
 // Screenshots of failures only: tools/.check-output/.
 import { chromium } from 'playwright';
 import {
-  SIZES, MIN_TOUCH, SHELL_TOUCH, isMain, kit, loadGameChecks, newContext, screenshotPath,
-  selectedGames, startServer, watchErrors,
+  SIZES, MIN_TOUCH, SHELL_TOUCH, STEP_TIMEOUT, describeFailure, isMain, kit, loadGameChecks,
+  newContext, screenshotPath, selectedGames, startServer, watchErrors, withTimeout,
 } from './check-kit.mjs';
 
 // Runs in the page: measures everything and returns the problems found.
@@ -66,15 +66,21 @@ export async function checkLayout(args = []) {
         failures.push(`${game.id}: no games/${game.id}/checks.js with worstCases`);
         continue;
       }
+      // Progress line, so a slow run isn't silent.
+      console.log(`  … layout: ${game.id} (${checks.worstCases.length} worst cases × ${SIZES.length} sizes)`);
+      // A worst case that timed out, or broke on a JS error, would fail the same way at
+      // every size: try it only once. (Other setup failures can depend on the size.)
+      const broken = new Set();
       for (const size of SIZES) {
         const context = await newContext(browser, size);
         for (const wc of checks.worstCases) {
+          if (broken.has(wc)) continue;
           const page = await context.newPage();
           const errors = watchErrors(page);
           const where = `${game.id} · ${wc.name} · ${size.name}`;
           try {
             await page.goto(`${server.base}?nosw`);
-            await wc.setup(page, kit);
+            await withTimeout(wc.setup(page, kit), STEP_TIMEOUT, 'setup');
             await kit.settle(page);
             const problems = await page.evaluate(measure, {
               touch: [...SHELL_TOUCH, ...checks.touch], cells: checks.cells, minCell: checks.minCell ?? 0, minTouch: MIN_TOUCH,
@@ -86,7 +92,10 @@ export async function checkLayout(args = []) {
               failures.push(...problems.map((p) => `${where}: ${p}`));
             }
           } catch (err) {
-            failures.push(`${where}: setup failed — ${err.message.split('\n')[0]}`);
+            const skip = err.timedOut || errors.some((e) => e.startsWith('page error'));
+            if (skip) broken.add(wc);
+            const skipped = skip ? ' (other sizes skipped)' : '';
+            failures.push(`${where}: setup failed — ${describeFailure(err, errors)}${skipped}`);
             await page.screenshot({ path: screenshotPath(game.id, wc.name, size.name, 'error') }).catch(() => {});
           }
           await page.close();

@@ -134,6 +134,9 @@ node tools/gate.mjs --only unit,privacy
 - `check-privacy.mjs`: words from `tools/private-words.txt` (git-ignored; `word @ file` =
   allowed in that file only) in committed/staged/untracked files and commit messages; the
   list itself must never be tracked; no network calls/URLs in app code.
+- Never hangs: 10 s per Playwright action, 30 s per page load, 60 s per worst case /
+  `offline()` (constants in `check-kit.mjs`). Failures show the page's JS errors; a worst
+  case that times out or hits a JS error is skipped at the remaining sizes.
 - Needs once: `npm install` + `npx playwright install chromium`.
 
 ## Local dev
