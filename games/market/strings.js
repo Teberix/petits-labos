@@ -69,7 +69,7 @@ export default {
     'market.free.changeOver.one': 'Oups, {n} franc de trop ! Reprends-le.',
     'market.free.changeOver.other': 'Oups, {n} francs de trop ! Reprends-les.',
     'market.free.sold': 'Vendu ! Merci et à bientôt !',
-    'market.free.inBasket': 'Il est dans le panier ! Son prix ne bouge pas.',
+    'market.free.inBasket': 'C’est dans le panier ! Son prix ne bouge pas.',
   },
   es: {
     'market.chooseLevel': '¡Elige un nivel!',

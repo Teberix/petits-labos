@@ -71,6 +71,7 @@ classes start with `mk-`. The checks wait for `market.css` before tapping a leve
 
 ## Playtest history
 Built in steps (a)–(f), playtested by the owner with the kids on a phone through a
-temporary preview repo (preview-only `VERSION`, never committed to `main`): levels 1–5
-validated on 2026-09-29; the free shop (level 6) is not playtested yet. Changes from those playtests: stall layout fixed for phones,
+temporary preview repo (preview-only `VERSION`, never committed to `main`): levels 1–6
+validated on 2026-09-29. (The mid-purchase role-switch rule and the locked-good line were
+added right after the free-shop playtest.) Changes from those playtests: stall layout fixed for phones,
 animal as seller in levels 1–4, stars only for the exact amount, grey price dots.
