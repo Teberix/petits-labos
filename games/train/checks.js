@@ -5,7 +5,8 @@ import { validFillings } from './pattern.js';
 
 // A check-only level (never in levels.js): AAB × 3 = 9 wagons, the longest train whose
 // rows must break at period boundaries. Added to the page's LEVELS array (the same
-// module instance train.js uses) before the game opens; it shows as the last level.
+// module instance train.js uses) before the game opens; it shows as the last level
+// (open it with n = 'last').
 const AAB_LEVEL = {
   id: 99, tokens: ['red', 'blue', 'yellow', 'green', 'purple'], patterns: ['AAB'],
   wagons: [9, 9], gap: 'end', choices: 3, rounds: 5,
@@ -28,7 +29,8 @@ async function openLevel(page, kit, n, { longest = false, extraLevel = null } = 
     return map && getComputedStyle(map).display === 'flex';
   });
   if (longest) await page.evaluate(() => { Math.random = () => 0.999; });
-  await kit.tap(page, page.locator('.tr-level-btn').nth(n - 1));
+  const buttons = page.locator('.tr-level-btn');
+  await kit.tap(page, n === 'last' ? buttons.last() : buttons.nth(n - 1));
   await page.locator('.tr-tray .tr-token').first().waitFor();
   await kit.settle(page); // the train has rolled in
 }
@@ -74,7 +76,9 @@ async function savedStars(page) {
 const token = (id) => `.tr-tray .tr-token[data-token="${id}"]`;
 
 export default {
-  touch: ['.tr-token', '.tr-level-btn', '.tr-continue'],
+  // Empty wagons are drop targets (and where a tapped token goes): ≥ 64px like any
+  // touch target. Full wagons only play a note when tapped (optional): cells ≥ 56px.
+  touch: ['.tr-token', '.tr-level-btn', '.tr-continue', '.tr-car.tr-gap'],
   cells: '.tr-car',
   minCell: 56,
 
@@ -90,10 +94,40 @@ export default {
       // AAB AAB / AAB… : on a 360px portrait phone, one period per row (3 rows).
       name: 'AAB x 3 (9 wagons), rows break at period boundaries',
       async setup(page, kit) {
-        await openLevel(page, kit, 2, { extraLevel: AAB_LEVEL });
+        await openLevel(page, kit, 'last', { extraLevel: AAB_LEVEL });
         await expectCars(page, 9);
         const width = await page.evaluate(() => innerWidth);
         await expectPeriodRows(page, 3, width === 360 ? 3 : null);
+      },
+    },
+    {
+      name: 'level 2, longest train (ABC x 3, 9 fruit wagons, 3 in the tray)',
+      async setup(page, kit) {
+        await openLevel(page, kit, 2, { longest: true });
+        await expectCars(page, 9);
+        await expectPeriodRows(page, 3);
+      },
+    },
+    {
+      name: 'level 3, longest train (AABB x 2 + 1, 9 wagons)',
+      async setup(page, kit) {
+        await openLevel(page, kit, 3, { longest: true });
+        await expectCars(page, 9);
+      },
+    },
+    {
+      // 9 wagons with the gap inside, 4 tokens (2 tray columns in landscape), and
+      // 3 wrong tokens: the outlined period and the wiggling token on screen.
+      name: 'level 4, longest train, gap in the middle, 4 in the tray, hints 2 + 3',
+      async setup(page, kit) {
+        await openLevel(page, kit, 4, { longest: true });
+        await expectCars(page, 9);
+        const { cars, wrong } = await tokensFor(page);
+        if (cars.indexOf(null) === cars.length - 1) throw new Error('the gap is not in the middle');
+        for (let i = 0; i < 3; i++) await kit.tap(page, token(wrong));
+        await kit.settle(page);
+        const hinted = await page.evaluate(() => document.querySelectorAll('.tr-token.tr-hint').length);
+        if (hinted !== 1) throw new Error(`${hinted} wiggling tokens`);
       },
     },
     {

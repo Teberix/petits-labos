@@ -19,7 +19,15 @@
 
 // Colour tokens also differ in shape (never colour alone).
 export const COLORS = ['red', 'blue', 'yellow', 'green', 'purple'];
+export const FRUITS = ['apple', 'banana', 'grapes', 'pear', 'watermelon'];
 
 export const LEVELS = [
+  // Two colours taking turns; the last wagon is missing.
   { id: 1, tokens: COLORS, patterns: ['AB'], wagons: [5, 7], gap: 'end', choices: 2, rounds: 5 },
+  // Fruits; two or three taking turns; one fruit in the tray is not in the train.
+  { id: 2, tokens: FRUITS, patterns: ['AB', 'ABC'], wagons: [7, 9], gap: 'end', choices: 3, rounds: 5, intro: 'train.intro.fruits' },
+  // The same one twice in a row (AAB, ABB, AABB — AABB needs all 9 wagons).
+  { id: 3, tokens: COLORS, patterns: ['AAB', 'ABB', 'AABB'], wagons: [7, 9], gap: 'end', choices: 3, rounds: 5, intro: 'train.intro.double' },
+  // Any of those, but the empty wagon is somewhere in the middle; 4 in the tray.
+  { id: 4, tokens: FRUITS, patterns: ['AB', 'ABC', 'AAB', 'ABB'], wagons: [6, 9], gap: 'middle', choices: 4, rounds: 5, intro: 'train.intro.middle' },
 ];

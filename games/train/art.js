@@ -19,6 +19,27 @@ export const TOKENS = {
   yellow: { color: '#F5B700', art: svg(shape.triangle('#FFC83D')) },
   green: { color: '#2FA85A', art: svg(shape.star('#3FB96B')) },
   purple: { color: '#9B5DE5', art: svg(shape.heart('#9B5DE5')) },
+
+  // Fruits: each one a different colour AND outline (owner: no two red fruits).
+  apple: { color: '#E8453C', art: svg(`
+    <path d="M50 30c-14-10-38-6-38 20 0 22 16 40 26 40 6 0 8-3 12-3s6 3 12 3c10 0 26-18 26-40 0-26-24-30-38-20z" fill="#E8453C"/>
+    <path d="M50 30q0-12 8-20" stroke="#6B4A2B" stroke-width="5" fill="none" stroke-linecap="round"/>
+    <path d="M56 20q14-10 22 0-12 8-22 0z" fill="#3FB96B"/>`) },
+  banana: { color: '#F5B700', art: svg(`
+    <path d="M18 18C8 58 46 92 90 70c-8-8-16-8-26-7-26 2-40-18-36-45z" fill="#FFC83D" stroke="#E0A800" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M22 12l6 8" stroke="#6B4A2B" stroke-width="6" stroke-linecap="round"/>`) },
+  grapes: { color: '#9B5DE5', art: svg(`
+    <path d="M50 22q2-10 10-14" stroke="#6B4A2B" stroke-width="5" fill="none" stroke-linecap="round"/>
+    ${[[38, 32], [62, 32], [26, 48], [50, 48], [74, 48], [38, 64], [62, 64], [50, 80]]
+      .map(([x, y]) => `<circle cx="${x}" cy="${y}" r="12" fill="#9B5DE5" stroke="#7A3FC4" stroke-width="2"/>`).join('')}`) },
+  pear: { color: '#7CB342', art: svg(`
+    <path d="M50 16c-9 0-13 8-13 18 0 10-19 20-19 38 0 14 14 22 32 22s32-8 32-22c0-18-19-28-19-38 0-10-4-18-13-18z" fill="#9CCC65" stroke="#7CB342" stroke-width="3"/>
+    <path d="M50 16q0-8 6-12" stroke="#6B4A2B" stroke-width="5" fill="none" stroke-linecap="round"/>`) },
+  watermelon: { color: '#2FA85A', art: svg(`<g transform="translate(0 8)">
+    <path d="M6 34a44 44 0 0 0 88 0z" fill="#2FA85A"/>
+    <path d="M14 34a36 36 0 0 0 72 0z" fill="#FF6F79"/>
+    ${[[34, 46], [50, 52], [66, 46], [42, 60], [58, 60]]
+      .map(([x, y]) => `<ellipse cx="${x}" cy="${y}" rx="2.6" ry="4" fill="#2B2141"/>`).join('')}</g>`) },
 };
 
 export const token = (id) => TOKENS[id].art;

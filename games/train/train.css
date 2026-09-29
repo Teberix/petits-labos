@@ -1,10 +1,13 @@
 /* "Le Train des Suites" — layout + animations. All classes start with tr- so nothing
    clashes with other games' stylesheets (they stay loaded after a game closes).
 
-   [        track         ]   the train: locomotive + wagons, in rows (left → right,
-   [        track         ]   like reading, breaking at the end of a period when it
-   [ tray: tokens to place ]  can). train.js sets the columns, the wagon size (--columns,
-                              --car) and each wagon's grid row/column.
+   Portrait:                   Landscape:
+   [        track         ]    [ track | tray ]   (the tray is a column on the right,
+   [ tray: tokens to place ]   [ track | tray ]    2 columns when it has 4 tokens, so
+                                                   the train gets the full height)
+   The train: locomotive + wagons, in rows (left → right, like reading, breaking at the
+   end of a period when it can). train.js sets the columns, the wagon size (--columns,
+   --car) and each wagon's grid row/column.
    Nothing scrolls during play. */
 
 /* ---------- Level map ---------- */
@@ -46,6 +49,12 @@
   grid-template-rows: minmax(0, 1fr) auto;
   gap: 0.5rem;
   padding: 0 var(--gap) var(--gap);
+}
+@media (orientation: landscape) {
+  .tr-play {
+    grid-template-rows: minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
 }
 
 .tr-track {
@@ -120,6 +129,14 @@
   padding: 0.5rem;
   border-radius: var(--radius);
   background: #F3E6D3;
+}
+@media (orientation: landscape) {
+  .tr-tray {
+    display: grid;
+    grid-template-columns: repeat(var(--tray-columns, 1), auto); /* set by train.js */
+    align-content: center;
+    gap: 0.5rem;
+  }
 }
 .tr-token {
   --size: clamp(64px, 13vmin, 104px);

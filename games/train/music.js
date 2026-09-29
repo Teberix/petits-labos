@@ -9,6 +9,12 @@ export const PITCH = {
   yellow: 784, // G5 (sol)
   green: 880,  // A5 (la)
   purple: 1047, // C6 (do, higher)
+  // Fruits: the same five notes.
+  apple: 523,
+  banana: 659,
+  pear: 784,
+  grapes: 880,
+  watermelon: 1047,
 };
 
 let ac = null;

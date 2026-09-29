@@ -1,6 +1,6 @@
 // Everything "Le Train des Suites" says, in fr / es / en.
 // (The title is in meta.js: the hub needs it before the game loads.)
-// train.token.* = the colour names the "singing train" hint says (one per token in art.js).
+// train.token.* = the names the "singing train" hint says (one per token in art.js).
 export default {
   fr: {
     'train.chooseLevel': 'Choisis un niveau !',
@@ -23,6 +23,11 @@ export default {
     // Token names (a colour; each colour also has its own shape).
     'train.token.red': 'rouge', 'train.token.blue': 'bleu', 'train.token.yellow': 'jaune',
     'train.token.green': 'vert', 'train.token.purple': 'violet',
+    'train.token.apple': 'pomme', 'train.token.banana': 'banane', 'train.token.grapes': 'raisin',
+    'train.token.pear': 'poire', 'train.token.watermelon': 'pastèque',
+    'train.intro.fruits': 'Maintenant, le train transporte des fruits !',
+    'train.intro.double': 'Regarde bien : parfois, le même wagon vient deux fois de suite !',
+    'train.intro.middle': 'Attention : cette fois, le trou peut être au milieu du train !',
   },
   es: {
     'train.chooseLevel': '¡Elige un nivel!',
@@ -44,6 +49,11 @@ export default {
     'train.hintToken': '¡Prueba el vagón que baila!',
     'train.token.red': 'rojo', 'train.token.blue': 'azul', 'train.token.yellow': 'amarillo',
     'train.token.green': 'verde', 'train.token.purple': 'morado',
+    'train.token.apple': 'manzana', 'train.token.banana': 'plátano', 'train.token.grapes': 'uvas',
+    'train.token.pear': 'pera', 'train.token.watermelon': 'sandía',
+    'train.intro.fruits': '¡Ahora el tren lleva frutas!',
+    'train.intro.double': 'Mira bien: ¡a veces el mismo vagón viene dos veces seguidas!',
+    'train.intro.middle': 'Atención: ¡esta vez el hueco puede estar en medio del tren!',
   },
   en: {
     'train.chooseLevel': 'Choose a level!',
@@ -65,5 +75,10 @@ export default {
     'train.hintToken': 'Try the wagon that’s dancing!',
     'train.token.red': 'red', 'train.token.blue': 'blue', 'train.token.yellow': 'yellow',
     'train.token.green': 'green', 'train.token.purple': 'purple',
+    'train.token.apple': 'apple', 'train.token.banana': 'banana', 'train.token.grapes': 'grapes',
+    'train.token.pear': 'pear', 'train.token.watermelon': 'watermelon',
+    'train.intro.fruits': 'Now the train is carrying fruit!',
+    'train.intro.double': 'Look closely: sometimes the same wagon comes twice in a row!',
+    'train.intro.middle': 'Careful: this time the gap can be in the middle of the train!',
   },
 };

@@ -235,6 +235,8 @@ function createGame(container, ctx) {
       return el;
     });
     play.els.tray.replaceChildren(...tokens);
+    // Landscape: the tray is a column; 4 tokens don't fit one column on a small phone.
+    play.els.tray.style.setProperty('--tray-columns', tokens.length > 3 ? 2 : 1);
   }
 
   // ---------- Placing a token ----------

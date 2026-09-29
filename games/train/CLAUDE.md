@@ -7,9 +7,16 @@ tray into them. Non-linguistic → app language (French by default).
 ## Status
 IN PROGRESS — (a) pattern logic + tests, level 1 playable (drag/tap, star, train
 rolls away, next train) · (b) a musical note per token + the 3-step hints, rows that
-break at period boundaries. Next: (c) levels 2–4 (objects; AAB/ABB/AABB; gap in the middle) · (d) level 5 (whole-period
-gap, no AABB) and level 6 (dots growing by 1; small/medium/big as a variant) ·
-(e) level 7 free mode. Then a phone preview (same flow as Le Marché).
+break at period boundaries · (c) levels 2–4 (fruits; AAB/ABB/AABB; gap in the
+middle), side tray in landscape. Next: (d) level 5 (whole-period gap, no AABB) and
+level 6 (dots growing by 1; small/medium/big as a variant) · (e) level 7 free mode.
+Then a phone preview (same flow as Le Marché).
+
+## Levels
+1 AB colours, gap at the end, 2 in the tray · 2 fruits, AB / ABC, 3 in the tray (one
+fruit not in the train) · 3 colours, AAB / ABB / AABB · 4 fruits, AB / ABC / AAB / ABB,
+gap in the middle, 4 in the tray. 5 trains each. Progress is saved by level `id` —
+never renumber.
 
 ## Rules (owner's decisions, 2026-09-29)
 - Every puzzle has exactly ONE valid answer (one way to fill the gaps from the tray
@@ -18,6 +25,7 @@ gap, no AABB) and level 6 (dots growing by 1; small/medium/big as a variant) ·
 - Max 9 wagons. Level 5 (whole-period gap = 3 periods) excludes AABB (12 wagons).
 - Colour tokens also differ in shape (red circle, blue square, yellow triangle, green
   star, purple heart) — never colour alone.
+- Fruits: apple, banana, grapes, pear, watermelon (not strawberry: two red fruits).
 - Level 7 (free): the child's start IS the period; the locomotive repeats it as-is (no
   period inference).
 - Musical notes stay inside the game (own small Web Audio code), no change to
@@ -34,8 +42,12 @@ gap, no AABB) and level 6 (dots growing by 1; small/medium/big as a variant) ·
   (pentatonic). A placed token plays its note; tapping a full wagon plays it; a full
   train plays its whole tune, whistles, then rolls away.
 - Rows break at period boundaries (AAB AAB / AAB) as long as wagons stay ≥ 64px;
-  otherwise any rows ≥ 64px; if nothing reaches 64px (small landscape phone), the
-  biggest wagons, period boundaries first.
+  otherwise any rows ≥ 64px; if nothing reaches 64px, the biggest wagons, period
+  boundaries first.
+- Empty wagons (drop targets) and tray tokens are ≥ 64px at every size: the gate
+  checks empty wagons as touch targets. Full wagons (tapping = optional note) may be
+  smaller (cells ≥ 56px). Measured 2026-09-29 over all worst cases: empty wagons
+  66–144px, tokens 64–104px.
 
 ## Files
 - `levels.js` — level data (tokens, patterns, wagons, gap kind, choices, rounds).
@@ -46,14 +58,17 @@ gap, no AABB) and level 6 (dots growing by 1; small/medium/big as a variant) ·
   the gap's knock, the whistle. Own lazy AudioContext.
 - `train.js` — screens and flow; `strings.js` (incl. `train.token.*` colour names),
   `art.js`, `train.css`.
-- `checks.js` — dev-only: longest level-1 train (Math.random pinned to 0.999 in the
-  page); AAB × 3 through a check-only level 99 pushed into the page's `LEVELS` (rows
-  must break at periods; exactly 3 per row at 360px); hints 2 + 3 on screen; the
+- `checks.js` — dev-only: longest train of levels 1–4 (Math.random pinned to 0.999
+  in the page: the last pattern, the most wagons, the gap furthest right); AAB × 3
+  through a check-only level 99 pushed into the page's `LEVELS` (rows must break at
+  periods; exactly 3 per row at 360px); hints 2 + 3 on screen (levels 1 and 4); the
   screen after a wrong token. Offline: wrong token → no star, right token (dragged) →
   one star, a different train comes next.
 
 ## Layout
-Track (the train) above, tray below. `fitTrain` picks rows/size from the track's size
+Portrait: track (the train) above, tray below. Landscape: tray as a column on the
+right (2 columns when it has 4 tokens: `--tray-columns`), so the train gets the full
+height. `fitTrain` picks rows/size from the track's size
 (ResizeObserver); train.js sets `--columns` / `--car` on `.tr-train` and each wagon's
 grid row/column. The locomotive has column 1; other rows start under the first wagon,
 so periods line up in columns. All classes start with `tr-`. The track clips its
