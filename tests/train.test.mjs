@@ -88,6 +88,10 @@ test('growing trains: dotCount / grows', () => {
   assert.ok(!grows(['dots1', 'dots2', 'dots3', 'dots3']));
   assert.ok(!grows(['dots1', 'dots3', 'dots5']));  // +2: not "one more"
   assert.ok(!grows(['dots1', 'red']));
+  assert.ok(grows(['dots5', 'dots4', 'dots3', 'dots2']));          // counting down
+  assert.ok(!grows(['dots5', 'dots4', 'dots3', 'dots4']));         // down then up
+  assert.ok(!grows(['dots2', 'dots2', 'dots2']));                  // no change
+  assert.deepEqual(validFillings(['dots5', 'dots4', 'dots3', null], [3], ['dots1', 'dots2', 'dots3'], true), [{ 3: 'dots2' }]);
   assert.deepEqual(validFillings(['dots2', 'dots3', 'dots4', null], [3], ['dots4', 'dots5', 'dots3'], true), [{ 3: 'dots5' }]);
 });
 
@@ -102,12 +106,28 @@ test('level 5: every train is 3 periods with the whole last period empty (no AAB
   }
 });
 
-test('level 6: all the growing trains (1-2-3-?, 2-3-4-?, 1-2-3-4-?) come up', () => {
+test('level 6: all 6 trains come up (3 counting up, 3 counting down)', () => {
   const level = LEVELS.find((l) => l.grow);
   const rng = seeded(6);
   const seen = new Set();
-  for (let n = 0; n < 200; n++) seen.add(makePuzzle(level, rng).key);
-  assert.deepEqual([...seen].sort(), ['dots1,dots2,dots3,dots4,dots5|4', 'dots1,dots2,dots3,dots4|3', 'dots2,dots3,dots4,dots5|3']);
+  let previous = null;
+  for (let n = 0; n < 300; n++) {
+    previous = makePuzzle(level, rng, previous?.key);
+    seen.add(previous.cars.filter(Boolean).map(dotCount).join('-'));
+  }
+  assert.deepEqual([...seen].sort(), ['1-2-3', '1-2-3-4', '2-3-4', '4-3-2', '5-4-3', '5-4-3-2']);
+});
+
+test('level 6: never the same answer twice in a row', () => {
+  const level = LEVELS.find((l) => l.grow);
+  const rng = seeded(66);
+  let previous = null;
+  for (let n = 0; n < 300; n++) {
+    const puzzle = makePuzzle(level, rng, previous?.key);
+    if (previous) assert.notEqual(puzzle.answer[puzzle.gaps[0]], previous.answer[previous.gaps[0]], `#${n}`);
+    assert.equal(puzzle.step, dotCount(puzzle.cars[1]) - dotCount(puzzle.cars[0]), `#${n}: step`);
+    previous = puzzle;
+  }
 });
 
 test('firstEmpty', () => {

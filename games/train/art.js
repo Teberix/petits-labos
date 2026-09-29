@@ -43,15 +43,16 @@ export const TOKENS = {
 };
 
 // Growing trains: 1 to 5 dots in a 3 + 2 frame (faint circles = the empty places), so
-// each wagon visibly has "one more". The last dot (the new one) has its own class:
-// hint 2 colours it (.tr-grow-hint in train.css).
+// each wagon visibly has "one more" (or "one less"). Hint 2 (see train.css) colours
+// the last dot (.tr-dot-new) when counting up, or the first empty place — where the
+// dot that just left was (.tr-dot-gone) — when counting down.
 const DOT_PLACES = [[24, 34], [50, 34], [76, 34], [24, 66], [50, 66]];
 for (let n = 1; n <= DOT_PLACES.length; n++) {
   TOKENS[`dots${n}`] = {
     color: '#3C7BE8',
     art: svg(DOT_PLACES.map(([x, y], i) => (i < n
       ? `<circle class="tr-dot${i === n - 1 ? ' tr-dot-new' : ''}" cx="${x}" cy="${y}" r="11" fill="#3C7BE8"/>`
-      : `<circle cx="${x}" cy="${y}" r="10" fill="none" stroke="#C9B79C" stroke-width="2.5"/>`)).join('')),
+      : `<circle${i === n ? ' class="tr-dot-gone"' : ''} cx="${x}" cy="${y}" r="10" fill="none" stroke="#C9B79C" stroke-width="2.5"/>`)).join('')),
   };
 }
 

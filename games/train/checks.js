@@ -157,16 +157,19 @@ export default {
       },
     },
     {
-      // Growing train 1-2-3-4-? and 2 wrong tokens: hint 2 = the new dots turn orange.
-      name: 'level 6, longest growing train, hint 2 (orange dots)',
+      // Counting down 5-4-3-2-? (pinned random: the last step, the most wagons) and 2
+      // wrong tokens: hint 2 = the places of the dots that left turn orange.
+      name: 'level 6, longest train counting down, hint 2 (orange circles)',
       async setup(page, kit) {
         await openLevel(page, kit, 6, { longest: true });
         await expectCars(page, 5);
         const { wrong } = await tokensFor(page);
         for (let i = 0; i < 2; i++) await kit.tap(page, token(wrong));
         await kit.settle(page);
-        const hinted = await page.evaluate(() => document.querySelector('.tr-train.tr-grow-hint') !== null);
-        if (!hinted) throw new Error('hint 2 not shown');
+        const { cars } = await readTrain(page);
+        if (cars.slice(0, 4).map(dotCount).join('-') !== '5-4-3-2') throw new Error(`expected 5-4-3-2-?, got ${cars}`);
+        const hinted = await page.evaluate(() => document.querySelector('.tr-train.tr-grow-hint.tr-shrink') !== null);
+        if (!hinted) throw new Error('hint 2 (counting down) not shown');
       },
     },
     {

@@ -16,8 +16,9 @@ Marché).
 1 AB colours, gap at the end, 2 in the tray · 2 fruits, AB / ABC, 3 in the tray (one
 fruit not in the train) · 3 colours, AAB / ABB / AABB · 4 fruits, AB / ABC / AAB / ABB,
 gap in the middle, 4 in the tray · 5 colours, AB / ABC / AAB / ABB, the whole last
-period missing (3 periods = 6 or 9 wagons), 4 in the tray · 6 growing dots:
-1-2-3-?, 2-3-4-?, 1-2-3-4-? (tray: the answer and its neighbours). 5 trains each. Progress is saved by level `id` —
+period missing (3 periods = 6 or 9 wagons), 4 in the tray · 6 dots counting up or
+down by one: 1-2-3-?, 2-3-4-?, 1-2-3-4-?, 5-4-3-?, 4-3-2-?, 5-4-3-2-? (tray: the answer
+and its neighbours; never the same answer twice in a row). 5 trains each. Progress is saved by level `id` —
 never renumber.
 
 ## Rules (owner's decisions, 2026-09-29)
@@ -28,10 +29,14 @@ never renumber.
 - Level 5 (owner, 2026-09-29): the empty wagons can be filled in any order (drag onto
   any of them; a tap fills the leftmost); a wrong token in one never clears the
   others; hints count per train; 1 star per completed train.
-- Level 6 (owner, 2026-09-29): dots growing by one only (the small/medium/big variant
-  was dropped: ambiguous after "big"), max 5 dots, at least 3 wagons before the gap,
-  one answer (tested). Dots sit in a 3 + 2 frame with faint empty places; hint 2
-  turns each wagon's newest dot orange; the notes rise with the dots.
+- Level 6 (owner, 2026-09-29): dots going up or down by one (the small/medium/big
+  variant was dropped: ambiguous after "big"), 1–5 dots, at least 3 wagons before the
+  gap, one answer, never the same answer twice in a row (the puzzle `key` of a growing
+  train is its answer) — all tested. Counting down was added so the 3 up-trains
+  can't be learnt by heart. Dots sit in a 3 + 2 frame with faint empty places.
+  Hint 2: up → each wagon's newest dot turns orange (« un point de plus ») · down →
+  the place of the dot that left becomes an orange dashed circle (« un point de
+  moins »). The notes follow the number of dots.
 - Colour tokens also differ in shape (red circle, blue square, yellow triangle, green
   star, purple heart) — never colour alone.
 - Fruits: apple, banana, grapes, pear, watermelon (not strawberry: two red fruits).
@@ -73,7 +78,7 @@ never renumber.
   through a check-only level 99 pushed into the page's `LEVELS` (rows must break at
   periods; exactly 3 per row at 360px); hints 2 + 3 on screen (levels 1 and 4); level 5
   filled out of order (last wagon first, then a wrong token on the middle one: the
-  filled one stays, no star yet); level 6 hint 2 (orange dots); the screen after a
+  filled one stays, no star yet); level 6 counting down 5-4-3-2-? with hint 2 (orange circles); the screen after a
   wrong token. Offline: wrong token → no star, right token (dragged) →
   one star, a different train comes next.
 

@@ -12,9 +12,10 @@
 //   choices   how many different tokens in the tray (at least the pattern's letters)
 //   rounds    trains to finish the level
 //   intro     (optional) extra line said at the first train (key in strings.js)
-//   grow      true → a growing train instead of a pattern: 1, 2, 3… dots, one more
-//             each wagon (max 5); uses `before` = [min, max] wagons before the gap
-//             (at least 3) instead of tokens/patterns/wagons/gap
+//   grow      true → a growing train instead of a pattern: 1 to 5 dots, one more (or
+//             one less) each wagon; uses `before` = [min, max] wagons before the gap
+//             (at least 3) and `steps` ([1] up, [-1] down, [1, -1] both) instead of
+//             patterns/wagons/gap. Two trains in a row never have the same answer.
 //
 // pattern.js checks every train before it's shown: exactly one way to fill it, and at
 // least 2 full periods visible. tests/train.test.mjs generates many trains per level
@@ -37,6 +38,7 @@ export const LEVELS = [
   // A whole period is missing (the train is 3 periods; no AABB: that would be 12
   // wagons). The empty wagons can be filled in any order.
   { id: 5, tokens: COLORS, patterns: ['AB', 'ABC', 'AAB', 'ABB'], gap: 'period', choices: 4, rounds: 5, intro: 'train.intro.period' },
-  // Growing: one more dot each wagon (max 5), 3 or 4 wagons before the gap.
-  { id: 6, grow: true, tokens: DOTS, before: [3, 4], choices: 3, rounds: 5, intro: 'train.intro.grow' },
+  // Growing: one more dot each wagon, or one less (1 to 5 dots), 3 or 4 wagons before
+  // the gap: 1-2-3-?, 2-3-4-?, 1-2-3-4-?, 5-4-3-?, 4-3-2-?, 5-4-3-2-?.
+  { id: 6, grow: true, tokens: DOTS, before: [3, 4], steps: [1, -1], choices: 3, rounds: 5, intro: 'train.intro.grow' },
 ];

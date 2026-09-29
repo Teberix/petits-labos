@@ -14,14 +14,15 @@
 // Tray tokens are sources: the same token can be used for several wagons. With several
 // empty wagons (level 5) they can be filled in any order (drag), or left to right (tap);
 // a wrong token never clears the others.
-// Growing trains (level 6): wagons with 1, 2, 3… dots; same flow.
+// Growing trains (level 6): wagons with 1, 2, 3… dots (or 5, 4, 3…); same flow.
 // Music: every token has its own note (music.js); tapping a wagon plays it, so the
 //        pattern is also a tune.
 // Hints, stronger after each wrong token (per train):
 //        1 → the train "sings": wagons light up one by one with their notes (the gap
 //            knocks), then the voice names them: « rouge, bleu, rouge… et après ? »
 //        2 → the first full period is outlined (the part that repeats); in a growing
-//            train, the new dot of each wagon turns orange ("one more each time")
+//            train, the new dot of each wagon turns orange ("one more each time"), or
+//            counting down, the place of the dot that left ("one less each time")
 //        3 → the right token wiggles in the tray
 // The puzzles (and their checks: one answer only, 2 full periods visible) are made in
 // pattern.js; the level data is in levels.js.
@@ -276,7 +277,7 @@ function createGame(container, ctx) {
     } else if (puzzle.misses === 2) {
       puzzle.showPeriod = true;
       markPeriod();
-      remark(t(puzzle.grow ? 'train.hintGrow' : 'train.hintPeriod'));
+      remark(t(!puzzle.grow ? 'train.hintPeriod' : puzzle.step > 0 ? 'train.hintGrow' : 'train.hintShrink'));
     } else if (!puzzle.tokenHint) {
       puzzle.tokenHint = true;
       renderTray();
@@ -306,10 +307,11 @@ function createGame(container, ctx) {
   }
 
   // Hint 2: outline the first period that has no empty wagon (the part that repeats).
-  // Growing train: colour each wagon's new dot instead.
+  // Growing train: colour each wagon's new dot (or the place of the one that left).
   function markPeriod() {
     if (puzzle.grow) {
       play.els.train.classList.add('tr-grow-hint');
+      play.els.train.classList.toggle('tr-shrink', puzzle.step < 0);
       return;
     }
     const p = puzzle.period;

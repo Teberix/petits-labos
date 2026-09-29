@@ -112,8 +112,10 @@
   color: #C98B54;
   line-height: 1;
 }
-/* Hint 2 in a growing train: the new dot of each wagon turns orange. */
-.tr-grow-hint .tr-dot-new { fill: #FF8A3D; }
+/* Hint 2 in a growing train. Counting up: the new dot of each wagon turns orange.
+   Counting down: the empty place of the dot that left shows as an orange dashed circle. */
+.tr-grow-hint:not(.tr-shrink) .tr-dot-new { fill: #FF8A3D; }
+.tr-grow-hint.tr-shrink .tr-dot-gone { stroke: #FF8A3D; stroke-width: 4; stroke-dasharray: 5 4; }
 
 /* Hint 2: the first full period (the part that repeats) gets a blue frame (inset:
    the track clips anything outside the wagons). */
