@@ -70,5 +70,23 @@ export const HANGER = `<svg viewBox="0 0 100 100" preserveAspectRatio="none" ari
   <path d="M50 0L6 100M50 0v100M50 0l44 100" stroke="#8A7A66" stroke-width="2" vector-effect="non-scaling-stroke" fill="none"/>
 </svg>`;
 
+// The podium's sign, so the question can be SEEN: a heavy weight with an arrow going
+// down ("the heavier one"), or a feather with an arrow going up ("the lighter one").
+export const SIGN = {
+  heavy: svg(`
+    <path d="M30 40h40l12 48H18z" fill="#4A5160"/>
+    <circle cx="50" cy="32" r="10" fill="none" stroke="#4A5160" stroke-width="6"/>
+    <path d="M50 52v24M40 66l10 10 10-10" stroke="#FFC83D" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`),
+  light: svg(`
+    <path d="M26 88C30 50 50 22 82 12 76 44 58 72 26 88z" fill="#E5E8EE" stroke="#8B95A5" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M26 88L70 26" stroke="#8B95A5" stroke-width="3" stroke-linecap="round"/>
+    <path d="M18 58V26M8 36l10-10 10 10" stroke="#3C7BE8" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`),
+};
+
+// The podium itself (the sign or the winning object sits on it).
+export const PODIUM = `<svg viewBox="0 0 100 40" preserveAspectRatio="none" aria-hidden="true">
+  <path d="M6 8h88v32H6z" fill="#FFC83D"/><path d="M0 0h100v10H0z" fill="#F5B700"/>
+</svg>`;
+
 export const ICON_NEXT = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M12 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 export const ICON_LOCK = `<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10" width="14" height="11" rx="2.5" fill="currentColor"/><path d="M8 10V7a4 4 0 0 1 8 0v3" fill="none" stroke="currentColor" stroke-width="2.5"/></svg>`;

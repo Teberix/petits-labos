@@ -1,8 +1,8 @@
 // "La Balance" scene: the balance (stand, beam, two pans), the tray, and object
 // buttons. Only builds DOM and moves the beam — no game rules here.
 //
-//   [ stage: the balance ]   portrait: the tray is under the balance;
-//   [ tray: objects      ]   landscape: a column on its right (balance.css).
+//   [ stage: the balance    ]   portrait: the dock is under the balance;
+//   [ dock: tray  | podium  ]   landscape: a column on its right (balance.css).
 import { h } from '../../js/dom.js';
 import { OBJECTS } from './levels.js';
 import { tilt } from './weigh.js';
@@ -12,7 +12,7 @@ import * as art from './art.js';
 // 18% to 82%). A pan hangs from each end, so it moves up/down by HALF_BEAM × sin(angle).
 const HALF_BEAM = 32;
 
-// Builds the play screen. Returns { root, scale, pans: [left, right], tray }.
+// Builds the play screen. Returns { root, scale, pans: [left, right], tray, podium }.
 // Each pan has a `.bl-load` (what's on it) and data-side = 0 (left) / 1 (right).
 export function buildScene(t) {
   const pans = [0, 1].map((side) => h('div', {
@@ -28,8 +28,22 @@ export function buildScene(t) {
     h('div', { class: 'bl-beam' }),
     ...pans);
   const tray = h('div', { class: 'bl-tray', role: 'group', 'aria-label': t('balance.tray') });
-  const root = h('div', { class: 'bl-play' }, h('div', { class: 'bl-stage' }, scale), tray);
-  return { root, scale, pans, tray };
+  // The podium: the answer is DRAGGED onto it (tapping it only repeats the question).
+  const podium = h('button', { class: 'bl-podium', type: 'button', 'aria-label': t('balance.podium') },
+    h('span', { class: 'bl-podium-top' }),
+    h('span', { class: 'bl-podium-base', html: art.PODIUM }));
+  const dock = h('div', { class: 'bl-dock' }, tray, podium);
+  const root = h('div', { class: 'bl-play' }, h('div', { class: 'bl-stage' }, scale), dock);
+  return { root, scale, pans, tray, podium };
+}
+
+// What the podium shows: the question's sign ('heavy' | 'light'), dim until the
+// objects have been weighed; or the object that won the round.
+export function setPodium(podium, { question, awake, winner = null }) {
+  podium.classList.toggle('bl-awake', awake || Boolean(winner));
+  podium.dataset.question = question;
+  podium.querySelector('.bl-podium-top').innerHTML = winner ? art.OBJECT_ART[winner] : art.SIGN[question];
+  podium.querySelector('.bl-podium-top').dataset.look = winner ? OBJECTS[winner].look : '';
 }
 
 // An object button. Its drawing is scaled by how big the thing looks (levels.js

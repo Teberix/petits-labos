@@ -11,6 +11,7 @@ import { buildScene, restartAnimation } from './scene.js';
 import { playRounds } from './round.js';
 import STRINGS from './strings.js';
 import * as art from './art.js';
+import meta from './meta.js';
 
 function loadStylesheet() {
   if (document.querySelector('link[data-game="balance"]')) return;
@@ -76,7 +77,29 @@ function createGame(container, ctx) {
     stopLevel();
     const els = buildScene(t);
     container.replaceChildren(els.root);
-    rounds = playRounds(ctx, level, els);
+    rounds = playRounds(ctx, level, els, () => levelDone(level));
+  }
+
+  function markCompleted(level) {
+    const p = progress();
+    if (!p.completed.includes(level.id)) p.completed.push(level.id);
+    ctx.save(p);
+  }
+
+  // ---------- Level complete ----------
+
+  function levelDone(level) {
+    stopLevel();
+    markCompleted(level);
+    sfx.fanfare();
+    container.replaceChildren(h('div', { class: 'bl-done' },
+      h('div', { class: 'bl-done-art', html: meta.icon }),
+      h('button', {
+        class: 'bl-continue', type: 'button', 'aria-label': t('balance.continue'),
+        html: art.ICON_NEXT, onclick: () => { sfx.pop(); showLevels(); },
+      }),
+    ));
+    ctx.speak(t('balance.levelDone'));
   }
 
   return {

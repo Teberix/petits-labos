@@ -146,6 +146,62 @@
 .bl-obj[data-look="small"] .bl-art { transform: scale(0.55); }
 .bl-obj[data-look="medium"] .bl-art { transform: scale(0.78); }
 
+/* Hint 2: an arrow on the answer — down = "the heavier one", up = "the lighter one". */
+.bl-arrow-down, .bl-arrow-up { position: relative; }
+.bl-arrow-down::after, .bl-arrow-up::after {
+  content: '';
+  position: absolute;
+  left: 30%;
+  width: 40%;
+  height: 32%;
+  top: -12%;
+  background: #FF8A3D;
+  clip-path: polygon(30% 0, 70% 0, 70% 45%, 100% 45%, 50% 100%, 0 45%, 30% 45%); /* ↓ */
+  animation: bl-nudge 0.9s ease-in-out infinite;
+}
+.bl-arrow-up::after { clip-path: polygon(50% 0, 100% 55%, 70% 55%, 70% 100%, 30% 100%, 30% 55%, 0 55%); /* ↑ */ }
+/* Hint 3: the answer wiggles until it's used. */
+.bl-obj.bl-hint { animation: bl-hint 0.9s ease-in-out infinite; }
+/* Hint 1: the pan that went down (or up) glows. */
+.bl-dish.bl-pulse { animation: bl-pulse 0.6s ease-in-out 3; }
+
+/* ---------- Dock: tray + podium ---------- */
+
+.bl-dock {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--gap);
+}
+@media (orientation: landscape) {
+  .bl-dock { flex-direction: column; }
+}
+
+/* The podium: a sign (heavy / light) on a pedestal; the answer is dragged onto it.
+   Dim until the objects have been weighed. */
+.bl-podium {
+  --size: clamp(64px, 13vmin, 104px);
+  width: calc(var(--size) * 1.2);
+  height: calc(var(--size) * 1.2);
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  border: none;
+  border-radius: 1rem;
+  background: #FFF0CC;
+  box-shadow: var(--shadow);
+  opacity: 0.45;
+}
+.bl-podium.bl-awake { opacity: 1; }
+.bl-podium.drop-hover { background: #E3F0FF; box-shadow: 0 0 0 0.25rem #3C7BE8; }
+.bl-podium-top { flex: 1; min-height: 0; padding: 12% 12% 2%; }
+.bl-podium-top svg { display: block; width: 100%; height: 100%; transform-origin: 50% 100%; }
+.bl-podium-top[data-look="small"] svg { transform: scale(0.55); }
+.bl-podium-top[data-look="medium"] svg { transform: scale(0.78); }
+.bl-podium-base { flex: 0 0 22%; padding: 0 10% 8%; }
+.bl-podium-base svg { display: block; width: 100%; height: 100%; }
+
 /* ---------- Tray ---------- */
 
 .bl-tray {
@@ -170,6 +226,30 @@
   border-radius: 1rem;
 }
 
+/* ---------- Level done ---------- */
+
+.bl-done {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--gap);
+}
+.bl-done-art { width: clamp(6rem, 30vmin, 12rem); animation: bl-hop 0.6s ease-in-out infinite; }
+.bl-done-art svg { display: block; width: 100%; height: auto; }
+.bl-continue {
+  width: var(--tap);
+  height: var(--tap);
+  padding: 0.9rem;
+  border: none;
+  border-radius: 50%;
+  background: var(--green);
+  color: #fff;
+  box-shadow: var(--shadow);
+}
+.bl-continue svg { width: 100%; height: 100%; }
+
 /* ---------- Animations ---------- */
 
 .bl-wiggle { animation: bl-shake 0.4s ease-in-out; }
@@ -179,6 +259,10 @@
 @keyframes bl-shake { 25% { transform: rotate(-6deg); } 75% { transform: rotate(6deg); } }
 @keyframes bl-bounce { 35% { transform: translateY(-35%); } 65% { transform: translateY(6%); } 85% { transform: translateY(-4%); } }
 @keyframes bl-pop-in { from { transform: scale(0.4); } }
+@keyframes bl-hop { 50% { transform: translateY(-10%); } }
+@keyframes bl-hint { 25% { transform: translateY(-10%) rotate(-8deg); } 75% { transform: translateY(-10%) rotate(8deg); } }
+@keyframes bl-nudge { 50% { transform: translateY(15%); } }
+@keyframes bl-pulse { 50% { background: #FF8A3D; box-shadow: 0 0 0 0.4rem rgba(255, 138, 61, 0.45); } }
 
 @media (prefers-reduced-motion: reduce) {
   .bl-beam, .bl-pan { transition-duration: 0.01s; }
