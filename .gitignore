@@ -10,3 +10,6 @@ Thumbs.db
 tools/private-words.txt
 # Screenshots of failed layout checks
 tools/.check-output/
+# Private material (e.g. level generators) never goes in this public repo — the gate
+# also fails on any tracked path under private/ or containing "generator"
+private/

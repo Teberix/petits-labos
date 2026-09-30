@@ -92,8 +92,10 @@ games/registry.js      one line per game
 games/<id>/meta.js     id, titleKey, strings, tile icon (loaded eagerly by the hub)
 games/<id>/<id>.js     default export { mount(container, ctx), unmount() } (lazy-loaded)
 games/<id>/checks.js   dev-only: worst-case screens + offline interaction for the gate
-games/<id>/CLAUDE.md   dev-only: that game's notes
-tools/                 dev-only Node scripts (never loaded by the app)
+games/<id>/CLAUDE.md   dev-only: that game's notes (template: tools/templates/game-CLAUDE.md)
+games/<id>/levels.json level-based games only: the levels (app file) — see "Level data"
+games/<id>/levels.schema.json, solver.mjs   level-based games: dev-only, used by the gate
+tools/                 dev-only Node scripts (never loaded by the app); templates/ for /new-game
 tests/                 dev-only unit tests: node --test tests/*.test.mjs
 .claude/               settings.json (permissions), agents/ (reviewers), commands/ (/gate, /new-game)
 ```
@@ -101,8 +103,8 @@ tests/                 dev-only unit tests: node --test tests/*.test.mjs
 Conventions:
 - **All URLs relative** (`./sw.js`, `css/base.css`) — the app lives at `/petits-labos/`.
 - **New/removed app file → `node tools/update-precache.mjs`** (release does it too).
-  Dev-only files (`checks.js`, `*.md`) are never precached (`isDevOnly()` in
-  `tools/precache.mjs`).
+  Dev-only files (`checks.js`, `solver.mjs`, `levels.schema.json`, `*.md`) are never
+  precached (`isDevOnly()` in `tools/precache.mjs`).
 - Game contract and `ctx` fields are documented at the top of `js/screens/game.js`.
 - Game-specific strings go in the game's `strings.js` / `meta.js`, not in `js/i18n/`.
 - Updates are applied only at safe moments: app launch, entering hub/profiles, or the app
@@ -118,10 +120,34 @@ Conventions:
   way with a crown. Always positive: a normal success still gets its star, nothing is
   ever shown as a failure, and "try to do better" is said at most once per level.
 
+## Level data (level-based games)
+
+For games with many hand-made puzzle levels (games 11–14 onwards). Existing games keep
+their `levels.js`; don't convert them.
+- `games/<id>/levels.json` — the only place level content lives (no levels hard-coded
+  in engine code):
+  ```json
+  { "schemaVersion": 1, "game": "<id>", "levels": [ { "id": 1, "difficulty": 1, "…": "game params" } ] }
+  ```
+  `id` unique (progress is saved by id — never renumber), `difficulty` a number (the
+  intended curve). The engine loads it with a JSON module import —
+  `import data from './levels.json' with { type: 'json' };` — never `fetch()` (the app
+  makes no network calls; the service worker precaches `levels.json` like any app file).
+- `games/<id>/levels.schema.json` — JSON Schema for ONE level (the game's params).
+  Dev-only. The gate's validator (`tools/json-schema.mjs`) supports a subset (type,
+  properties, required, additionalProperties, items, min/max, enum, const, pattern,
+  `$ref` to `#/$defs/…`); any other keyword is reported, never silently ignored.
+- `games/<id>/solver.mjs` — optional, dev-only: `export function solve(level) →
+  { solvable, minMoves? }`. Plain JS, no dependencies, bounded search.
+- Templates for all three: `tools/templates/level-game/` (`/new-game` copies them).
+- **Level generators never go in this repo** (it's public): they live in a separate
+  private repo. `private/` is git-ignored, and the gate fails on any tracked path under
+  `private/` or containing "generator".
+
 ## Verification (the gate)
 
 ```bash
-node tools/gate.mjs                 # everything: unit + privacy + layout + offline (~1.5 min)
+node tools/gate.mjs                 # everything: unit + privacy + levels + layout + offline
 node tools/gate.mjs --game robot    # layout/offline for one game (during a build step)
 node tools/gate.mjs --only unit,privacy
 ```
@@ -133,7 +159,12 @@ node tools/gate.mjs --only unit,privacy
   interaction must succeed.
 - `check-privacy.mjs`: words from `tools/private-words.txt` (git-ignored; `word @ file` =
   allowed in that file only) in committed/staged/untracked files and commit messages; the
-  list itself must never be tracked; no network calls/URLs in app code.
+  list itself must never be tracked; no network calls/URLs in app code; no tracked path
+  (`git ls-files`) under `private/` or matching /generator/i.
+- `check-levels.mjs` (level-based games only — games without `levels.json` are
+  skipped): `levels.json` shape + every level valid against `levels.schema.json` → FAIL
+  otherwise; if `solver.mjs` exists, every level must be solvable → FAIL otherwise; then a
+  difficulty table (id, difficulty, minMoves) — information only.
 - Never hangs: 10 s per Playwright action, 30 s per page load, 60 s per worst case /
   `offline()` (constants in `check-kit.mjs`). Failures show the page's JS errors; a worst
   case that times out or hits a JS error is skipped at the remaining sizes.
