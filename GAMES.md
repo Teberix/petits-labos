@@ -31,7 +31,8 @@ clear difficulty curve.
 - **12 La Pâtisserie** — match-3 swap (Cookie Jam-style). No lives, no timer; simple
   goals (« collect 10 X »); auto-reshuffle when no move is left; hint after 5 s idle.
   The fun = cascades and combo feedback.
-- **13 Les Paires** — mahjong-style pair matching on stacked tiles. Boards solvable by
-  construction; a free shuffle button.
+- **13 Les Paires** — mahjong-style pair matching on stacked tiles. Every board must be
+  solvable: v1 levels are hand-made, so it needs a real `solver.mjs` (the gate checks
+  every level). A free shuffle button.
 - **14 Les Pompons** — move zones to guide fluffy balls to the matching colour (Fluffy
   Drop-style). No fail penalty; short levels.
