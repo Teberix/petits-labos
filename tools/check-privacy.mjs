@@ -10,6 +10,9 @@
 // 2. That list itself must never be tracked or staged.
 // 3. App code must not talk to the network: no fetch/XHR/WebSocket/EventSource/beacon,
 //    no http(s):// URLs (except fetch in sw.js — the cache — and SVG namespace URLs).
+// 4. Private guard: this repo is public. Level GENERATORS live in a separate private
+//    repo, and private/ is git-ignored: no tracked path (git ls-files) may be under
+//    private/ or have "generator" (any case) anywhere in its path.
 import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -129,11 +132,26 @@ function checkNetwork(failures) {
   return files.length;
 }
 
+// ---- Private guard ----
+function checkPrivatePaths(failures) {
+  const tracked = git('ls-files', '-z').split('\0').filter(Boolean);
+  for (const path of tracked) {
+    if (path.startsWith('private/')) failures.push(`${path}: tracked under private/ — private files never go in this public repo (git rm --cached)`);
+    else if (/generator/i.test(path)) failures.push(`${path}: a level generator (or "generator" in the path) — generators live in the private repo, never here`);
+  }
+  return tracked.length;
+}
+
 export async function checkPrivacy() {
   const failures = [];
   const scanned = checkPrivateWords(failures);
   const appFiles = checkNetwork(failures);
-  return { ok: failures.length === 0, summary: `${scanned} files + commit messages scanned, ${appFiles} app files network-free`, failures };
+  const tracked = checkPrivatePaths(failures);
+  return {
+    ok: failures.length === 0,
+    summary: `${scanned} files + commit messages scanned, ${appFiles} app files network-free, ${tracked} tracked paths checked for private/ and generators`,
+    failures,
+  };
 }
 
 if (isMain(import.meta.url)) {

@@ -12,10 +12,13 @@ const FILES = ['index.html', 'manifest.webmanifest'];
 const FOLDERS = ['css', 'js', 'games', 'icons'];
 
 // Dev-only files that live next to the app code but must never reach a device:
-// each game's layout/offline checks (games/<id>/checks.js) and notes (*.md).
+// each game's layout/offline checks (games/<id>/checks.js), notes (*.md), and for
+// level-based games the level solver (solver.mjs) and the level schema
+// (levels.schema.json) — both only used by the gate (tools/check-levels.mjs).
+const DEV_ONLY_NAMES = ['checks.js', 'solver.mjs', 'levels.schema.json'];
 export function isDevOnly(path) {
   const name = path.split('/').at(-1);
-  return name === 'checks.js' || name.endsWith('.md');
+  return DEV_ONLY_NAMES.includes(name) || name.endsWith('.md');
 }
 
 function walk(dir) {

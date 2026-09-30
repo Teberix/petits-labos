@@ -10,8 +10,13 @@ stop and ask.
 ## 1. Design proposal — then STOP and wait for the owner's OK
 Propose, briefly:
 - screens and the core loop (what the child sees, touches, hears — no reading needed);
-- level progression, as config data in `games/<id>/levels.js` (editable without touching
-  logic), and how mistakes, hints (progressive) and rewards work;
+- level progression, as config data (editable without touching logic), and how
+  mistakes, hints (progressive) and rewards work. Where the levels live:
+  - **level-based games** (many hand-made puzzle levels, e.g. games 11–14): the "Level
+    data" convention in the root `CLAUDE.md` — `levels.json` + `levels.schema.json` +
+    `solver.mjs`, checked by the gate. The engine loads levels ONLY from `levels.json`;
+  - other games: `games/<id>/levels.js`, as before;
+  say which one this game is;
 - the data model and any pure logic module that can be unit-tested;
 - which shared utilities it reuses (dragdrop, audio, i18n, storage, rewards, parent gate);
 - language: fr default for non-linguistic games, fr/es/en per profile for reading games;
@@ -21,6 +26,13 @@ Ask only about real ambiguities. Don't build anything yet. Set GAMES.md status t
 IN PROGRESS only after the OK.
 
 ## 2. Build, one step at a time
+Step (a) scaffolds the folder:
+- `games/<id>/CLAUDE.md` from `tools/templates/game-CLAUDE.md` (fill in as you go);
+- level-based games also copy `tools/templates/level-game/` → `games/<id>/`
+  (`levels.json`, `levels.schema.json`, `solver.mjs`), replacing `GAME_ID` with the id.
+  The solver stub fails the gate on purpose until `solve()` is written (or the file is
+  deleted, with the reason in the game's `CLAUDE.md`, when levels can't be unsolvable).
+
 For each step:
 1. Implement it. New game = new folder `games/<id>/` + ONE line in `games/registry.js`;
    never touch other games. Add/extend `games/<id>/checks.js` and unit tests

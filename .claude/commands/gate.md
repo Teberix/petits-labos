@@ -18,7 +18,8 @@ Verify the current working tree of Petits Labos. Don't verify manually what this
 
 3. **Reviewers** — in parallel (one message, several Agent calls), read-only:
    - `kid-ux-reviewer` once per changed game (give it the game id and its changed files);
-   - `pwa-guardian` only if the shell changed (give it the changed files).
+   - `pwa-guardian` only if the shell changed, or a game's `levels.json`, `solver.mjs`
+     or `levels.schema.json` changed (give it the changed files).
    No changed game and no shell change → no reviewers.
 
 4. **Summary** — short:

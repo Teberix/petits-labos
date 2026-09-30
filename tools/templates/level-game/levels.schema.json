@@ -1,0 +1,10 @@
+{
+  "$comment": "ONE level of GAME_ID. Dev-only (never precached): the gate checks every level of levels.json against it (tools/check-levels.mjs, which supports the keywords listed in tools/json-schema.mjs). Add the game's own params under properties + required.",
+  "type": "object",
+  "required": ["id", "difficulty"],
+  "additionalProperties": false,
+  "properties": {
+    "id": { "type": "integer", "minimum": 1 },
+    "difficulty": { "type": "integer", "minimum": 1, "maximum": 10 }
+  }
+}

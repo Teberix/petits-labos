@@ -1,12 +1,15 @@
-// The verification gate: unit tests + privacy + layout + offline.
+// The verification gate: unit tests + privacy + levels + layout + offline.
 //   node tools/gate.mjs                 everything (release.mjs always runs this)
 //   node tools/gate.mjs --game robot    layout/offline for one game only (during a build step)
-//   node tools/gate.mjs --only unit,privacy   just some checks (unit, privacy, layout, offline)
+//   node tools/gate.mjs --only unit,privacy   just some checks (unit, privacy, levels, layout, offline)
+// levels = level-based games only (games/<id>/levels.json): schema + solver; it also
+// prints a difficulty table (information, never a failure).
 // Prints one line per check (+ its problems) and exits with code 1 if anything failed.
 import { spawnSync } from 'node:child_process';
 import { ROOT } from './precache.mjs';
 import { selectedGames } from './check-kit.mjs';
 import { checkPrivacy } from './check-privacy.mjs';
+import { checkLevels } from './check-levels.mjs';
 import { checkLayout } from './check-layout.mjs';
 import { checkOffline } from './check-offline.mjs';
 
@@ -25,6 +28,7 @@ function unitTests() {
 const CHECKS = {
   unit: () => unitTests(),
   privacy: () => checkPrivacy(),
+  levels: (args) => checkLevels(args),
   layout: (args) => checkLayout(args),
   offline: (args) => checkOffline(args),
 };
@@ -54,6 +58,7 @@ for (const name of names) {
   const secs = Math.round((Date.now() - t0) / 1000);
   console.log(`${result.ok ? '✓' : '✗'} ${name.padEnd(8)} ${result.summary} (${secs}s)`);
   const shown = result.failures.slice(0, 25);
+  for (const line of result.info ?? []) console.log(`    ${line}`); // (information only)
   for (const f of shown) console.log(`    ✗ ${f}`);
   if (result.failures.length > shown.length) console.log(`    … and ${result.failures.length - shown.length} more`);
 }
