@@ -370,8 +370,7 @@ export const SCENES = {
     <g fill="#2E7D32"><path d="M20 70l12-40 12 40z"/><path d="M110 72l14-46 14 46z"/><path d="M140 76l9-30 9 30z"/></g>
     <g fill="#6D4C41"><rect x="29" y="70" width="6" height="8"/><rect x="121" y="72" width="6" height="8"/></g>
     <rect x="72" y="52" width="6" height="22" fill="#6D4C41"/>
-    <circle cx="75" cy="44" r="16" fill="#43A047"/><circle cx="66" cy="50" r="9" fill="#4CAF50"/>
-    <g fill="#E53935"><circle cx="16" cy="90" r="2"/><circle cx="92" cy="92" r="2"/></g>`),
+    <circle cx="75" cy="44" r="16" fill="#43A047"/><circle cx="66" cy="50" r="9" fill="#4CAF50"/>`),
   // The Alps: snowy peaks over a meadow with rocks.
   mountain: scene(`
     <rect width="160" height="100" fill="#BBDEFB"/>
