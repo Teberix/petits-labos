@@ -264,7 +264,8 @@
   background: #F3E6D3;
 }
 @media (orientation: landscape) {
-  .bl-tray { flex-direction: column; justify-content: center; gap: 0.5rem; }
+  /* a column; 2 columns with 3 objects (input.js sets --tray-columns) */
+  .bl-tray { display: grid; grid-template-columns: repeat(var(--tray-columns, 1), auto); align-content: center; gap: 0.5rem; }
 }
 /* The empty place of an object that is on a pan. */
 .bl-slot {

@@ -45,7 +45,7 @@ export function levelSets(level) {
   });
 }
 
-const setKey = (set) => [...set].sort().join('+');
+export const setKey = (set) => [...set].sort().join('+');
 
 // Shuffles a copy of `list` (Fisher–Yates).
 function shuffled(list, random) {
@@ -69,6 +69,13 @@ export function makeRound(level, random, previousKey = null) {
   if (level.cubes) return { objects, target: panWeight(set), key };
   const question = level.questions[Math.floor(random() * level.questions.length)];
   return { objects, question, answer: answerFor(set, question), key };
+}
+
+// Has the child weighed enough to answer? `weighed` = the keys (setKey) of the pairs
+// that have been on the two pans together. Two objects: that one pair. Three objects
+// (only two pans): two different pairs — e.g. A with B, then the heavier with C.
+export function weighedEnough(weighed, objectCount) {
+  return weighed.size >= (objectCount <= 2 ? 1 : 2);
 }
 
 // Placing object `id` on pan `side` (0 = left, 1 = right). `pans` = [left, right], each

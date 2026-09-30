@@ -1,20 +1,23 @@
 // "La Balance" rounds of a "which is heavier / lighter" level.
 //
-// Round: the objects go on the pans (input.js); once they have all been on the balance
-// together, the podium wakes up and the voice asks « Lequel est le plus lourd (léger) ? ».
+// Round: the objects go on the pans (input.js); once they have been weighed (both on
+// the balance together; level 6, three objects for two pans: two different pairs), the
+// podium wakes up and the voice asks « Lequel est le plus lourd (léger) ? ».
 // The child DRAGS the answer onto the podium:
 //   right → it stands on the podium, +1 star, the next round comes;
 //   wrong → a soft "boing", it hops back; never counted against the child, but the
 //           hints get stronger (per round):
 //             1 → the rule, said aloud: « le côté qui descend, c'est le plus lourd »
 //                 (or « qui monte… le plus léger »), and the answer's pan pulses (if an
-//                 object was taken off since: « pose-les sur la balance » instead)
+//                 object was taken off since: « pose-les sur la balance » instead;
+//                 three objects: « pèse-les deux par deux »)
 //             2 → an arrow on the answer (down = heavier, up = lighter)
 //             3 → the answer wiggles
 //           after that, neutral « essaie encore » lines.
-//   dragged there before weighing → « Pèse-les d'abord ! » (not a mistake, no hint).
+//   dragged there before weighing → « Pèse-les d'abord ! » (three objects: « Pèse les
+//   objets deux par deux ! »). Not a mistake, no hint.
 import { speak } from '../../js/audio.js';
-import { makeRound, panWeight, putOnPan } from './weigh.js';
+import { makeRound, panWeight, putOnPan, setKey, weighedEnough } from './weigh.js';
 import { LEVELS } from './levels.js';
 import { renderPieces } from './input.js';
 import { setTilt, setPodium, restartAnimation } from './scene.js';
@@ -48,10 +51,10 @@ export function playRounds(ctx, level, els, onDone) {
   function start() {
     round = {
       ...makeRound(level, Math.random, round?.key ?? null),
-      pans: [null, null], weighed: false, misses: 0, busy: false,
+      pans: [null, null], pairsWeighed: new Set(), weighed: false, misses: 0, busy: false,
     };
     render();
-    let line = t('balance.place');
+    let line = placeLine();
     if (index === 0) {
       if (level.id === LEVELS[0].id) line += ' ' + t('balance.howTo');
       if (level.intro) line += ' ' + t(level.intro);
@@ -60,6 +63,8 @@ export function playRounds(ctx, level, els, onDone) {
   }
 
   const question = () => t(`balance.ask.${round.question}`);
+  // What to do before answering: two objects → put them both on; three → pairs.
+  const placeLine = () => t(round.objects.length > 2 ? 'balance.placeThree' : 'balance.place');
 
   function render() {
     stopInputs();
@@ -68,7 +73,7 @@ export function playRounds(ctx, level, els, onDone) {
       : null;
     cleanups = renderPieces(els, { ...round, hint }, t, {
       put, takeOff, answer,
-      full: () => sfx.boing(),
+      full: () => { sfx.boing(); remark(t('balance.panFull')); }, // (3 objects, 2 pans)
       canDrag: () => !round.busy,
     });
     const [left, right] = round.pans.map((id) => panWeight(id ? [id] : []));
@@ -81,8 +86,9 @@ export function playRounds(ctx, level, els, onDone) {
     sfx.plop();
     render();
     restartAnimation(els.pans[side].querySelector('.bl-obj'), 'bl-pop-in');
-    // All the round's objects on the balance at once (2 pans = a pair) → ask.
-    if (!round.weighed && round.pans.every(Boolean)) {
+    // Weighed enough (weigh.js weighedEnough: the pair; with 3 objects, 2 pairs) → ask.
+    if (round.pans.every(Boolean)) round.pairsWeighed.add(setKey(round.pans));
+    if (!round.weighed && weighedEnough(round.pairsWeighed, round.objects.length)) {
       round.weighed = true;
       const current = round;
       later(() => {
@@ -104,7 +110,7 @@ export function playRounds(ctx, level, els, onDone) {
     if (!round.weighed) {
       sfx.boing();
       restartAnimation(el, 'bl-bounce');
-      remark(t('balance.weighFirst'));
+      remark(round.objects.length > 2 ? t('balance.placeThree') : t('balance.weighFirst'));
       return;
     }
     if (id === round.answer) win(id);
@@ -129,6 +135,10 @@ export function playRounds(ctx, level, els, onDone) {
   // If an object was taken off since weighing, the beam no longer compares the two:
   // ask to put them back instead.
   function ruleHint() {
+    if (round.objects.length > 2) {
+      remark(t('balance.hint.pairs'));
+      return;
+    }
     if (!round.pans.every(Boolean)) {
       remark(t('balance.place'));
       return;
@@ -160,7 +170,7 @@ export function playRounds(ctx, level, els, onDone) {
   // Tapping the podium only says again what to do (answers are dragged there).
   els.podium.onclick = () => {
     if (round.busy) return;
-    ctx.speak(round.weighed ? question() : t('balance.place'));
+    ctx.speak(round.weighed ? question() : placeLine());
   };
 
   start();

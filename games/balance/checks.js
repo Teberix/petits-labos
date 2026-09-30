@@ -212,6 +212,30 @@ export default {
         if (await savedStars(page) !== stars + 1) throw new Error('balanced: expected one more star');
       },
     },
+    {
+      // 3 objects, 2 pans: one pair weighed → the podium still asleep; the 3rd object
+      // tapped with both pans taken → it hops (nothing moves); swap one → a 2nd pair →
+      // awake. Then 3 wrong answers: arrow + wiggle on the heaviest, wherever it is.
+      name: 'level 6, three objects: two pairs weighed, then hints 2 + 3',
+      async setup(page, kit) {
+        await openLevel(page, kit, 6, { last: true });
+        const [a, b, c] = (await readScale(page)).tray;
+        await kit.tap(page, trayObj(a));
+        await kit.tap(page, trayObj(b));
+        if ((await expectScale(page, { pans: [a, b] })).awake) throw new Error('awake after one pair');
+        await kit.tap(page, trayObj(c));
+        await kit.tap(page, panObj(0));
+        await kit.tap(page, trayObj(c));
+        if (!(await expectScale(page, { pans: [c, b] })).awake) throw new Error('asleep after two pairs');
+        const right = answerFor([a, b, c], 'heavy');
+        const wrong = [a, b, c].find((id) => id !== right);
+        const from = async (id) => ((await readScale(page)).pans.includes(id) ? onPan(id) : trayObj(id));
+        for (let i = 0; i < 3; i++) await kit.drag(page, await from(wrong), '.bl-podium');
+        await kit.settle(page);
+        const marked = await page.locator(`.bl-obj[data-object="${right}"].bl-arrow-down.bl-hint`).count();
+        if (marked !== 1) throw new Error(`the heaviest (${right}) has no arrow + wiggle`);
+      },
+    },
   ],
 
   // Level 1: both objects onto the pans (one tapped, one dragged) → the beam leans

@@ -66,6 +66,9 @@ export function renderPieces(els, { objects, pans, away = null, hint = null }, t
     }));
     return el;
   }));
+  // Landscape: the tray is a column; 3 objects + the podium don't fit one column on a
+  // small phone.
+  els.tray.style.setProperty('--tray-columns', objects.length > 2 ? 2 : 1);
 
   return cleanups;
 }

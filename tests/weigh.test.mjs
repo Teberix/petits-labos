@@ -3,7 +3,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  MIN_TILT, MAX_TILT, panWeight, tilt, answerFor, levelSets, makeRound, putOnPan, freePan,
+  MIN_TILT, MAX_TILT, panWeight, tilt, answerFor, levelSets, makeRound, putOnPan, freePan, weighedEnough, setKey,
 } from '../games/balance/weigh.js';
 import { OBJECTS, LEVELS, MAX_CUBES } from '../games/balance/levels.js';
 import { OBJECT_ART } from '../games/balance/art.js';
@@ -146,6 +146,25 @@ test('level 2: surprise pairs — the one that looks bigger is the lighter one',
 test('level 3: asks for the heavier and for the lighter one', () => {
   const questions = new Set(rounds(LEVELS[2], 100).map((r) => r.question));
   assert.deepEqual([...questions].sort(), ['heavy', 'light']);
+});
+
+test('level 6: three objects of three different weights, find the heaviest', () => {
+  const level = LEVELS.find((l) => l.count === 3);
+  assert.ok(level && !level.cubes, 'a 3-object level exists');
+  assert.deepEqual(level.questions, ['heavy']);
+  for (const round of rounds(level, 300)) {
+    assert.equal(round.objects.length, 3);
+    assert.equal(new Set(round.objects.map(weight)).size, 3, `${round.objects}: equal weights`);
+  }
+  assert.equal(LEVELS.indexOf(level), LEVELS.length - 1 - (LEVELS.at(-1).free ? 1 : 0), 'the last level before free mode (owner)');
+});
+
+test('weighedEnough: one pair for 2 objects, two different pairs for 3', () => {
+  assert.ok(!weighedEnough(new Set(), 2));
+  assert.ok(weighedEnough(new Set(['apple+stone']), 2));
+  assert.ok(!weighedEnough(new Set(['apple+stone']), 3));
+  assert.ok(weighedEnough(new Set(['apple+stone', 'ball+stone']), 3));
+  assert.equal(setKey(['stone', 'apple']), setKey(['apple', 'stone']), 'a pair is the same whichever pan');
 });
 
 test('putOnPan / freePan: one object per pan, moving and replacing', () => {

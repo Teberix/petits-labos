@@ -62,4 +62,7 @@ export const LEVELS = [
   { id: 4, cubes: true, count: 1, objects: Object.keys(OBJECTS), rounds: 5, intro: 'balance.intro.cubes' },
   // Two objects (of different weights) together, balanced with cubes: adding up.
   { id: 5, cubes: true, count: 2, objects: Object.keys(OBJECTS), rounds: 5, intro: 'balance.intro.two' },
+  // Three objects, only two pans: weigh them two by two to find the heaviest (weights
+  // hidden again). The podium wakes after two different pairs were weighed.
+  { id: 6, count: 3, objects: Object.keys(OBJECTS), questions: ['heavy'], rounds: 5, intro: 'balance.intro.three' },
 ];
