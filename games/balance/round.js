@@ -1,8 +1,9 @@
 // "La Balance" rounds of a "which is heavier / lighter" level.
 //
-// Round: the objects go on the pans (input.js); once they have been weighed (both on
-// the balance together; level 6, three objects for two pans: two different pairs), the
-// podium wakes up and the voice asks « Lequel est le plus lourd (léger) ? ».
+// Round: the objects go on the pans (input.js); once the answer is known from what was
+// weighed (weigh.js answerKnown: 2 objects → that pair; level 6, 3 objects for 2 pans →
+// one object beat both others, directly or through the third), the podium wakes up and
+// the voice asks « Lequel est le plus lourd (léger) ? ».
 // The child DRAGS the answer onto the podium:
 //   right → it stands on the podium, +1 star, the next round comes;
 //   wrong → a soft "boing", it hops back; never counted against the child, but the
@@ -17,7 +18,7 @@
 //   dragged there before weighing → « Pèse-les d'abord ! » (three objects: « Pèse les
 //   objets deux par deux ! »). Not a mistake, no hint.
 import { speak } from '../../js/audio.js';
-import { makeRound, panWeight, putOnPan, setKey, weighedEnough } from './weigh.js';
+import { makeRound, panWeight, putOnPan, weighing, answerKnown } from './weigh.js';
 import { LEVELS } from './levels.js';
 import { renderPieces } from './input.js';
 import { setTilt, setPodium, restartAnimation } from './scene.js';
@@ -51,7 +52,7 @@ export function playRounds(ctx, level, els, onDone) {
   function start() {
     round = {
       ...makeRound(level, Math.random, round?.key ?? null),
-      pans: [null, null], pairsWeighed: new Set(), weighed: false, misses: 0, busy: false,
+      pans: [null, null], weighings: [], weighed: false, misses: 0, busy: false,
     };
     render();
     let line = placeLine();
@@ -86,9 +87,9 @@ export function playRounds(ctx, level, els, onDone) {
     sfx.plop();
     render();
     restartAnimation(els.pans[side].querySelector('.bl-obj'), 'bl-pop-in');
-    // Weighed enough (weigh.js weighedEnough: the pair; with 3 objects, 2 pairs) → ask.
-    if (round.pans.every(Boolean)) round.pairsWeighed.add(setKey(round.pans));
-    if (!round.weighed && weighedEnough(round.pairsWeighed, round.objects.length)) {
+    // The answer is now known from the weighings (weigh.js answerKnown) → ask.
+    if (round.pans.every(Boolean)) round.weighings.push(weighing(...round.pans));
+    if (!round.weighed && answerKnown(round.weighings, round.objects, round.question)) {
       round.weighed = true;
       const current = round;
       later(() => {

@@ -64,7 +64,7 @@ export const LEVELS = [
   // Two objects (of different weights) together, balanced with cubes: adding up.
   { id: 5, cubes: true, count: 2, objects: Object.keys(OBJECTS), rounds: 5, intro: 'balance.intro.two' },
   // Three objects, only two pans: weigh them two by two to find the heaviest (weights
-  // hidden again). The podium wakes after two different pairs were weighed.
+  // hidden again). The podium wakes once the heaviest is known (weigh.js answerKnown).
   { id: 6, count: 3, objects: Object.keys(OBJECTS), questions: ['heavy'], rounds: 5, intro: 'balance.intro.three' },
   // Free mode: every object and the cubes, on any pan (equal weights allowed: balancing
   // two different things is the fun). No stars; done after the first weighing.

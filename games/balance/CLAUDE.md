@@ -26,8 +26,9 @@ row.
   a time, so the child always reaches the exact count before going over — "too many"
   can't happen, and the planned overshoot hints were dropped as unreachable.
 - The 3-object level comes last, before free mode; its weights stay hidden.
-- Weighed before answering: 2 objects → that pair; 3 objects → two different pairs
-  (`weighedEnough`). Dragging to the podium before that: « Pèse-les d'abord ! » /
+- Weighed before answering: the podium wakes only when the answer is logically known
+  (`answerKnown`): 2 objects → that pair; 3 objects → one beat both others, directly or
+  transitively (A > B, C > B is NOT enough). Dragging to the podium before that: « Pèse-les d'abord ! » /
   « Pèse les objets deux par deux ! » — not a mistake, no hint.
 - Hints per round, one step per wrong answer: 1 → the rule aloud + the answer's pan
   pulses (3 objects: « pèse-les deux par deux… ») · 2 → arrow on the answer (↓ heavier,
@@ -43,7 +44,7 @@ row.
 ## Files
 - `levels.js` — the weight table + level data. `weigh.js` — pure logic, tested in
   `tests/weigh.test.mjs`: `tilt`, `panWeight`, `levelSets`/`makeRound`, `answerFor`,
-  `weighedEnough`, `putOnPan`/`freePan`, free-mode pans (`freePut`, `freeCube`,
+  `weighing`/`answerKnown`, `putOnPan`/`freePan`, free-mode pans (`freePut`, `freeCube`,
   `cubeSide`…).
 - `balance.js` — level map, level done, progress. `scene.js` — the balance DOM, tilt,
   podium, cube frame/source. `input.js` — touches on objects (pair levels).

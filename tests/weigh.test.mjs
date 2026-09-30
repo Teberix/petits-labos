@@ -3,7 +3,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  MIN_TILT, MAX_TILT, panWeight, tilt, answerFor, levelSets, makeRound, putOnPan, freePan, weighedEnough, setKey,
+  MIN_TILT, MAX_TILT, panWeight, tilt, answerFor, levelSets, makeRound, putOnPan, freePan, weighing, answerKnown,
   emptyPans, freeWeight, freePut, freeTakeOff, freeCube, cubeSide, freeObjectSide,
 } from '../games/balance/weigh.js';
 import { OBJECTS, LEVELS, MAX_CUBES } from '../games/balance/levels.js';
@@ -162,12 +162,58 @@ test('level 6: three objects of three different weights, find the heaviest', () 
   assert.equal(LEVELS.indexOf(level), LEVELS.length - 1 - (LEVELS.at(-1).free ? 1 : 0), 'the last level before free mode (owner)');
 });
 
-test('weighedEnough: one pair for 2 objects, two different pairs for 3', () => {
-  assert.ok(!weighedEnough(new Set(), 2));
-  assert.ok(weighedEnough(new Set(['apple+stone']), 2));
-  assert.ok(!weighedEnough(new Set(['apple+stone']), 3));
-  assert.ok(weighedEnough(new Set(['apple+stone', 'ball+stone']), 3));
-  assert.equal(setKey(['stone', 'apple']), setKey(['apple', 'stone']), 'a pair is the same whichever pan');
+test('weighing: [heavier, lighter] whichever pan', () => {
+  assert.deepEqual(weighing('apple', 'stone'), ['stone', 'apple']);
+  assert.deepEqual(weighing('stone', 'apple'), ['stone', 'apple']);
+});
+
+// Owner's rule (2026-09-30): the podium wakes only when the answer is LOGICALLY known.
+// apple 2 < ball 4 < stone 6.
+test('answerKnown: two objects → their one weighing', () => {
+  const two = ['apple', 'stone'];
+  assert.ok(!answerKnown([], two, 'heavy'));
+  assert.ok(answerKnown([weighing('apple', 'stone')], two, 'heavy'));
+  assert.ok(answerKnown([weighing('apple', 'stone')], two, 'light'));
+});
+
+test('answerKnown: three objects — the heaviest must have beaten both others', () => {
+  const three = ['apple', 'ball', 'stone'];
+  const w = weighing;
+  assert.ok(!answerKnown([], three, 'heavy'));
+  assert.ok(!answerKnown([w('apple', 'ball')], three, 'heavy'), 'one pair');
+  // Ambiguous: stone > apple and ball > apple — stone vs ball still unknown.
+  assert.ok(!answerKnown([w('stone', 'apple'), w('ball', 'apple')], three, 'heavy'), 'A > B, C > B is ambiguous');
+  assert.ok(!answerKnown([w('stone', 'apple'), w('apple', 'stone')], three, 'heavy'), 'the same pair twice');
+  // Direct: stone beat both.
+  assert.ok(answerKnown([w('stone', 'apple'), w('stone', 'ball')], three, 'heavy'));
+  // Transitive: stone > ball, ball > apple → stone > apple.
+  assert.ok(answerKnown([w('stone', 'ball'), w('ball', 'apple')], three, 'heavy'));
+  assert.ok(answerKnown([w('ball', 'apple'), w('stone', 'ball')], three, 'heavy'), 'any order');
+  // All three pairs: always known.
+  assert.ok(answerKnown([w('stone', 'apple'), w('ball', 'apple'), w('stone', 'ball')], three, 'heavy'));
+  // The lightest is the mirror case: stone > apple, ball > apple → apple IS known lightest.
+  assert.ok(answerKnown([w('stone', 'apple'), w('ball', 'apple')], three, 'light'));
+  assert.ok(!answerKnown([w('stone', 'apple'), w('stone', 'ball')], three, 'light'));
+});
+
+test('answerKnown: every order of weighing every level-6 trio agrees with answerFor', () => {
+  const level = LEVELS.find((l) => l.count === 3);
+  for (const set of levelSets(level)) {
+    const pairs = [[set[0], set[1]], [set[0], set[2]], [set[1], set[2]]].map(([a, b]) => weighing(a, b));
+    for (const first of pairs) {
+      for (const second of pairs) {
+        if (first === second) continue;
+        const known = answerKnown([first, second], set, 'heavy');
+        const top = answerFor(set, 'heavy');
+        // Known exactly when the heaviest won both weighings, or won one (top > x) and
+        // the other shows x beating the third (top > x > y).
+        const [a, b] = [first, second];
+        const expect = (a[0] === top && b[0] === top)
+          || (a[0] === top && b[0] === a[1]) || (b[0] === top && a[0] === b[1]);
+        assert.equal(known, expect, `${set}: ${first} / ${second}`);
+      }
+    }
+  }
 });
 
 test('putOnPan / freePan: one object per pan, moving and replacing', () => {

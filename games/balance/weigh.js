@@ -71,11 +71,30 @@ export function makeRound(level, random, previousKey = null) {
   return { objects, question, answer: answerFor(set, question), key };
 }
 
-// Has the child weighed enough to answer? `weighed` = the keys (setKey) of the pairs
-// that have been on the two pans together. Two objects: that one pair. Three objects
-// (only two pans): two different pairs — e.g. A with B, then the heavier with C.
-export function weighedEnough(weighed, objectCount) {
-  return weighed.size >= (objectCount <= 2 ? 1 : 2);
+// A weighing seen on the balance: [heavier, lighter] (a round's objects never weigh the
+// same, so there is always one).
+export function weighing(a, b) {
+  return OBJECTS[a].weight > OBJECTS[b].weight ? [a, b] : [b, a];
+}
+
+// Is the answer known from what the child has weighed? `weighings` = [heavier, lighter]
+// pairs. 'heavy': one object beat every other one, directly or through another
+// (A > B and B > C → A > C). 'light': one object lost to every other one.
+// Two pairs are not always enough: A > B and C > B leave A vs C open (for 'heavy').
+export function answerKnown(weighings, objects, question) {
+  // beats.get(x) = everything x is known to be heavier than (transitive closure).
+  const beats = new Map(objects.map((id) => [id, new Set()]));
+  for (const [heavy, light] of weighings) beats.get(heavy).add(light);
+  for (const middle of objects) {
+    for (const x of objects) {
+      if (beats.get(x).has(middle)) beats.get(middle).forEach((y) => beats.get(x).add(y));
+    }
+  }
+  const others = objects.length - 1;
+  if (question === 'light') {
+    return objects.some((y) => objects.filter((x) => beats.get(x).has(y)).length === others);
+  }
+  return objects.some((x) => beats.get(x).size === others);
 }
 
 // ---------- Free mode (level 7) ----------
