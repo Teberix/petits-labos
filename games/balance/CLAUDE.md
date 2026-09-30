@@ -4,7 +4,8 @@ Heavier / lighter and equality with a two-pan balance: the side that goes down i
 heavier one. Non-linguistic → app language (French by default).
 
 ## Status
-IN PROGRESS — steps (a)–(e) built 2026-09-30; waiting for the phone playtest (f).
+Released as v0.7.0 on 2026-09-30 after the owner's phone playtest (« playtest went
+well »). DONE in GAMES.md only once the owner confirms the kids played it.
 
 ## Levels (7)
 1 two objects, the heavier also looks bigger (≥ 3 cubes apart) · 2 surprises: the one
@@ -65,7 +66,10 @@ by 32cqw × sin(angle), staying upright. Portrait: dock (tray + podium) under th
 balance; landscape: a column on the right (tray 2 columns with 3 objects; free mode 3,
 or 4 on a short phone). Free mode stacks object + frame on a pan, strings behind.
 
-## To check at the phone playtest (parked by the owner)
-- The tilt's feel (0.9 s with a small overshoot) on a real phone.
-- Whether the level-2 size difference reads clearly (balloon/pillow vs ball/stone).
-- Free mode's one-object-per-pan limit; cube levels without any "too many".
+## Playtest history
+Built in steps (a)–(f) on 2026-09-30 (+ the level-6 rule: the podium waits until the
+heaviest is logically known). The owner playtested it on a phone through a temporary
+preview repo (`Teberix/petits-labos-preview`, preview-only `VERSION`
+`0.6.0-preview.1`, never committed to `main`), checking the tilt's feel, the level-2
+size difference, free mode's one-object-per-pan limit and the cube levels without
+"too many": « playtest went well » — no changes needed.
