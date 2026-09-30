@@ -4,8 +4,8 @@ Heavier / lighter and equality with a two-pan balance: the side that goes down i
 heavier one. Non-linguistic → app language (French by default).
 
 ## Status
-Released as v0.7.0 on 2026-09-30 after the owner's phone playtest (« playtest went
-well »). DONE in GAMES.md only once the owner confirms the kids played it.
+DONE — released as v0.7.0 on 2026-09-30 after the owner's phone playtest (« playtest
+went well »); the kids played it (owner's confirmation, 2026-09-30).
 
 ## Levels (7)
 1 two objects, the heavier also looks bigger (≥ 3 cubes apart) · 2 surprises: the one

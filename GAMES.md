@@ -10,7 +10,7 @@ owner confirms it was playtested with the kids.
 | 3 | Lettres Magiques | letters/sounds/first words (FR/ES/EN) | POSTPONED (owner will do it later; letter sounds need recorded audio — system voices only say letter names) |
 | 4 | Le Marché | counting, addition, CHF coins | DONE |
 | 5 | Le Train des Suites | patterns/logic | DONE |
-| 6 | La Balance | heavier/lighter, equality | IN PROGRESS |
+| 6 | La Balance | heavier/lighter, equality | DONE |
 | 7 | Qui mange qui ? | food chains, habitats | planned |
 | 8 | Formes & Silhouettes | shapes, spatial reasoning, symmetry | planned |
 | 9 | Duo Mémoire | memory, turn-taking, 2 players on one device | planned |
