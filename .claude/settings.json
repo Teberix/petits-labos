@@ -30,6 +30,12 @@
       "PowerShell(git diff *)",
       "PowerShell(git log *)"
     ],
+    "deny": [
+      "Write(.claude/**)",
+      "Edit(.claude/**)",
+      "Write(tools/**)",
+      "Edit(tools/**)"
+    ],
     "ask": [
       "Bash(node tools/release.mjs *)",
       "Bash(git commit *)",
