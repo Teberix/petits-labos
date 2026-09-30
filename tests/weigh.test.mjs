@@ -3,7 +3,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  MIN_TILT, MAX_TILT, panWeight, tilt, answerFor, levelPairs, makeRound, putOnPan, freePan,
+  MIN_TILT, MAX_TILT, panWeight, tilt, answerFor, levelSets, makeRound, putOnPan, freePan,
 } from '../games/balance/weigh.js';
 import { OBJECTS, LEVELS, MAX_CUBES } from '../games/balance/levels.js';
 import { OBJECT_ART } from '../games/balance/art.js';
@@ -104,18 +104,25 @@ test('makeRound: never two objects of the same weight; never the same pair twice
         const weights = round.objects.map(weight);
         assert.equal(new Set(weights).size, weights.length, `${where}: equal weights ${round.objects}`);
         assert.equal(new Set(round.objects).size, round.objects.length, `${where}: same object twice`);
-        assert.ok(level.questions.includes(round.question), where);
-        assert.equal(round.answer, answerFor(round.objects, round.question), where);
+        if (level.cubes) {
+          assert.equal(round.objects.length, level.count, where);
+          assert.equal(round.target, panWeight(round.objects), `${where}: target = what the left pan weighs`);
+          assert.ok(round.target <= MAX_CUBES, `${where}: needs ${round.target} cubes (max ${MAX_CUBES})`);
+        } else {
+          assert.ok(level.questions.includes(round.question), where);
+          assert.equal(round.answer, answerFor(round.objects, round.question), where);
+        }
         if (i > 0) assert.notEqual(round.key, played[i - 1].key, `${where}: same pair twice in a row`);
       });
     }
   }
 });
 
-test('makeRound: every pair and both tray orders come up', () => {
+test('makeRound: every group comes up; the answer is not always in the same place', () => {
   for (const level of LEVELS) {
     const played = rounds(level, 2000);
-    assert.equal(new Set(played.map((r) => r.key)).size, levelPairs(level).length, `level ${level.id}`);
+    assert.equal(new Set(played.map((r) => r.key)).size, levelSets(level).length, `level ${level.id}`);
+    if (level.cubes) continue;
     assert.ok(played.some((r) => r.answer === r.objects[0]) && played.some((r) => r.answer === r.objects[1]), `level ${level.id}: the answer is always on the same side`);
   }
 });
@@ -159,8 +166,33 @@ test('levels: ids unique, fields sane', () => {
   assert.equal(new Set(ids).size, ids.length);
   for (const level of LEVELS) {
     assert.ok(level.rounds > 0, `level ${level.id}: rounds`);
-    assert.ok(level.questions.length && level.questions.every((q) => ['heavy', 'light'].includes(q)), `level ${level.id}: questions`);
-    assert.ok(levelPairs(level).length >= 2, `level ${level.id}: needs 2+ pairs (no repeat in a row)`);
+    if (!level.cubes) assert.ok(level.questions.length && level.questions.every((q) => ['heavy', 'light'].includes(q)), `level ${level.id}: questions`);
+    assert.ok(levelSets(level).length >= 2, `level ${level.id}: needs 2+ groups (no repeat in a row)`);
+  }
+});
+
+// Owner's rule: a cube level never needs more cubes than fit on a pan.
+test('cube levels: every group of objects weighs 1..MAX_CUBES; both levels exist', () => {
+  const cubeLevels = LEVELS.filter((l) => l.cubes);
+  assert.deepEqual(cubeLevels.map((l) => l.count), [1, 2]);
+  for (const level of cubeLevels) {
+    for (const set of levelSets(level)) {
+      assert.ok(panWeight(set) >= 1 && panWeight(set) <= MAX_CUBES, `level ${level.id}: ${set} = ${panWeight(set)}`);
+    }
+  }
+  // Level 5 never pairs two objects of the same weight (apple + teddy = 2 + 2).
+  assert.ok(!levelSets(cubeLevels[1]).some((set) => set.includes('apple') && set.includes('teddy')));
+});
+
+test('spoken results: « … pèse N cubes » says the table weight, singular/plural', async () => {
+  const { pluralKey } = await import('../games/balance/plural.js');
+  assert.equal(pluralKey('balance.weighs', 1, 'fr'), 'balance.weighs.one');
+  assert.equal(pluralKey('balance.weighs', 2, 'fr'), 'balance.weighs.other');
+  assert.equal(pluralKey('balance.weighs', 1, 'en'), 'balance.weighs.one');
+  for (const lang of ['fr', 'es', 'en']) {
+    for (const key of ['balance.weighs', 'balance.weighsTwo']) {
+      for (const form of ['one', 'other']) assert.ok(STRINGS[lang][`${key}.${form}`].includes('{n}'), `${lang} ${key}.${form}`);
+    }
   }
 });
 

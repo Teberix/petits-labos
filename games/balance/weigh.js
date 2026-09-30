@@ -1,5 +1,5 @@
-// "La Balance" pure logic (no DOM) — tested in tests/balance.test.mjs.
-import { OBJECTS } from './levels.js';
+// "La Balance" pure logic (no DOM) — tested in tests/weigh.test.mjs.
+import { OBJECTS, MAX_CUBES } from './levels.js';
 
 // How far the beam tilts, in degrees. Any difference, even 1 cube, tilts it at least
 // MIN_TILT so a child can see it; bigger differences tilt more, up to MAX_TILT.
@@ -27,28 +27,48 @@ export function answerFor(ids, question) {
   return question === 'light' ? sorted[0] : sorted[sorted.length - 1];
 }
 
-// Every pair a level can use: its `pairs`, or any two of its `objects` that don't weigh
-// the same.
-export function levelPairs(level) {
-  if (level.pairs) return level.pairs;
-  const pairs = [];
-  level.objects.forEach((a, i) => level.objects.slice(i + 1).forEach((b) => {
-    if (OBJECTS[a].weight !== OBJECTS[b].weight) pairs.push([a, b]);
-  }));
-  return pairs;
+// All the ways to choose `count` items of `list` (order doesn't matter).
+function combinations(list, count) {
+  if (count === 0) return [[]];
+  return list.flatMap((first, i) => combinations(list.slice(i + 1), count - 1).map((rest) => [first, ...rest]));
 }
 
-const pairKey = (pair) => [...pair].sort().join('+');
+// Every group of objects a level can use in a round: its `pairs`, or any `count`
+// (default 2) of its `objects`. Never two objects of the same weight in one group
+// (equal weights only in free mode); cube levels: never more than MAX_CUBES in all.
+export function levelSets(level) {
+  if (level.pairs) return level.pairs;
+  return combinations(level.objects, level.count ?? 2).filter((set) => {
+    const weights = set.map((id) => OBJECTS[id].weight);
+    if (new Set(weights).size !== weights.length) return false;
+    return !level.cubes || panWeight(set) <= MAX_CUBES;
+  });
+}
 
-// One round of a "which is heavier / lighter" level:
-//   { objects: [a, b] (tray order), question, answer, key }
-// `previousKey` = the last round's key: the same pair never comes twice in a row.
+const setKey = (set) => [...set].sort().join('+');
+
+// Shuffles a copy of `list` (Fisher–Yates).
+function shuffled(list, random) {
+  const out = [...list];
+  for (let i = out.length - 1; i > 0; i--) {
+    const j = Math.floor(random() * (i + 1));
+    [out[i], out[j]] = [out[j], out[i]];
+  }
+  return out;
+}
+
+// One round. `previousKey` = the last round's key: the same objects never come twice
+// in a row.
+//   "which is heavier / lighter": { objects (tray order), question, answer, key }
+//   cube levels:                  { objects (on the left pan), target (cubes), key }
 export function makeRound(level, random, previousKey = null) {
-  const pairs = levelPairs(level).filter((pair) => pairKey(pair) !== previousKey);
-  const pair = pairs[Math.floor(random() * pairs.length)];
-  const objects = random() < 0.5 ? [...pair] : [pair[1], pair[0]];
+  const sets = levelSets(level).filter((set) => setKey(set) !== previousKey);
+  const set = sets[Math.floor(random() * sets.length)];
+  const objects = shuffled(set, random);
+  const key = setKey(set);
+  if (level.cubes) return { objects, target: panWeight(set), key };
   const question = level.questions[Math.floor(random() * level.questions.length)];
-  return { objects, question, answer: answerFor(pair, question), key: pairKey(pair) };
+  return { objects, question, answer: answerFor(set, question), key };
 }
 
 // Placing object `id` on pan `side` (0 = left, 1 = right). `pans` = [left, right], each

@@ -146,6 +146,55 @@
 .bl-obj[data-look="small"] .bl-art { transform: scale(0.55); }
 .bl-obj[data-look="medium"] .bl-art { transform: scale(0.78); }
 
+/* ---------- Cube levels ---------- */
+
+.bl-play[data-mode="cubes"] .bl-podium { display: none; }
+
+/* The objects the game put on the left pan (not buttons). Two of them share the pan. */
+.bl-fixed {
+  --size: clamp(48px, min(26cqw, 30cqh), 120px);
+  width: var(--size);
+  height: var(--size);
+  flex: 0 1 auto;
+  min-width: 0;
+}
+.bl-load[data-count="2"] .bl-fixed { --size: clamp(40px, min(16cqw, 26cqh), 110px); }
+.bl-fixed[data-look="small"] .bl-art { transform: scale(0.55); }
+.bl-fixed[data-look="medium"] .bl-art { transform: scale(0.78); }
+
+/* The cubes on the right pan: a 2 × 5 frame (a ten-frame). One button: tap = take a
+   cube off. */
+.bl-cubes {
+  width: 100%;
+  min-height: 64px;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  gap: 0.15rem;
+  padding: 0.25rem;
+  border: none;
+  border-radius: 0.6rem;
+  background: rgba(255, 255, 255, 0.6);
+}
+.bl-cell { display: block; min-width: 0; border-radius: 0.3rem; box-shadow: inset 0 0 0 1px #E2D6C2; }
+.bl-cell svg { display: block; width: 100%; height: 100%; }
+.bl-cell.bl-filled { box-shadow: none; }
+
+/* The cube in the tray (it never runs out). */
+.bl-cube-src {
+  --size: clamp(64px, 13vmin, 104px);
+  width: var(--size);
+  height: var(--size);
+  flex: none;
+  padding: calc(var(--size) * 0.14);
+  border: none;
+  border-radius: 1rem;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+.bl-cube-src svg { display: block; width: 100%; height: 100%; }
+.bl-cube-src:active { transform: translateY(0.15rem); box-shadow: none; }
+
 /* Hint 2: an arrow on the answer — down = "the heavier one", up = "the lighter one". */
 .bl-arrow-down, .bl-arrow-up { position: relative; }
 .bl-arrow-down::after, .bl-arrow-up::after {

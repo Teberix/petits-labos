@@ -3,12 +3,14 @@
 // Flow: level map → level (5 rounds) → map.
 // Files: levels.js (the one weight table + levels), weigh.js (pure logic, tested),
 //        scene.js (the balance DOM + tilt), input.js (touches on objects),
-//        round.js (a level's rounds), strings.js, art.js, balance.css.
+//        round.js (heavier / lighter rounds), cubes.js (cube rounds), plural.js,
+//        strings.js, art.js, balance.css.
 import { h } from '../../js/dom.js';
 import { addStrings } from '../../js/i18n.js';
 import { LEVELS } from './levels.js';
 import { buildScene, restartAnimation } from './scene.js';
 import { playRounds } from './round.js';
+import { playCubeRounds } from './cubes.js';
 import STRINGS from './strings.js';
 import * as art from './art.js';
 import meta from './meta.js';
@@ -77,7 +79,8 @@ function createGame(container, ctx) {
     stopLevel();
     const els = buildScene(t);
     container.replaceChildren(els.root);
-    rounds = playRounds(ctx, level, els, () => levelDone(level));
+    const play = level.cubes ? playCubeRounds : playRounds;
+    rounds = play(ctx, level, els, () => levelDone(level));
   }
 
   function markCompleted(level) {

@@ -16,7 +16,7 @@ async function openLevel(page, kit, n, { last = false } = {}) {
   });
   if (last) await page.evaluate(() => { Math.random = () => 0.999; });
   await kit.tap(page, page.locator('.bl-level-btn').nth(n - 1));
-  await page.locator('.bl-tray .bl-obj').first().waitFor();
+  await page.locator('.bl-tray > button').first().waitFor();
   await kit.settle(page);
 }
 
@@ -54,6 +54,16 @@ async function settleTilt(page) {
   await page.waitForTimeout(1000);
 }
 
+// Cube levels: the objects on the left pan (and what they weigh), the cubes, the beam.
+async function readCubes(page) {
+  const got = await page.evaluate(() => ({
+    objects: [...document.querySelectorAll('.bl-pan[data-side="0"] .bl-fixed')].map((el) => el.dataset.object),
+    cubes: Number(document.querySelector('.bl-cubes').dataset.cubes),
+    tilt: document.querySelector('.bl-scale').dataset.tilt,
+  }));
+  return { ...got, target: got.objects.reduce((sum, id) => sum + OBJECTS[id].weight, 0) };
+}
+
 async function savedStars(page) {
   return page.evaluate(() => JSON.parse(localStorage.getItem('petits-labos')).profiles[0].rewards.stars);
 }
@@ -77,7 +87,7 @@ async function weighBoth(page, kit) {
 export default {
   // Objects (in the tray and on the pans: tap = put on / take off), the pans and the
   // podium (drop targets; tapping the podium repeats the question).
-  touch: ['.bl-obj', '.bl-level-btn', '.bl-pan', '.bl-podium', '.bl-continue'],
+  touch: ['.bl-obj', '.bl-level-btn', '.bl-pan', '.bl-podium', '.bl-continue', '.bl-cube-src', '.bl-cubes'],
 
   worstCases: [
     {
@@ -162,6 +172,44 @@ export default {
         }
         await page.locator('.bl-continue').waitFor({ timeout: 20000 }); // (the 5th star brings a sticker)
         await kit.settle(page);
+      },
+    },
+    {
+      // The pumpkin (10 cubes): the full frame. 9 cubes → still leaning left; the 10th
+      // → level, and locked (one more tap adds nothing).
+      name: 'level 4, pumpkin balanced with 10 cubes, then locked',
+      async setup(page, kit) {
+        await openLevel(page, kit, 4, { last: true });
+        const { objects, target } = await readCubes(page);
+        if (objects.join() !== 'pumpkin' || target !== 10) throw new Error(`expected the pumpkin, got ${objects}`);
+        for (let i = 0; i < 9; i++) await kit.tap(page, '.bl-cube-src');
+        let now = await readCubes(page);
+        if (now.cubes !== 9 || now.tilt !== 'left') throw new Error(`9 cubes: ${now.cubes} on the pan, beam ${now.tilt}`);
+        await kit.tap(page, '.bl-cube-src');
+        await kit.tap(page, '.bl-cube-src');
+        await settleTilt(page);
+        now = await readCubes(page);
+        if (now.cubes !== 10 || now.tilt !== 'level') throw new Error(`balanced: ${now.cubes} cubes, beam ${now.tilt}`);
+      },
+    },
+    {
+      // Two objects on the left pan (the last pair of level 5), balanced with cubes
+      // dragged one by one; one taken off and put back on the way.
+      name: 'level 5, two objects balanced (a cube taken off on the way)',
+      async setup(page, kit) {
+        await openLevel(page, kit, 5, { last: true });
+        const { objects, target } = await readCubes(page);
+        if (objects.length !== 2) throw new Error(`${objects.length} objects on the left pan`);
+        const stars = await savedStars(page);
+        await kit.drag(page, '.bl-cube-src', pan(1));
+        await kit.drag(page, '.bl-cube-src', pan(1));
+        await kit.tap(page, '.bl-cubes');
+        if ((await readCubes(page)).cubes !== 1) throw new Error('tapping the cubes did not take one off');
+        for (let i = 1; i < target; i++) await kit.tap(page, '.bl-cube-src');
+        await settleTilt(page);
+        const now = await readCubes(page);
+        if (now.tilt !== 'level') throw new Error(`${now.cubes} cubes for ${target}: beam ${now.tilt}`);
+        if (await savedStars(page) !== stars + 1) throw new Error('balanced: expected one more star');
       },
     },
   ],

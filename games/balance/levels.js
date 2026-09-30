@@ -25,10 +25,12 @@ export const MAX_CUBES = 10;
 //              saved by id, so never renumber an existing level)
 //   pairs      the pairs of objects the level uses (one pair per round, never the same
 //              pair twice in a row), OR
-//   objects    any two of these with different weights
+//   objects    any `count` (default 2) of these, never two of the same weight
 //   questions  'heavy' (find the heavier one) and/or 'light' (the lighter one); one is
 //              picked per round
-//   rounds     rounds to finish the level
+//   cubes      true → a cube level: `count` objects of `objects` sit on the left pan,
+//              the child balances them with cubes (never more than MAX_CUBES; tested)
+//   rounds    rounds to finish the level
 //   intro      (optional) extra line said at the first round (key in strings.js)
 export const LEVELS = [
   // Obvious: the heavier one also looks bigger (tested: at least 3 cubes apart).
@@ -56,4 +58,8 @@ export const LEVELS = [
     rounds: 5,
     intro: 'balance.intro.light',
   },
+  // How many cubes does it weigh? One object, balanced with cubes.
+  { id: 4, cubes: true, count: 1, objects: Object.keys(OBJECTS), rounds: 5, intro: 'balance.intro.cubes' },
+  // Two objects (of different weights) together, balanced with cubes: adding up.
+  { id: 5, cubes: true, count: 2, objects: Object.keys(OBJECTS), rounds: 5, intro: 'balance.intro.two' },
 ];
