@@ -1,0 +1,47 @@
+// Everything "La Balance" says, in fr / es / en.
+// (The title is in meta.js: the hub needs it before the game loads.)
+// balance.obj.* = object names (one per object in levels.js OBJECTS).
+export default {
+  fr: {
+    'balance.chooseLevel': 'Choisis un niveau !',
+    'balance.level': 'Niveau {n}',
+    'balance.place': 'Pose les deux objets sur la balance !',
+    'balance.howTo': 'Le côté qui descend, c’est le plus lourd.',
+    'balance.intro.surprise': 'Attention, les gros objets ne sont pas toujours les plus lourds !',
+    'balance.intro.light': 'Écoute bien : parfois je demande le plus lourd, parfois le plus léger !',
+    'balance.tray': 'Les objets à peser',
+    'balance.pan.left': 'Plateau de gauche',
+    'balance.pan.right': 'Plateau de droite',
+    'balance.obj.balloon': 'le ballon', 'balance.obj.apple': 'la pomme', 'balance.obj.teddy': 'le nounours',
+    'balance.obj.pillow': 'le coussin', 'balance.obj.ball': 'la boule', 'balance.obj.pineapple': 'l’ananas',
+    'balance.obj.stone': 'la pierre', 'balance.obj.watermelon': 'la pastèque', 'balance.obj.pumpkin': 'la citrouille',
+  },
+  es: {
+    'balance.chooseLevel': '¡Elige un nivel!',
+    'balance.level': 'Nivel {n}',
+    'balance.place': '¡Pon los dos objetos en la balanza!',
+    'balance.howTo': 'El lado que baja es el más pesado.',
+    'balance.intro.surprise': '¡Atención, los objetos grandes no siempre son los más pesados!',
+    'balance.intro.light': '¡Escucha bien: a veces pido el más pesado y a veces el más ligero!',
+    'balance.tray': 'Los objetos para pesar',
+    'balance.pan.left': 'Platillo de la izquierda',
+    'balance.pan.right': 'Platillo de la derecha',
+    'balance.obj.balloon': 'el globo', 'balance.obj.apple': 'la manzana', 'balance.obj.teddy': 'el osito',
+    'balance.obj.pillow': 'el cojín', 'balance.obj.ball': 'la bola', 'balance.obj.pineapple': 'la piña',
+    'balance.obj.stone': 'la piedra', 'balance.obj.watermelon': 'la sandía', 'balance.obj.pumpkin': 'la calabaza',
+  },
+  en: {
+    'balance.chooseLevel': 'Choose a level!',
+    'balance.level': 'Level {n}',
+    'balance.place': 'Put both things on the scales!',
+    'balance.howTo': 'The side that goes down is the heavier one.',
+    'balance.intro.surprise': 'Careful, big things are not always the heaviest!',
+    'balance.intro.light': 'Listen carefully: sometimes I ask for the heavier one, sometimes the lighter one!',
+    'balance.tray': 'Things to weigh',
+    'balance.pan.left': 'Left pan',
+    'balance.pan.right': 'Right pan',
+    'balance.obj.balloon': 'the balloon', 'balance.obj.apple': 'the apple', 'balance.obj.teddy': 'the teddy bear',
+    'balance.obj.pillow': 'the pillow', 'balance.obj.ball': 'the metal ball', 'balance.obj.pineapple': 'the pineapple',
+    'balance.obj.stone': 'the stone', 'balance.obj.watermelon': 'the watermelon', 'balance.obj.pumpkin': 'the pumpkin',
+  },
+};

@@ -8,10 +8,12 @@ import potion from './potion/meta.js';
 import robot from './robot/meta.js';
 import market from './market/meta.js';
 import train from './train/meta.js';
+import balance from './balance/meta.js';
 
 export const GAMES = [
   { ...potion, load: () => import('./potion/potion.js') },
   { ...robot, load: () => import('./robot/robot.js') },
   { ...market, load: () => import('./market/market.js') },
   { ...train, load: () => import('./train/train.js') },
+  { ...balance, load: () => import('./balance/balance.js') },
 ];

@@ -1,0 +1,185 @@
+/* "La Balance" — layout + animations. All classes start with bl- so nothing clashes
+   with other games' stylesheets (they stay loaded after a game closes).
+
+   Portrait:              Landscape:
+   [   the balance   ]    [ the balance | tray ]   (the tray is a column on the right)
+   [ tray: objects   ]
+   The balance is a 4:3 box (.bl-scale) as big as fits in the stage; everything in it
+   is placed in % of that box (cqw / cqh). The stand's pivot is at 30% of the height;
+   the beam runs from 18% to 82% of the width; a pan hangs under each end.
+   scene.js sets --tilt (the beam's angle) and --drop (how far the right pan goes down,
+   in % of the width; the left pan goes up as much). Nothing scrolls during play. */
+
+/* ---------- Level map ---------- */
+
+.bl-levels {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto; /* many levels on a small landscape phone: scroll the MAP, never the game */
+  display: flex;
+  flex-wrap: wrap;
+  align-content: center;
+  justify-content: center;
+  gap: var(--gap);
+  padding: var(--gap);
+}
+.bl-level-btn {
+  position: relative;
+  width: clamp(6rem, 24vmin, 10rem);
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  border: none;
+  border-radius: 1.5rem;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+.bl-level-btn:active { transform: translateY(0.2rem); box-shadow: none; }
+.bl-level-btn.done { background: #FFF0CC; }
+.bl-level-btn.locked { opacity: 0.55; }
+.bl-level-num { font-size: clamp(2rem, 8vmin, 3.5rem); font-weight: 800; color: #C98B00; }
+.bl-level-lock { position: absolute; bottom: 0.6rem; width: 1.8rem; height: 1.8rem; color: var(--ink-soft); }
+
+/* ---------- Play layout ---------- */
+
+.bl-play {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: 0.5rem;
+  padding: 0 var(--gap) var(--gap);
+}
+@media (orientation: landscape) {
+  .bl-play {
+    grid-template-rows: minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+}
+
+.bl-stage {
+  min-height: 0;
+  min-width: 0;
+  container-type: size;
+  display: grid;
+  place-items: center;
+}
+
+/* ---------- The balance ---------- */
+
+.bl-scale {
+  --tilt: 0deg;   /* set by scene.js */
+  --drop: 0;      /* set by scene.js */
+  position: relative;
+  width: min(100cqw, 133.33cqh);
+  height: min(75cqw, 100cqh);
+  container-type: size;
+}
+.bl-stand { position: absolute; inset: 0; }
+.bl-stand svg { display: block; width: 100%; height: 100%; }
+
+.bl-beam {
+  position: absolute;
+  left: 18cqw;
+  width: 64cqw;
+  top: 28.5cqh;
+  height: 3cqh;
+  border-radius: 1.5cqh;
+  background: #8A5A3B;
+  transform: rotate(var(--tilt));
+  transition: transform 0.9s cubic-bezier(0.3, 1.4, 0.5, 1); /* a little overshoot, like a real beam */
+}
+
+.bl-pan {
+  position: absolute;
+  top: 30cqh;
+  width: 34cqw;
+  height: 56cqh;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.9s cubic-bezier(0.3, 1.4, 0.5, 1);
+}
+.bl-pan[data-side="0"] { left: 1cqw; transform: translateY(calc(var(--drop) * -1cqw)); }
+.bl-pan[data-side="1"] { left: 65cqw; transform: translateY(calc(var(--drop) * 1cqw)); }
+.bl-hanger { flex: 0 0 16cqh; }
+.bl-hanger svg { display: block; width: 100%; height: 100%; }
+.bl-load {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 0.25rem;
+}
+.bl-dish {
+  flex: 0 0 4cqh;
+  border-radius: 0 0 50% 50% / 0 0 100% 100%;
+  background: #F5B700;
+  box-shadow: inset 0 -0.4cqh 0 #C98B00;
+}
+.bl-pan.drop-hover .bl-dish { background: #9CC2FF; box-shadow: inset 0 -0.4cqh 0 #3C7BE8; }
+
+/* ---------- Objects ---------- */
+
+.bl-obj {
+  --size: clamp(64px, 13vmin, 104px);
+  width: var(--size);
+  height: var(--size);
+  flex: none;
+  padding: calc(var(--size) * 0.08); /* (a % padding would be % of the parent) */
+  border: none;
+  border-radius: 1rem;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+.bl-obj:active { transform: translateY(0.15rem); box-shadow: none; }
+/* On a pan: no card, the object sits on the dish. (cq units = the balance box.) */
+.bl-obj.bl-on-pan {
+  --size: clamp(64px, min(26cqw, 30cqh), 120px);
+  background: transparent;
+  box-shadow: none;
+}
+/* How big the thing looks (levels.js `look`): the drawing is scaled, sitting on the
+   bottom — the button (the touch target) keeps its size. */
+.bl-art { display: block; width: 100%; height: 100%; transform-origin: 50% 100%; }
+.bl-art svg { display: block; width: 100%; height: 100%; }
+.bl-obj[data-look="small"] .bl-art { transform: scale(0.55); }
+.bl-obj[data-look="medium"] .bl-art { transform: scale(0.78); }
+
+/* ---------- Tray ---------- */
+
+.bl-tray {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: var(--gap);
+  padding: 0.5rem;
+  border-radius: var(--radius);
+  background: #F3E6D3;
+}
+@media (orientation: landscape) {
+  .bl-tray { flex-direction: column; justify-content: center; gap: 0.5rem; }
+}
+/* The empty place of an object that is on a pan. */
+.bl-slot {
+  width: clamp(64px, 13vmin, 104px);
+  height: clamp(64px, 13vmin, 104px);
+  flex: none;
+  border: 0.2rem dashed #C9B79C;
+  border-radius: 1rem;
+}
+
+/* ---------- Animations ---------- */
+
+.bl-wiggle { animation: bl-shake 0.4s ease-in-out; }
+.bl-bounce { animation: bl-bounce 0.5s ease-out; }
+.bl-pop-in { animation: bl-pop-in 0.25s ease-out; }
+
+@keyframes bl-shake { 25% { transform: rotate(-6deg); } 75% { transform: rotate(6deg); } }
+@keyframes bl-bounce { 35% { transform: translateY(-35%); } 65% { transform: translateY(6%); } 85% { transform: translateY(-4%); } }
+@keyframes bl-pop-in { from { transform: scale(0.4); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .bl-beam, .bl-pan { transition-duration: 0.01s; }
+}
