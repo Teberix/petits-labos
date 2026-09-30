@@ -5,12 +5,8 @@ blue, red, blue…); empty wagons show a "?"; the child drags (or taps) a token 
 tray into them. Non-linguistic → app language (French by default).
 
 ## Status
-IN PROGRESS — (a) pattern logic + tests, level 1 playable (drag/tap, star, train
-rolls away, next train) · (b) a musical note per token + the 3-step hints, rows that
-break at period boundaries · (c) levels 2–4 (fruits; AAB/ABB/AABB; gap in the
-middle), side tray in landscape · (d) level 5 (whole missing period) and level 6
-(growing dots), then counting down too · (e) level 7 free mode. Next: phone
-preview for the playtest (same flow as Le Marché).
+DONE — released as v0.6.0 on 2026-09-30, playtested with the kids (owner's
+confirmation, 2026-09-30).
 
 ## Levels
 1 AB colours, gap at the end, 2 in the tray · 2 fruits, AB / ABC, 3 in the tray (one
@@ -105,13 +101,9 @@ grid row/column. The locomotive has column 1; other rows start under the first w
 so periods line up in columns. All classes start with `tr-`. The track clips its
 content (the train rolls in/out), so hint frames are inset.
 
-## Playtest (to do)
-Built in steps (a)–(e), all on 2026-09-29; not released. Phone preview through the
-temporary repo `Teberix/petits-labos-preview` (preview-only `VERSION`
-`0.5.0-preview.N`, never committed to `main`). What the gate can't judge:
-- dragging onto an empty wagon (middle of a row, level 4; any order, level 5);
-- the notes on a phone speaker, their volume next to the voice; hint 1's timing
-  (colour names ~0.3 s after the last note);
-- whether the fruits are recognised (grapes, half watermelon) and the dots countable
-  (~15 px each on a 360px phone);
-- level 7: is "tap a start wagon to take it out" found without help?
+## Playtest history
+Built in steps (a)–(f) on 2026-09-29 (then level 6 counting down, level 7 free mode).
+The owner playtested it with the kids on a phone through a temporary preview repo
+(`Teberix/petits-labos-preview`, preview-only `VERSION` `0.5.0-preview.1`, never
+committed to `main`); « test went well » — released as v0.6.0 on 2026-09-30, no
+changes needed after the playtest.
