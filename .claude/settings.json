@@ -3,6 +3,8 @@
   "permissions": {
     "defaultMode": "acceptEdits",
     "allow": [
+      "Write(games/**)",
+      "Edit(games/**)",
       "Bash(node --test *)",
       "Bash(npm test *)",
       "Bash(npm run gate *)",
