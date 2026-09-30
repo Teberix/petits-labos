@@ -78,6 +78,48 @@ export function weighedEnough(weighed, objectCount) {
   return weighed.size >= (objectCount <= 2 ? 1 : 2);
 }
 
+// ---------- Free mode (level 7) ----------
+// Each pan: { object: id | null, cubes: 0..MAX_CUBES } — one object and a cube frame
+// (the room there is on a phone). Equal weights are allowed here: balancing two
+// different things is the fun. None of these change the old array.
+
+export const emptyPans = () => [{ object: null, cubes: 0 }, { object: null, cubes: 0 }];
+
+export function freeWeight(pan) {
+  return (pan.object ? OBJECTS[pan.object].weight : 0) + pan.cubes;
+}
+
+// Puts object `id` on pan `side`: it leaves the other pan if it was there; an object
+// already on that pan goes back to the tray.
+export function freePut(pans, id, side) {
+  return pans.map((pan, i) => {
+    if (i === side) return { ...pan, object: id };
+    return pan.object === id ? { ...pan, object: null } : pan;
+  });
+}
+
+export function freeTakeOff(pans, side) {
+  return pans.map((pan, i) => (i === side ? { ...pan, object: null } : pan));
+}
+
+// +1 / -1 cube on pan `side`. Returns null when it can't (full / no cube).
+export function freeCube(pans, side, change) {
+  const cubes = pans[side].cubes + change;
+  if (cubes < 0 || cubes > MAX_CUBES) return null;
+  return pans.map((pan, i) => (i === side ? { ...pan, cubes } : pan));
+}
+
+// Where a TAPPED cube goes: onto the lighter pan (the one that is up), to help
+// balancing; the right one when level. (Dragging puts it on any pan.)
+export function cubeSide(pans) {
+  return freeWeight(pans[0]) < freeWeight(pans[1]) ? 0 : 1;
+}
+
+// Where a tapped object goes: the pan with no object (left first); -1 = both taken.
+export function freeObjectSide(pans) {
+  return pans.findIndex((pan) => !pan.object);
+}
+
 // Placing object `id` on pan `side` (0 = left, 1 = right). `pans` = [left, right], each
 // an object id or null (one object per pan). If it was on the other pan it moves; if
 // the pan was taken, the object that was there goes back to the tray. Returns the new

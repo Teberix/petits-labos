@@ -13,8 +13,8 @@ import { h } from '../../js/dom.js';
 import { speak } from '../../js/audio.js';
 import { draggable } from '../../js/dragdrop.js';
 import { makeRound } from './weigh.js';
-import { MAX_CUBES, OBJECTS } from './levels.js';
-import { setTilt, restartAnimation } from './scene.js';
+import { OBJECTS } from './levels.js';
+import { setTilt, restartAnimation, cubeFrame, cubeSource } from './scene.js';
 import { pluralKey } from './plural.js';
 import * as art from './art.js';
 
@@ -65,19 +65,10 @@ export function playCubeRounds(ctx, level, els, onDone) {
     }, h('span', { class: 'bl-art', html: art.OBJECT_ART[id] }))));
 
     // The right pan: the cube frame (tap = take one cube off).
-    const cells = Array.from({ length: MAX_CUBES }, (_, i) => h('span', {
-      class: `bl-cell${i < round.cubes ? ' bl-filled' : ''}`,
-      html: i < round.cubes ? art.CUBE : null,
-    }));
-    right.replaceChildren(h('button', {
-      class: 'bl-cubes', type: 'button', 'data-cubes': round.cubes, 'aria-label': t('balance.cubes.frame'),
-      onclick: removeCube,
-    }, cells));
+    right.replaceChildren(cubeFrame(round.cubes, t, removeCube));
 
     // The tray: one cube (a source: it never runs out).
-    const source = h('button', {
-      class: 'bl-cube-src', type: 'button', 'aria-label': t('balance.cubes.source'), html: art.CUBE,
-    });
+    const source = cubeSource(t);
     cleanups.push(draggable(source, {
       targets: () => [els.pans[1]],
       canDrag: () => !round.busy,

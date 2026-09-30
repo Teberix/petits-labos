@@ -4,6 +4,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   MIN_TILT, MAX_TILT, panWeight, tilt, answerFor, levelSets, makeRound, putOnPan, freePan, weighedEnough, setKey,
+  emptyPans, freeWeight, freePut, freeTakeOff, freeCube, cubeSide, freeObjectSide,
 } from '../games/balance/weigh.js';
 import { OBJECTS, LEVELS, MAX_CUBES } from '../games/balance/levels.js';
 import { OBJECT_ART } from '../games/balance/art.js';
@@ -20,6 +21,8 @@ function seeded(seed) {
 const weight = (id) => OBJECTS[id].weight;
 const LOOKS = ['small', 'medium', 'big'];
 const lookRank = (id) => LOOKS.indexOf(OBJECTS[id].look);
+// Every level but free mode plays rounds (makeRound).
+const ROUND_LEVELS = LEVELS.filter((l) => !l.free);
 
 // Plays `n` rounds of a level in a row, like the game does.
 function rounds(level, n, seed = 1) {
@@ -96,7 +99,7 @@ test('answerFor: heaviest / lightest', () => {
 // Owner's rule: equal weights only in free mode — a round never shows two (or three)
 // objects that weigh the same.
 test('makeRound: never two objects of the same weight; never the same pair twice in a row', () => {
-  for (const level of LEVELS) {
+  for (const level of ROUND_LEVELS) {
     for (const seed of [1, 7, 42]) {
       const played = rounds(level, 200, seed);
       played.forEach((round, i) => {
@@ -119,7 +122,7 @@ test('makeRound: never two objects of the same weight; never the same pair twice
 });
 
 test('makeRound: every group comes up; the answer is not always in the same place', () => {
-  for (const level of LEVELS) {
+  for (const level of ROUND_LEVELS) {
     const played = rounds(level, 2000);
     assert.equal(new Set(played.map((r) => r.key)).size, levelSets(level).length, `level ${level.id}`);
     if (level.cubes) continue;
@@ -183,7 +186,7 @@ test('putOnPan / freePan: one object per pan, moving and replacing', () => {
 test('levels: ids unique, fields sane', () => {
   const ids = LEVELS.map((l) => l.id);
   assert.equal(new Set(ids).size, ids.length);
-  for (const level of LEVELS) {
+  for (const level of ROUND_LEVELS) {
     assert.ok(level.rounds > 0, `level ${level.id}: rounds`);
     if (!level.cubes) assert.ok(level.questions.length && level.questions.every((q) => ['heavy', 'light'].includes(q)), `level ${level.id}: questions`);
     assert.ok(levelSets(level).length >= 2, `level ${level.id}: needs 2+ groups (no repeat in a row)`);
@@ -213,6 +216,41 @@ test('spoken results: « … pèse N cubes » says the table weight, singular/pl
       for (const form of ['one', 'other']) assert.ok(STRINGS[lang][`${key}.${form}`].includes('{n}'), `${lang} ${key}.${form}`);
     }
   }
+});
+
+test('free mode: the last level, every object, no rounds', () => {
+  const free = LEVELS.at(-1);
+  assert.ok(free.free);
+  assert.deepEqual([...free.objects].sort(), Object.keys(OBJECTS).sort());
+  assert.ok(!('rounds' in free) && !('questions' in free));
+});
+
+test('free mode: one object per pan (moves / replaces), cubes 0..MAX_CUBES, never mutates', () => {
+  let pans = emptyPans();
+  assert.equal(freeObjectSide(pans), 0);
+  pans = freePut(pans, 'apple', 0);
+  assert.equal(freeObjectSide(pans), 1);
+  pans = freePut(pans, 'teddy', 1);
+  assert.equal(freeObjectSide(pans), -1);
+  assert.equal(freeWeight(pans[0]), freeWeight(pans[1]), 'apple and teddy balance (equal weights allowed here)');
+  const before = JSON.stringify(pans);
+  assert.deepEqual(freePut(pans, 'apple', 1).map((p) => p.object), [null, 'apple'], 'moves; teddy → tray');
+  assert.deepEqual(freePut(pans, 'stone', 0).map((p) => p.object), ['stone', 'teddy'], 'apple → tray');
+  assert.deepEqual(freeTakeOff(pans, 0).map((p) => p.object), [null, 'teddy']);
+  assert.equal(JSON.stringify(pans), before);
+
+  let cubes = emptyPans();
+  for (let i = 0; i < MAX_CUBES; i++) cubes = freeCube(cubes, 1, +1);
+  assert.equal(cubes[1].cubes, MAX_CUBES);
+  assert.equal(freeCube(cubes, 1, +1), null, 'full');
+  assert.equal(freeCube(emptyPans(), 0, -1), null, 'no cube to take off');
+  assert.equal(freeWeight({ object: 'pumpkin', cubes: 3 }), 13);
+});
+
+test('free mode: a tapped cube goes onto the lighter pan (right when level)', () => {
+  assert.equal(cubeSide(emptyPans()), 1);
+  assert.equal(cubeSide(freePut(emptyPans(), 'stone', 1)), 0);
+  assert.equal(cubeSide(freePut(emptyPans(), 'stone', 0)), 1);
 });
 
 test('strings: same keys in fr / es / en, levels\' intros exist', () => {

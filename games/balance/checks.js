@@ -64,6 +64,14 @@ async function readCubes(page) {
   return { ...got, target: got.objects.reduce((sum, id) => sum + OBJECTS[id].weight, 0) };
 }
 
+// Free mode: cubes on each pan (0 when no frame) and the beam.
+async function readFree(page) {
+  return page.evaluate(() => ({
+    cubes: [0, 1].map((side) => Number(document.querySelector(`.bl-pan[data-side="${side}"] .bl-cubes`)?.dataset.cubes ?? 0)),
+    tilt: document.querySelector('.bl-scale').dataset.tilt,
+  }));
+}
+
 async function savedStars(page) {
   return page.evaluate(() => JSON.parse(localStorage.getItem('petits-labos')).profiles[0].rewards.stars);
 }
@@ -234,6 +242,45 @@ export default {
         await kit.settle(page);
         const marked = await page.locator(`.bl-obj[data-object="${right}"].bl-arrow-down.bl-hint`).count();
         if (marked !== 1) throw new Error(`the heaviest (${right}) has no arrow + wiggle`);
+      },
+    },
+    {
+      // The fullest free pans: pumpkin + 10 cubes against watermelon + 10 cubes (the
+      // object and a full frame stacked on each pan), 2 empty places in the tray. One
+      // cube more bounces (the frame is full).
+      name: 'level 7 (free), both pans full: object + 10 cubes each',
+      async setup(page, kit) {
+        await openLevel(page, kit, 7);
+        await kit.drag(page, trayObj('pumpkin'), pan(0));
+        await kit.drag(page, trayObj('watermelon'), pan(1));
+        for (const side of [0, 1]) for (let i = 0; i < 10; i++) await kit.drag(page, '.bl-cube-src', pan(side));
+        await kit.drag(page, '.bl-cube-src', pan(0));
+        await settleTilt(page);
+        const got = await readFree(page);
+        if (got.cubes.join() !== '10,10') throw new Error(`cubes: ${got.cubes}`);
+        if (got.tilt !== 'left') throw new Error(`20 vs 18: beam ${got.tilt}`);
+      },
+    },
+    {
+      // Apple and teddy bear weigh the same (2): level. Weighing once marks the level
+      // done. A tapped cube then goes to the right (level → right), and taking it off
+      // (tap the frame) makes it level again.
+      name: 'level 7 (free), apple = teddy, a cube on and off',
+      async setup(page, kit) {
+        await openLevel(page, kit, 7);
+        await kit.tap(page, trayObj('apple'));
+        await kit.tap(page, trayObj('teddy'));
+        await settleTilt(page);
+        if ((await readFree(page)).tilt !== 'level') throw new Error('apple and teddy do not balance');
+        const done = await page.evaluate(() => JSON.parse(localStorage.getItem('petits-labos')).profiles[0].games.balance?.completed ?? []);
+        if (!done.includes(7)) throw new Error('free mode not marked done after weighing');
+        await kit.tap(page, '.bl-cube-src');
+        await settleTilt(page);
+        if ((await readFree(page)).tilt !== 'right') throw new Error('the tapped cube did not go right');
+        await kit.tap(page, `${pan(1)} .bl-cubes`);
+        await settleTilt(page);
+        const got = await readFree(page);
+        if (got.tilt !== 'level' || got.cubes.join() !== '0,0') throw new Error(`after taking it off: ${got.cubes}, ${got.tilt}`);
       },
     },
   ],

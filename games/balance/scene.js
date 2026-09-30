@@ -4,7 +4,7 @@
 //   [ stage: the balance    ]   portrait: the dock is under the balance;
 //   [ dock: tray  | podium  ]   landscape: a column on its right (balance.css).
 import { h } from '../../js/dom.js';
-import { OBJECTS } from './levels.js';
+import { OBJECTS, MAX_CUBES } from './levels.js';
 import { tilt } from './weigh.js';
 import * as art from './art.js';
 
@@ -56,6 +56,23 @@ export function objectEl(id, where, t) {
     'data-look': OBJECTS[id].look,
     'aria-label': t(`balance.obj.${id}`),
   }, h('span', { class: 'bl-art', html: art.OBJECT_ART[id] }));
+}
+
+// The cubes on a pan: a 2 × 5 frame (a ten-frame: easy to count). One button: tapping
+// it calls onTap (take one cube off).
+export function cubeFrame(count, t, onTap) {
+  const cells = Array.from({ length: MAX_CUBES }, (_, i) => h('span', {
+    class: `bl-cell${i < count ? ' bl-filled' : ''}`,
+    html: i < count ? art.CUBE : null,
+  }));
+  return h('button', {
+    class: 'bl-cubes', type: 'button', 'data-cubes': count, 'aria-label': t('balance.cubes.frame'), onclick: onTap,
+  }, cells);
+}
+
+// The cube in the tray (a source: it never runs out).
+export function cubeSource(t) {
+  return h('button', { class: 'bl-cube-src', type: 'button', 'aria-label': t('balance.cubes.source'), html: art.CUBE });
 }
 
 // Tilts the beam for these pan weights; each pan moves up or down but stays upright,

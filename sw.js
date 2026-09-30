@@ -28,6 +28,7 @@ const PRECACHE = [
   'games/balance/balance.css',
   'games/balance/balance.js',
   'games/balance/cubes.js',
+  'games/balance/free.js',
   'games/balance/input.js',
   'games/balance/levels.js',
   'games/balance/meta.js',

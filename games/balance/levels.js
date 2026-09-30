@@ -31,6 +31,7 @@ export const MAX_CUBES = 10;
 //   cubes      true → a cube level: `count` objects of `objects` sit on the left pan,
 //              the child balances them with cubes (never more than MAX_CUBES; tested)
 //   rounds    rounds to finish the level
+//   free       true → free mode (see free.js): no rounds, no stars
 //   intro      (optional) extra line said at the first round (key in strings.js)
 export const LEVELS = [
   // Obvious: the heavier one also looks bigger (tested: at least 3 cubes apart).
@@ -65,4 +66,7 @@ export const LEVELS = [
   // Three objects, only two pans: weigh them two by two to find the heaviest (weights
   // hidden again). The podium wakes after two different pairs were weighed.
   { id: 6, count: 3, objects: Object.keys(OBJECTS), questions: ['heavy'], rounds: 5, intro: 'balance.intro.three' },
+  // Free mode: every object and the cubes, on any pan (equal weights allowed: balancing
+  // two different things is the fun). No stars; done after the first weighing.
+  { id: 7, free: true, objects: Object.keys(OBJECTS) },
 ];

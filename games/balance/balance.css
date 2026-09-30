@@ -148,7 +148,19 @@
 
 /* ---------- Cube levels ---------- */
 
-.bl-play[data-mode="cubes"] .bl-podium { display: none; }
+.bl-play[data-mode="cubes"] .bl-podium,
+.bl-play[data-mode="free"] .bl-podium { display: none; }
+
+/* Free mode: a pan holds an object AND its cube frame, stacked; the strings go behind
+   so the pan's whole height is room for them. */
+/* 9 objects + the cube in the tray: 3 columns in landscape, 4 on a short phone. */
+.bl-play[data-mode="free"] .bl-tray { --tray-columns: 3; }
+@media (orientation: landscape) and (max-height: 400px) {
+  .bl-play[data-mode="free"] .bl-tray { --tray-columns: 4; }
+}
+.bl-play[data-mode="free"] .bl-hanger { position: absolute; inset: 0 0 4cqh; z-index: -1; }
+.bl-play[data-mode="free"] .bl-load { flex-direction: column; align-items: center; justify-content: flex-end; gap: 0.15rem; }
+.bl-play[data-mode="free"] .bl-obj.bl-on-pan { --size: 64px; }
 
 /* The objects the game put on the left pan (not buttons). Two of them share the pan. */
 .bl-fixed {
