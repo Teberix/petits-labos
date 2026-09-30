@@ -1,0 +1,176 @@
+/* "Qui mange qui ?" — layout + animations. All classes start with fd- so nothing clashes
+   with other games' stylesheets (they stay loaded after a game closes).
+   Step (a): level map + empty level screen. Nothing scrolls during play. */
+
+/* ---------- Level map ---------- */
+
+.fd-levels {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto; /* many levels on a small landscape phone: scroll the MAP, never the game */
+  display: flex;
+  flex-wrap: wrap;
+  align-content: center;
+  justify-content: center;
+  gap: var(--gap);
+  padding: var(--gap);
+}
+.fd-level-btn {
+  position: relative;
+  width: clamp(6rem, 24vmin, 10rem);
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  border: none;
+  border-radius: 1.5rem;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+.fd-level-btn:active { transform: translateY(0.2rem); box-shadow: none; }
+.fd-level-btn.done { background: #E3F5D8; }
+.fd-level-btn.locked { opacity: 0.55; }
+.fd-level-num { font-size: clamp(2rem, 8vmin, 3.5rem); font-weight: 800; color: #3F8A2E; }
+.fd-level-lock { position: absolute; bottom: 0.6rem; width: 1.8rem; height: 1.8rem; color: var(--ink-soft); }
+
+/* ---------- Play ---------- */
+
+.fd-play {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  place-items: center;
+}
+
+/* Feed rounds.
+   Portrait:              Landscape:
+   [    the scene    ]    [ the scene | tray ]   (the tray is a column on the right)
+   [ tray: 3 cards   ]
+   The scene (.fd-scene) fills the stage, from 10:11 (tall phone) to 2:1 (wide laptop);
+   its drawing is cropped to fit ("slice"). The animal is a square --s = 78% of the
+   scene's height (at most 80% of its width), standing at the bottom middle. */
+.fd-feed {
+  place-items: stretch;
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: var(--gap);
+  padding: 0 var(--gap) var(--gap);
+}
+@media (orientation: landscape) {
+  .fd-feed {
+    grid-template-rows: minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+}
+
+.fd-stage {
+  min-height: 0;
+  min-width: 0;
+  container-type: size;
+  display: grid;
+  place-items: center;
+}
+.fd-scene {
+  position: relative;
+  width: min(100cqw, 200cqh);
+  height: min(100cqh, 110cqw);
+  container-type: size;
+  --s: min(78cqh, 80cqw);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+.fd-backdrop { position: absolute; inset: 0; }
+.fd-backdrop svg { display: block; width: 100%; height: 100%; }
+
+.fd-animal {
+  position: absolute;
+  bottom: 3cqh;
+  left: calc(50cqw - var(--s) / 2);
+  width: var(--s);
+  height: var(--s);
+  padding: 0;
+  border: none;
+  background: none;
+  transform-origin: 50% 100%;
+}
+.fd-animal svg { display: block; width: 100%; height: 100%; }
+.fd-animal.drop-hover { filter: drop-shadow(0 0 0.6rem #FFD54F) drop-shadow(0 0 0.3rem #FFB300); }
+
+/* « Beurk ! » bubble, top right of the animal. */
+.fd-bubble {
+  position: absolute;
+  bottom: calc(3cqh + var(--s) * 0.72);
+  left: calc(50cqw + var(--s) * 0.28);
+  width: calc(var(--s) * 0.34);
+  height: calc(var(--s) * 0.34);
+  pointer-events: none;
+  animation: fd-pop-in 0.25s ease-out;
+}
+.fd-bubble svg { display: block; width: 100%; height: 100%; }
+
+.fd-tray {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--gap);
+}
+@media (orientation: landscape) {
+  .fd-tray { flex-direction: column; }
+}
+.fd-card, .fd-slot {
+  --card: clamp(64px, 22vmin, 8.5rem);
+  width: var(--card);
+  height: var(--card);
+  flex: none;
+}
+.fd-card {
+  padding: calc(var(--card) * 0.1);
+  border: none;
+  border-radius: 1rem;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+.fd-card svg { display: block; width: 100%; height: 100%; pointer-events: none; }
+/* Hints: the right card glows (2), then dances (3) until used. */
+.fd-card.fd-glow { animation: fd-glow 0.9s ease-in-out infinite; }
+.fd-card.fd-dance { animation: fd-glow 0.9s ease-in-out infinite, fd-dance 0.9s ease-in-out infinite; }
+.fd-card.fd-bounce { animation: fd-bounce 0.5s ease-out; }
+
+/* Level complete. */
+.fd-done {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--gap);
+}
+.fd-done-art { width: clamp(6rem, 30vmin, 12rem); animation: fd-hop 0.6s ease-in-out infinite; }
+.fd-done-art svg { display: block; width: 100%; height: auto; }
+.fd-continue {
+  width: var(--tap);
+  height: var(--tap);
+  padding: 0.9rem;
+  border: none;
+  border-radius: 50%;
+  background: var(--green);
+  color: #fff;
+  box-shadow: var(--shadow);
+}
+.fd-continue svg { width: 100%; height: 100%; }
+
+/* ---------- Animations ---------- */
+
+.fd-wiggle { animation: fd-shake 0.4s ease-in-out; }
+.fd-pop-in { animation: fd-pop-in 0.3s ease-out; }
+/* Wrong card: the animal shakes its head (and the bubble says « beurk »). */
+.fd-animal.fd-yuck { animation: fd-shake 0.25s ease-in-out 3; }
+/* Right card: the animal chews (squash and stretch). */
+.fd-animal.fd-chew { animation: fd-chew 0.3s ease-in-out 4; }
+
+@keyframes fd-shake { 25% { transform: rotate(-6deg); } 75% { transform: rotate(6deg); } }
+@keyframes fd-pop-in { from { transform: scale(0.4); } }
+@keyframes fd-chew { 50% { transform: scale(1.06, 0.94); } }
+@keyframes fd-bounce { 35% { transform: translateY(-25%); } 65% { transform: translateY(5%); } 85% { transform: translateY(-3%); } }
+@keyframes fd-hop { 50% { transform: translateY(-10%); } }
+@keyframes fd-dance { 25% { transform: translateY(-8%) rotate(-8deg); } 75% { transform: translateY(-8%) rotate(8deg); } }
+@keyframes fd-glow { 50% { box-shadow: 0 0 0 0.35rem #FFD54F, 0 0 1rem 0.3rem rgba(255, 179, 0, 0.6); } }

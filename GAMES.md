@@ -11,7 +11,7 @@ owner confirms it was playtested with the kids.
 | 4 | Le Marché | counting, addition, CHF coins | DONE |
 | 5 | Le Train des Suites | patterns/logic | DONE |
 | 6 | La Balance | heavier/lighter, equality | DONE |
-| 7 | Qui mange qui ? | food chains, habitats | planned |
+| 7 | Qui mange qui ? | food chains, habitats | IN PROGRESS |
 | 8 | Formes & Silhouettes | shapes, spatial reasoning, symmetry | planned |
 | 9 | Duo Mémoire | memory, turn-taking, 2 players on one device | planned |
 | 10 | Le Jardin | plant life cycle, grows over real days | planned |
@@ -19,6 +19,12 @@ owner confirms it was playtested with the kids.
 | 12 | La Pâtisserie | match-3 swaps, spotting patterns | TODO |
 | 13 | Les Paires | pair matching on stacked tiles, visual search | TODO |
 | 14 | Les Pompons | moving zones to guide balls to their colour, cause/effect | TODO |
+
+### Game 7 note (owner, 2026-09-30)
+Qui mange qui ? keeps its levels in `games/food/levels.js`, not `levels.json` — an
+accepted exception: its rounds are generated from the animal/food data, not hand-made
+puzzles, and the consistency tests in `tests/food.test.mjs` act as its solver (every
+round `makeRound` can build has exactly one right answer).
 
 ### Backlog notes (games 11–14, owner, 2026-09-30)
 All four: **original names and art only** — no assets, names or branding from the apps
