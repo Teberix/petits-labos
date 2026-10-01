@@ -207,12 +207,12 @@
 
 /* Chain rounds.
    Portrait:            Landscape:
-   [ plant ]            [ plant → □ → □ → □ ]
-   [   ↓   ]            [ tray: cards        ]
+   [   □   ]            [ plant → □ → □ → □ ]
+   [   ↑   ]            [ tray: cards        ]
    [   □   ]
-   [   ↓   ]
-   [   □   ]
-   [ tray ]
+   [   ↑   ]
+   [ plant ]            (bottom → top: the owner's playtest found top → bottom
+   [ tray ]              counter-intuitive — the plant is the ground of the chain)
    The chain sits on its scene (.fd-chainbox, cropped drawing). Slot size --s: n slots
    + (n-1) arrows of 0.4 slot = --k slots along the chain (set by chain.js), so
    --s = the box's length along the chain / --k, at most 60% across it. */
@@ -236,7 +236,7 @@
   position: absolute;
   inset: 0;
   display: flex;
-  flex-direction: column;
+  flex-direction: column-reverse; /* portrait: the plant at the BOTTOM, eaters above (owner, playtest) */
   align-items: center;
   justify-content: center;
 }
@@ -263,7 +263,7 @@
   height: calc(var(--s) * 0.4);
   flex: none;
   color: rgba(43, 33, 65, 0.45);
-  transform: rotate(90deg); /* portrait: pointing down */
+  transform: rotate(-90deg); /* portrait: pointing up */
 }
 @media (orientation: landscape) {
   .fd-arrow { transform: none; }

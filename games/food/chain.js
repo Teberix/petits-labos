@@ -1,5 +1,5 @@
 // "Qui mange qui ?" chain rounds (levels 5–7): a food chain to put in order, in its
-// scene. Slots joined by arrows (« est mangé par »): top → bottom on a portrait
+// scene. Slots joined by arrows (« est mangé par »): bottom → top on a portrait
 // screen, left → right on a landscape one. The first slot (the plant) is already in
 // place; the cards (the rest of the chain + any decoy) wait in the tray.
 //   drag a card onto an empty slot → it goes there; tap a card in a slot → back to

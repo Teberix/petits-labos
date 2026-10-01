@@ -26,6 +26,17 @@ accepted exception: its rounds are generated from the animal/food data, not hand
 puzzles, and the consistency tests in `tests/food.test.mjs` act as its solver (every
 round `makeRound` can build has exactly one right answer).
 
+### Big update after game 10: new engine + rewards (owner, 2026-10-01)
+From the Qui mange qui ? playtest: the kids finished all 7 levels in under 5 minutes.
+They are quick and the games are too easy for them.
+- **Plan:** finish game 7, then build games 8–10 with the current approach to validate
+  the game ideas. Then switch engine and strategy, reusing what is already built and
+  tested, so that **difficulty rises as they progress** instead of a few fixed levels.
+- **Rewards:** stars work as motivation (they play on every phone to earn them), but
+  they complain the sticker album fills up far too fast. The reward system needs an
+  alternative or an evolution, ideally together with the new-engine games. To design
+  as part of that big update; nothing to change before then.
+
 ### Backlog notes (games 11–14, owner, 2026-09-30)
 All four: **original names and art only** — no assets, names or branding from the apps
 that inspired them. Level-based: levels in `levels.json` (see "Level data" in

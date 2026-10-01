@@ -9,7 +9,10 @@ IN PROGRESS — design approved by the owner on 2026-09-30; built in steps (a)�
 redrawn: flat-fill zebra, raspberries, hazelnut in its husk, ibex horns, turtle
 flippers, shaded ice floe, sunflower seeds) · (c) feed rounds ✔ (level 1 playtested
 on the owner's tablet through the preview repo, `0.7.0-preview.1`: « went well »; the
-forest's red dots removed after it) · (d) home rounds ✔ · (e) chain rounds ✔ · (d) home rounds ·
+forest's red dots removed after it) · (d) home rounds ✔ · (e) chain rounds ✔ ·
+(f) after the owner's full playtest (`0.7.0-preview.2`, 2026-10-01: « graphics
+great », difficulty OK, the kids did all 7 levels in < 5 min): chains go bottom → top
+on a portrait screen ✔ · (d) home rounds ·
 (e) chain rounds · (f) level done, polish, full `checks.js`.
 
 ## Levels (7)
@@ -108,8 +111,9 @@ Home: portrait = scenes stacked, tray under them (3 or 4 per row); landscape = s
 side by side, tray as 2 columns on the right. Scenes share the space equally
 (cropped drawings); animals at home = min(62% of the scene's height, 44% of its
 width). Tray cards: clamp(64px, 17vmin, 7.5rem).
-Chain: on its scene (cropped drawing); portrait = slots top → bottom (arrows turned
-down), landscape = left → right; tray under it. Slot `--s` = the box's length along
+Chain: on its scene (cropped drawing); portrait = slots bottom → top, the plant at
+the bottom (arrows turned up; owner's playtest: top → bottom was counter-intuitive),
+landscape = left → right; tray under it. Slot `--s` = the box's length along
 the chain / `--k` (n slots + (n-1) arrows of 0.4 slot, set by chain.js), at most 60%
 across and 9rem.
 
