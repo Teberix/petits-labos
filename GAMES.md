@@ -12,7 +12,7 @@ owner confirms it was playtested with the kids.
 | 5 | Le Train des Suites | patterns/logic | DONE |
 | 6 | La Balance | heavier/lighter, equality | DONE |
 | 7 | Qui mange qui ? | food chains, habitats | DONE |
-| 8 | Formes & Silhouettes | shapes, spatial reasoning, symmetry | planned |
+| 8 | Formes & Silhouettes | shapes, spatial reasoning, symmetry | IN PROGRESS |
 | 9 | Duo Mémoire | memory, turn-taking, 2 players on one device | planned |
 | 10 | Le Jardin | plant life cycle, grows over real days | planned |
 | 11 | Les Tubes Arc-en-ciel | colour sorting in tubes, planning ahead | TODO |
@@ -36,6 +36,13 @@ They are quick and the games are too easy for them.
   they complain the sticker album fills up far too fast. The reward system needs an
   alternative or an evolution, ideally together with the new-engine games. To design
   as part of that big update; nothing to change before then.
+- **Engine:** levels in `levels.json` + `solver.mjs`, checked by the gate (see "Level
+  data" in `CLAUDE.md`). Games 8–10 keep `levels.js` (owner, 2026-10-01).
+- **Review (owner, 2026-10-01):** until game 10, each checkpoint (proposal, art
+  contact sheet, first playable, final gate report) goes to `docs/mailbox/` for the
+  owner's external reviewer. After game 10: add a read-only "project-manager" subagent
+  that reviews proposals against the project standards before they reach the owner; it
+  replaces the mailbox as the first review layer. Roadmap only — not built yet.
 
 ### Backlog notes (games 11–14, owner, 2026-09-30)
 All four: **original names and art only** — no assets, names or branding from the apps
