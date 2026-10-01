@@ -7,7 +7,9 @@ by default); every plant/animal name is said aloud when touched.
 IN PROGRESS — design approved by the owner on 2026-09-30; built in steps (a)–(f):
 (a) scaffold + data + logic ✔ · (b) art ✔ (contact sheet reviewed by the owner;
 redrawn: flat-fill zebra, raspberries, hazelnut in its husk, ibex horns, turtle
-flippers, shaded ice floe, sunflower seeds) · (c) feed rounds ✔ · (d) home rounds ·
+flippers, shaded ice floe, sunflower seeds) · (c) feed rounds ✔ (level 1 playtested
+on the owner's tablet through the preview repo, `0.7.0-preview.1`: « went well »; the
+forest's red dots removed after it) · (d) home rounds ✔ · (d) home rounds ·
 (e) chain rounds · (f) level done, polish, full `checks.js`.
 
 ## Levels (7)
@@ -50,8 +52,18 @@ checks each has exactly one right answer.
   « regarde bien les trois » + the question again (points to no card) → glow →
   dance. Then neutral « essaie encore » lines (still dancing). (Implementation
   decision, to confirm at playtest.)
-- Feed: answers only by dragging a card onto the animal; tapping a card says its
-  name, tapping the animal says its name + the question.
+- Feed: answers only by dragging a card onto the animal (drop zone = the whole
+  animal's box + the drag helper's 25% margin); tapping a card says its name, tapping
+  the animal says its name + the question.
+- Home: drag each animal onto its scene; it settles there (« Oui ! Le lapin vit dans
+  la forêt. »). 1 star when the tray is empty. Hints per ANIMAL (`web.js homeHint`):
+  « pas là ! Où vit le lapin ? » → « le lapin vit dans la forêt » → glow: that
+  animal's card dances and its home glows while THAT card is held (+ 2 s right after
+  the hint) — never while another animal is dragged (kid-ux review) → neutral lines. Tapping a card / a scene says its name.
+  Ice floe = « près de la banquise » (orca, krill and fish don't live ON it).
+- Side-by-side scenes: the drag helper takes the first target whose enlarged hit area
+  contains the finger, and neighbours' areas overlap; `common.js nearestFirst` sorts
+  the scenes nearest-to-the-finger first (checked by an edge-drop worst case).
 - 1 star per round (home: when the tray is empty). No bonus star, no free mode.
 
 ## Files
@@ -60,12 +72,16 @@ checks each has exactly one right answer.
   `homeOf`, `chainOk`, `chainSolutions`, `levelRounds` (every round of a level,
   cached), `makeRound`.
 - `food.js` — level map, level dispatch, level done (home/chain levels: placeholder
-  until (d)/(e)). `feed.js` — feed rounds. `strings.js`, `food.css` (classes `fd-`).
+  until (e)). `feed.js` — feed rounds. `home.js` — home rounds. `common.js` — cap,
+  pickOne, restartAnimation, timerSet, nearestFirst (tested). `strings.js`,
+  `food.css` (classes `fd-`).
 - `art.js` — `ART[id]` (every plant/animal, 100×100, standing on y ≈ 95) and
   `SCENES[habitat]` (160×100, slice). No ids/gradients (a card and its drag ghost share
   the page; tested). The nut is a hazelnut (not an acorn).
 - `checks.js` — dev-only worst cases: level map, feed round (level 4), two wrong
   cards (beurk + glow), level 4 three wrong (dance), level done (5 rounds + sticker).
+  Home: level 3 round (3 scenes + 6 animals), edge drops + 3 wrong drops (glow),
+  level 2 everyone home (one star, new round).
   Offline: level 1, wrong card → no star, right → one star, next animal.
 
 ## Layout
@@ -73,6 +89,10 @@ Feed: portrait = scene over a row of 3 cards; landscape = scene + a column of ca
 on the right. The scene fills its stage between 10:11 and 2:1 (its drawing is
 cropped, "slice"); the animal is a square `--s` = min(78% of the scene's height, 80%
 of its width), standing at the bottom middle. Cards: clamp(64px, 22vmin, 8.5rem).
+Home: portrait = scenes stacked, tray under them (3 or 4 per row); landscape = scenes
+side by side, tray as 2 columns on the right. Scenes share the space equally
+(cropped drawings); animals at home = min(62% of the scene's height, 44% of its
+width). Tray cards: clamp(64px, 17vmin, 7.5rem).
 
 ## Playtest history
 —

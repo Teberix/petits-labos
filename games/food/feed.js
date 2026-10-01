@@ -14,19 +14,10 @@ import { h } from '../../js/dom.js';
 import { ANIMALS } from './levels.js';
 import { makeRound, feedHint, isPlant } from './web.js';
 import { ART, SCENES, YUCK } from './art.js';
+import { cap, pickOne, restartAnimation, timerSet } from './common.js';
 
 const NEXT_MS = 1800; // the animal chews before the next round
 const YUCK_MS = 1200; // how long the « beurk » bubble stays
-
-const pickOne = (n) => 1 + Math.floor(Math.random() * n);
-const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
-
-// Restarts a one-shot CSS animation on `el` (removing and re-adding the class).
-export function restartAnimation(el, className) {
-  el.classList.remove(className);
-  void el.offsetWidth; // forces the browser to notice the removal
-  el.classList.add(className);
-}
 
 // Plays feed `level` in `container`; calls onDone() after the last round.
 // Returns { stop }.
@@ -34,16 +25,12 @@ export function playFeed(ctx, level, container, onDone) {
   const { t, sfx } = ctx;
   const remark = (text) => speak(text, ctx.lang); // a reaction: the repeat button keeps the question
   const name = (id) => t(`food.name.${id}`);
-  const timers = new Set();
+  const timers = timerSet();
+  const later = timers.later;
   let cleanups = [];
   let index = 0;     // rounds played in this level
   let round = null;  // web.js makeRound() + { misses, busy }
   let stopped = false;
-
-  function later(fn, ms) {
-    const id = setTimeout(() => { timers.delete(id); fn(); }, ms);
-    timers.add(id);
-  }
 
   function stopInputs() {
     cleanups.forEach((stop) => stop());
@@ -158,7 +145,6 @@ export function playFeed(ctx, level, container, onDone) {
   return {
     stop() {
       stopped = true;
-      timers.forEach(clearTimeout);
       timers.clear();
       stopInputs();
     },

@@ -2,14 +2,17 @@
 //
 // Flow: level map → level (5 rounds) → level done → map.
 // Files: levels.js (animals, plants, chains, levels), web.js (pure logic, tested),
-//        feed.js (feed rounds), strings.js, art.js, food.css.
-// Home and chain rounds come in steps (d)–(e); until then those levels show an empty
-// screen with a button back to the map.
+//        feed.js (feed rounds), home.js (home rounds), common.js (small helpers),
+//        strings.js, art.js, food.css.
+// Chain rounds come in step (e); until then those levels show an empty screen with a
+// button back to the map.
 import { h } from '../../js/dom.js';
 import { addStrings } from '../../js/i18n.js';
 import { LEVELS } from './levels.js';
 import { makeRound } from './web.js';
-import { playFeed, restartAnimation } from './feed.js';
+import { playFeed } from './feed.js';
+import { playHome } from './home.js';
+import { restartAnimation } from './common.js';
 import STRINGS from './strings.js';
 import * as art from './art.js';
 import meta from './meta.js';
@@ -76,11 +79,12 @@ function createGame(container, ctx) {
 
   function playLevel(level) {
     stopLevel();
-    if (level.type === 'feed') {
-      rounds = playFeed(ctx, level, container, () => levelDone(level));
+    const play = { feed: playFeed, home: playHome }[level.type];
+    if (play) {
+      rounds = play(ctx, level, container, () => levelDone(level));
       return;
     }
-    // Not built yet (steps (d)–(e)): an empty level screen.
+    // Not built yet (step (e)): an empty level screen.
     const round = makeRound(level, Math.random);
     container.replaceChildren(h('div', {
       class: 'fd-play', 'data-type': level.type, 'data-key': round.key,

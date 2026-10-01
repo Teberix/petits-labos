@@ -103,6 +103,16 @@ function homeRounds(level) {
   return out;
 }
 
+// The hint after the n-th wrong scene for ONE animal of a home round (n = 1, 2, …):
+//   'ask'   « pas là ! Où vit le lapin ? » — points to no scene
+//   'name'  say where it lives (« le lapin vit dans la forêt »): the child still has
+//           to find that scene
+//   'glow'  the right scene glows until the animal is there
+//   null    no new hint: a neutral line (the scene keeps glowing)
+export function homeHint(misses) {
+  return ['ask', 'name', 'glow'][misses - 1] ?? null;
+}
+
 // ---------- chain: put a food chain in order ----------
 
 // Is `list` a real food chain (each one eaten by the next)?
@@ -169,13 +179,16 @@ export function shuffled(list, random) {
 
 // One round, picked at random among ALL the level's rounds. `previousKey` = the last
 // round's key: never the same animal (feed), scenes (home) or chain twice in a row.
-// Cards and animals come shuffled; feed rounds also get `cards` (answer + wrong).
+// Cards, animals and scenes come shuffled; feed rounds also get `cards` (answer +
+// wrong).
 export function makeRound(level, random, previousKey = null) {
   const all = levelRounds(level);
   const fresh = all.filter((r) => r.key !== previousKey);
   const pool = fresh.length ? fresh : all;
   const round = pool[Math.floor(random() * pool.length)];
   if (level.type === 'feed') return { ...round, cards: shuffled([round.answer, ...round.wrong], random) };
-  if (level.type === 'home') return { ...round, animals: shuffled(round.animals, random) };
+  if (level.type === 'home') {
+    return { ...round, scenes: shuffled(round.scenes, random), animals: shuffled(round.animals, random) };
+  }
   return { ...round, cards: shuffled(round.cards, random) };
 }

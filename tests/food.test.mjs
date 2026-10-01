@@ -5,10 +5,11 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  eats, mightEat, isPlant, foodCards, homeOf, chainOk, chainSolutions, levelRounds, makeRound, feedHint, combinations, permutations,
+  eats, mightEat, isPlant, foodCards, homeOf, chainOk, chainSolutions, levelRounds, makeRound, feedHint, homeHint, combinations, permutations,
 } from '../games/food/web.js';
 import { HABITATS, PLANTS, ANIMALS, CHAINS, LEVELS } from '../games/food/levels.js';
 import { ART, SCENES } from '../games/food/art.js';
+import { nearestFirst, distanceTo } from '../games/food/common.js';
 import STRINGS from '../games/food/strings.js';
 
 // A tiny repeatable random generator, so every run tests the same rounds.
@@ -211,6 +212,37 @@ test('feed hints: a gentle first step that points to no card, then glow → danc
   const hard = LEVELS.find((l) => l.type === 'feed' && l.distractors === 'same');
   assert.deepEqual([1, 2, 3, 4].map((n) => feedHint(easy, n)), ['clue', 'pulse', 'wiggle', null]);
   assert.deepEqual([1, 2, 3, 4].map((n) => feedHint(hard, n)), ['ask', 'pulse', 'wiggle', null]);
+});
+
+test('home hints: ask → say where it lives → the scene glows → neutral', () => {
+  assert.deepEqual([1, 2, 3, 4].map(homeHint), ['ask', 'name', 'glow', null]);
+});
+
+test('home rounds come with the scenes shuffled (all of them kept)', () => {
+  const level = LEVELS.find((l) => l.type === 'home' && l.scenes === 3);
+  const random = seeded(11);
+  const orders = new Set();
+  for (let i = 0; i < 40; i++) {
+    const r = makeRound(level, random);
+    assert.deepEqual([...r.scenes].sort(), r.key.split('+').sort());
+    orders.add(r.scenes.join());
+  }
+  assert.ok(orders.size > 1);
+});
+
+test('every habitat has a place phrase and every home line is said in fr, es and en', () => {
+  for (const lang of ['fr', 'es', 'en']) {
+    for (const h of HABITATS) assert.ok(STRINGS[lang][`food.at.${h}`], `${lang}: food.at.${h}`);
+  }
+});
+
+test('nearestFirst: the scene under the finger first, then by distance', () => {
+  const box = (left, right) => ({ getBoundingClientRect: () => ({ left, right, top: 0, bottom: 100 }) });
+  const [a, b, c] = [box(0, 100), box(110, 210), box(220, 320)];
+  assert.deepEqual(nearestFirst([a, b, c], { x: 115, y: 50 }), [b, a, c]); // inside b, near a
+  assert.deepEqual(nearestFirst([a, b, c], { x: 105, y: 50 }).slice(0, 2), [a, b]); // gap, a is 5 away
+  assert.deepEqual(nearestFirst([a, b, c], null), [a, b, c]);
+  assert.equal(distanceTo({ left: 0, right: 10, top: 0, bottom: 10 }, { x: 13, y: 14 }), 5);
 });
 
 test('helpers: combinations and permutations', () => {
