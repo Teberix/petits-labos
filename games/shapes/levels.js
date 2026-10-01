@@ -33,7 +33,7 @@ export const SHAPES = {
 // thin tail) — the contact sheet at 360px scale is the check.
 export const OBJECTS = {
   house: { details: ['chimney', 'roof'] },
-  rabbit: { details: ['ears', 'tail'] },
+  rabbit: { details: ['ears', 'carrot'] }, // a round tail blends into the body (contact sheet)
   car: { details: ['wheels', 'cabin'] },
   teapot: { details: ['spout', 'handle'] },
   rocket: { details: ['fins', 'nose'] },
@@ -69,8 +69,8 @@ export const PICTURES = {
   // ---- turning (levels 5–6): only shapes with a real orientation ----
   sailboat: [
     { shape: 'halfCircle', angle: 180, x: 50, y: 80, size: 56, color: '#8B5E3C' },
-    { shape: 'triangle', angle: 0, x: 46, y: 44, size: 40, color: '#F4F4F4' },
-    { shape: 'halfSquare', angle: 0, x: 74, y: 16, size: 14, color: '#E4572E' },
+    { shape: 'triangle', angle: 0, x: 40, y: 44, size: 40, color: '#F4F4F4' },
+    { shape: 'halfSquare', angle: 0, x: 74, y: 50, size: 26, color: '#E4572E' },
   ],
   mushroom: [
     { shape: 'halfCircle', angle: 0, x: 50, y: 38, size: 64, color: '#E4572E' },
@@ -87,16 +87,16 @@ export const PICTURES = {
   rocket: [
     { shape: 'rectangle', angle: 90, x: 50, y: 52, size: 52, color: '#D9D9E0' },
     { shape: 'triangle', angle: 0, x: 50, y: 13, size: 24, color: '#E4572E' },
-    { shape: 'halfSquare', angle: 90, x: 26, y: 70, size: 20, color: '#2E86DE' },
+    { shape: 'halfSquare', angle: 270, x: 26, y: 70, size: 20, color: '#2E86DE' },
     { shape: 'halfSquare', angle: 0, x: 74, y: 70, size: 20, color: '#2E86DE' },
     { shape: 'halfCircle', angle: 180, x: 50, y: 88, size: 24, color: '#F28C28' },
   ],
   ship: [
     { shape: 'halfCircle', angle: 180, x: 50, y: 80, size: 70, color: '#8B5E3C' },
     { shape: 'bar', angle: 90, x: 50, y: 40, size: 44, color: '#5C4033' },
-    { shape: 'halfSquare', angle: 0, x: 30, y: 44, size: 28, color: '#F4F4F4' },
+    { shape: 'halfSquare', angle: 270, x: 30, y: 44, size: 28, color: '#F4F4F4' },
     { shape: 'triangle', angle: 0, x: 70, y: 44, size: 28, color: '#F4F4F4' },
-    { shape: 'rectangle', angle: 0, x: 64, y: 10, size: 16, color: '#E4572E' },
+    { shape: 'rectangle', angle: 0, x: 64, y: 22, size: 16, color: '#E4572E' },
   ],
   cottage: [
     { shape: 'triangle', angle: 0, x: 50, y: 24, size: 48, color: '#E4572E' },

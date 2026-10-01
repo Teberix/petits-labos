@@ -6,7 +6,9 @@ Shapes, silhouettes, turning pieces, mirror symmetry. Non-linguistic → app lan
 ## Status
 IN PROGRESS — design approved on 2026-10-01 (owner + external review, see
 `docs/mailbox/game-08-proposal.md`). Steps:
-(a) scaffold + data + logic ✔ · (b) art → mailbox contact sheet (at 360px scale) ·
+(a) scaffold + data + logic ✔ · (b) art ✔ → mailbox contact sheet at 360px scale
+(`docs/mailbox/game-08-b-art.png`; the rabbit's round tail blended into its body in
+silhouette → swapped for a big carrot) ·
 (c) sorter (level 1) + silhouettes (levels 2–3) → mailbox first playable + preview ·
 (d) puzzles (levels 4–6) with tap-to-turn · (e) mirror (levels 7–8), level done,
 polish, full `checks.js` → mailbox final gate report.
@@ -50,6 +52,10 @@ Progress is saved by level `id` — never renumber.
   `fits`, `tapsToFit`, `startAngles`, `footprint`, mirror (`mirrorTarget`,
   `mirrorStart`, `rightTap`, `mirrorCell`, `mirrorDone`, `nextMirrorCell`), `hintStep`,
   `makeRound`, `rightShadow`.
+- `art.js` — `shapeSvg` / `holeSvg` (every shape, any angle), `objectSvg(id, { shadow,
+  missing })` (objects as layers: body + one layer per detail; eyes and windows only
+  in colour), `pictureSvg(id, filled)` (pieces in colour, the rest as dashed holes),
+  `BUTTERFLY_BODY`. No ids/gradients (tested).
 - `shapes.js` — level map, level dispatch (placeholder screen until each kind of round
   is built). `strings.js`, `art.js`, `shapes.css` (classes `sh-`).
 - `checks.js` — dev-only worst cases: level map, placeholder level. Offline: open level

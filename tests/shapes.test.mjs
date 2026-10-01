@@ -305,3 +305,24 @@ test('strings: same keys in fr/es/en, a name for every shape and object', () => 
   for (const id of Object.keys(OBJECTS)) assert.ok(STRINGS.fr[`shapes.object.${id}`], `object ${id}`);
   for (const lang of ['fr', 'es', 'en']) assert.ok(meta.strings[lang]['shapes.title'], lang);
 });
+
+// ---------- art ----------
+
+test('art: every shape and object is drawn; every missing detail is a layer; no ids', async () => {
+  const art = await import('../games/shapes/art.js');
+  for (const id of Object.keys(SHAPES)) assert.match(art.shapeSvg(id, '#000000', 90), /<svg/, id);
+  for (const [id, o] of Object.entries(OBJECTS)) {
+    const parts = art.OBJECT_PARTS[id];
+    assert.ok(parts, `${id}: no drawing`);
+    assert.ok(parts.includes('body'), `${id}: no body`);
+    for (const d of o.details) assert.ok(parts.includes(d), `${id}: detail ${d} not drawn as a layer`);
+    const full = art.objectSvg(id, { shadow: true });
+    for (const d of o.details) assert.notEqual(art.objectSvg(id, { shadow: true, missing: d }), full, `${id}/${d}`);
+    assert.ok(!art.objectSvg(id).includes(art.SHADOW), `${id}: shadow colour in the colour drawing`);
+    assert.ok(!/(fill|stroke)="#(?!4A4458)/i.test(full), `${id}: shadow has another colour`);
+  }
+  for (const id of Object.keys(PICTURES)) assert.match(art.pictureSvg(id, new Set([0])), /<svg/, id);
+  const all = [...Object.keys(OBJECTS).map((id) => art.objectSvg(id)), art.BUTTERFLY_BODY,
+    ...Object.keys(PICTURES).map((id) => art.pictureSvg(id))].join('');
+  assert.ok(!/\sid=|Gradient|url\(#/.test(all), 'ids/gradients would clash when a drawing appears twice');
+});
