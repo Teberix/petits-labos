@@ -5,7 +5,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  eats, mightEat, isPlant, foodCards, homeOf, chainOk, chainSolutions, levelRounds, makeRound, feedHint, homeHint, combinations, permutations,
+  eats, mightEat, isPlant, foodCards, homeOf, chainOk, chainSolutions, levelRounds, makeRound, feedHint, homeHint, chainCheck, chainHint, combinations, permutations,
 } from '../games/food/web.js';
 import { HABITATS, PLANTS, ANIMALS, CHAINS, LEVELS } from '../games/food/levels.js';
 import { ART, SCENES } from '../games/food/art.js';
@@ -243,6 +243,26 @@ test('nearestFirst: the scene under the finger first, then by distance', () => {
   assert.deepEqual(nearestFirst([a, b, c], { x: 105, y: 50 }).slice(0, 2), [a, b]); // gap, a is 5 away
   assert.deepEqual(nearestFirst([a, b, c], null), [a, b, c]);
   assert.equal(distanceTo({ left: 0, right: 10, top: 0, bottom: 10 }, { x: 13, y: 14 }), 5);
+});
+
+test('chain check is by position (the seal eats krill too, but not in this chain)', () => {
+  const round = { chain: ['algae', 'krill', 'fish', 'seal'], given: 1 };
+  assert.deepEqual(chainCheck(round, ['algae', 'krill', 'fish', 'seal']), [true, true, true, true]);
+  assert.deepEqual(chainCheck(round, ['algae', 'krill', 'seal', 'fish']), [true, true, false, false]);
+  assert.deepEqual([1, 2, 3, 4].map(chainHint), ['ask', 'glow', 'dance', null]);
+});
+
+test('chain "who eats …?" hint is only ever asked about a real link (never the decoy)', () => {
+  // The hint asks « qui mange X ? » with X = the right card before the first wrong
+  // slot: always a link of the chain, so there is a real answer among the cards.
+  for (const level of LEVELS.filter((l) => l.type === 'chain')) {
+    for (const r of levelRounds(level)) {
+      for (let i = r.given; i < r.chain.length; i++) {
+        assert.ok(r.cards.includes(r.chain[i]), `${r.chain}: ${r.chain[i]} not among the cards`);
+        assert.ok(eats(r.chain[i], r.chain[i - 1]));
+      }
+    }
+  }
 });
 
 test('helpers: combinations and permutations', () => {

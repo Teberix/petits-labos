@@ -205,6 +205,78 @@
 }
 .fd-htray .fd-card, .fd-htray .fd-slot { --card: clamp(64px, 17vmin, 7.5rem); }
 
+/* Chain rounds.
+   Portrait:            Landscape:
+   [ plant ]            [ plant → □ → □ → □ ]
+   [   ↓   ]            [ tray: cards        ]
+   [   □   ]
+   [   ↓   ]
+   [   □   ]
+   [ tray ]
+   The chain sits on its scene (.fd-chainbox, cropped drawing). Slot size --s: n slots
+   + (n-1) arrows of 0.4 slot = --k slots along the chain (set by chain.js), so
+   --s = the box's length along the chain / --k, at most 60% across it. */
+.fd-chain-play {
+  place-items: stretch;
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: var(--gap);
+  padding: 0 var(--gap) var(--gap);
+}
+.fd-chainbox {
+  position: relative;
+  width: 100cqw;
+  height: 100cqh;
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  container-type: size;
+}
+.fd-chain {
+  --s: max(64px, min(calc((100cqh - 1.5rem) / var(--k, 3.8)), 60cqw, 9rem)); /* never under 64px */
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+@media (orientation: landscape) {
+  .fd-chain {
+    --s: max(64px, min(calc((100cqw - 1.5rem) / var(--k, 3.8)), 60cqh, 9rem));
+    flex-direction: row;
+  }
+}
+.fd-cslot {
+  width: var(--s);
+  height: var(--s);
+  flex: none;
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.8);
+  box-shadow: inset 0 0 0 0.2rem rgba(43, 33, 65, 0.3);
+}
+.fd-cslot.fd-filled { background: none; box-shadow: none; }
+.fd-cslot.drop-hover { background: rgba(255, 236, 179, 0.9); box-shadow: inset 0 0 0 0.25rem #FFB300; }
+.fd-cslot .fd-card { --card: var(--s); }
+.fd-card.fd-fixed { box-shadow: 0 0 0 0.2rem #8BC34A, var(--shadow); }
+.fd-arrow {
+  width: calc(var(--s) * 0.4);
+  height: calc(var(--s) * 0.4);
+  flex: none;
+  color: rgba(43, 33, 65, 0.45);
+  transform: rotate(90deg); /* portrait: pointing down */
+}
+@media (orientation: landscape) {
+  .fd-arrow { transform: none; }
+}
+.fd-arrow svg { display: block; width: 100%; height: 100%; }
+.fd-arrow.fd-lit { color: #FFB300; filter: drop-shadow(0 0 0.3rem #FFE082); }
+/* (the pop-in keeps the arrow's direction) */
+.fd-arrow.fd-pop-in { animation: fd-arrow-pop 0.3s ease-out; }
+@keyframes fd-arrow-pop { from { scale: 1.8; } }
+@media (orientation: landscape) {
+  .fd-chain-play .fd-tray { flex-direction: row; }
+}
+
 /* Level complete. */
 .fd-done {
   flex: 1;

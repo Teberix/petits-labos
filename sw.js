@@ -38,6 +38,7 @@ const PRECACHE = [
   'games/balance/strings.js',
   'games/balance/weigh.js',
   'games/food/art.js',
+  'games/food/chain.js',
   'games/food/common.js',
   'games/food/feed.js',
   'games/food/food.css',

@@ -2,7 +2,7 @@
 // tools/check-layout.mjs and its offline interaction for tools/check-offline.mjs.
 // See tools/check-kit.mjs.
 // Home and chain rounds (steps (d)–(e)) add their worst cases later.
-import { LEVELS } from './levels.js';
+import { LEVELS, CHAINS } from './levels.js';
 import { eats, homeOf } from './web.js';
 
 async function openMap(page, kit) {
@@ -69,6 +69,23 @@ async function dragToScene(page, id, habitat, edge = null) {
   await page.mouse.up();
 }
 
+// Chain round: the slots, the tray and the chain (its key is on the box).
+async function readChain(page) {
+  await page.locator('.fd-cslot').first().waitFor();
+  await page.locator('.fd-chain-play .fd-tray .fd-card').first().waitFor();
+  const got = await page.evaluate(() => ({
+    slots: [...document.querySelectorAll('.fd-cslot')].map((s) => s.querySelector('.fd-card')?.dataset.animal ?? null),
+    tray: [...document.querySelectorAll('.fd-chain-play .fd-tray .fd-card')].map((c) => c.dataset.animal),
+    key: document.querySelector('.fd-chainbox').dataset.key,
+  }));
+  const entry = CHAINS.find((c) => c.chain.join('>') === got.key);
+  if (!entry) throw new Error(`unknown chain ${got.key}`);
+  return { ...got, chain: entry.chain };
+}
+
+const trayAnimal = (id) => `.fd-tray .fd-card[data-animal="${id}"]`;
+const slot = (i) => `.fd-cslot[data-index="${i}"]`;
+
 const residents = (page) => page.evaluate(() =>
   Object.fromEntries([...document.querySelectorAll('.fd-home')].map((el) =>
     [el.dataset.habitat, [...el.querySelectorAll('.fd-resident')].map((r) => r.dataset.animal)])));
@@ -78,7 +95,7 @@ async function savedStars(page) {
 }
 
 export default {
-  touch: ['.fd-level-btn', '.fd-continue', '.fd-card', '.fd-animal', '.fd-home'],
+  touch: ['.fd-level-btn', '.fd-continue', '.fd-card', '.fd-animal', '.fd-home', '.fd-cslot'],
 
   worstCases: [
     {
@@ -191,6 +208,59 @@ export default {
           const now = [...document.querySelectorAll('.fd-home')].map((el) => el.dataset.habitat).sort().join();
           return document.querySelectorAll('.fd-htray .fd-card').length === 4 && now !== old;
         }, [...scenes].sort().join(), { timeout: 8000 });
+        await kit.settle(page);
+      },
+    },
+    {
+      name: 'chain: a 4-link chain (level 7)',
+      async setup(page, kit) {
+        await openLevel(page, kit, 7);
+        const { slots, tray } = await readChain(page);
+        if (slots.length !== 4 || tray.length !== 3) throw new Error(`${slots.length} slots, ${tray.length} cards`);
+        await kit.settle(page);
+      },
+    },
+    {
+      // Level 6 (one decoy): the decoy + the chain's animals in the wrong order, three
+      // times → the ones in place stay, the others go back; then the next card dances.
+      name: 'chain: level 6, wrong orders → back to the tray, then the hint dances',
+      async setup(page, kit) {
+        await openLevel(page, kit, 6);
+        const { chain, tray } = await readChain(page);
+        const decoy = tray.find((id) => !chain.includes(id));
+        for (let attempt = 0; attempt < 3; attempt++) {
+          // Fill the empty slots: the decoy first, then whatever is left.
+          const now = await readChain(page);
+          const empty = now.slots.map((id, i) => (id ? null : i)).filter((i) => i !== null);
+          const cards = [decoy, ...now.tray.filter((id) => id !== decoy)];
+          for (const [k, i] of empty.entries()) await kit.drag(page, trayAnimal(cards[k]), slot(i));
+          await page.waitForFunction((d) => !!document.querySelector(`.fd-tray .fd-card[data-animal="${d}"]`), decoy, { timeout: 5000 });
+        }
+        const after = await readChain(page);
+        if (after.slots.includes(decoy)) throw new Error('the decoy stayed in the chain');
+        if (!(await page.locator('.fd-tray .fd-card.fd-dance').count())) throw new Error('no card dances after 3 wrong chains');
+        await kit.settle(page);
+      },
+    },
+    {
+      // Level 5: the right order → the arrows light up, one star, a new round.
+      name: 'chain: level 5, the right chain → arrows lit, one star, new round',
+      async setup(page, kit) {
+        await openLevel(page, kit, 5);
+        const before = await savedStars(page);
+        const { chain } = await readChain(page);
+        // A card put in the wrong slot and tapped back first (no check: not full).
+        await kit.drag(page, trayAnimal(chain[2]), slot(1));
+        await kit.tap(page, `${slot(1)} .fd-card`);
+        if ((await readChain(page)).slots[1]) throw new Error('tapping a placed card did not take it back');
+        for (let i = 1; i < chain.length; i++) await kit.drag(page, trayAnimal(chain[i]), slot(i));
+        await page.waitForFunction(() => document.querySelectorAll('.fd-arrow.fd-lit').length === document.querySelectorAll('.fd-arrow').length, null, { timeout: 8000 });
+        await page.waitForFunction((b) => JSON.parse(localStorage.getItem('petits-labos')).profiles[0].rewards.stars === b + 1, before, { timeout: 8000 });
+        await page.waitForFunction((old) => {
+          const first = document.querySelector('.fd-cslot .fd-card');
+          return document.querySelectorAll('.fd-chain-play .fd-tray .fd-card').length === 2 && !document.querySelector('.fd-arrow.fd-lit')
+            && first && document.querySelector('.fd-chainbox').dataset.key !== old;
+        }, chain.join('>'), { timeout: 10000 });
         await kit.settle(page);
       },
     },

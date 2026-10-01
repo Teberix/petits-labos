@@ -2,16 +2,14 @@
 //
 // Flow: level map → level (5 rounds) → level done → map.
 // Files: levels.js (animals, plants, chains, levels), web.js (pure logic, tested),
-//        feed.js (feed rounds), home.js (home rounds), common.js (small helpers),
-//        strings.js, art.js, food.css.
-// Chain rounds come in step (e); until then those levels show an empty screen with a
-// button back to the map.
+//        feed.js / home.js / chain.js (the three kinds of rounds), common.js (small
+//        helpers), strings.js, art.js, food.css.
 import { h } from '../../js/dom.js';
 import { addStrings } from '../../js/i18n.js';
 import { LEVELS } from './levels.js';
-import { makeRound } from './web.js';
 import { playFeed } from './feed.js';
 import { playHome } from './home.js';
+import { playChain } from './chain.js';
 import { restartAnimation } from './common.js';
 import STRINGS from './strings.js';
 import * as art from './art.js';
@@ -79,22 +77,8 @@ function createGame(container, ctx) {
 
   function playLevel(level) {
     stopLevel();
-    const play = { feed: playFeed, home: playHome }[level.type];
-    if (play) {
-      rounds = play(ctx, level, container, () => levelDone(level));
-      return;
-    }
-    // Not built yet (step (e)): an empty level screen.
-    const round = makeRound(level, Math.random);
-    container.replaceChildren(h('div', {
-      class: 'fd-play', 'data-type': level.type, 'data-key': round.key,
-    },
-      h('button', {
-        class: 'fd-continue', type: 'button', 'aria-label': t('food.continue'),
-        html: art.ICON_NEXT, onclick: () => { sfx.pop(); showLevels(); },
-      }),
-    ));
-    if (level.intro) ctx.speak(t(level.intro));
+    const play = { feed: playFeed, home: playHome, chain: playChain }[level.type];
+    rounds = play(ctx, level, container, () => levelDone(level));
   }
 
   // ---------- Level complete ----------

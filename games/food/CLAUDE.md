@@ -9,7 +9,7 @@ IN PROGRESS — design approved by the owner on 2026-09-30; built in steps (a)�
 redrawn: flat-fill zebra, raspberries, hazelnut in its husk, ibex horns, turtle
 flippers, shaded ice floe, sunflower seeds) · (c) feed rounds ✔ (level 1 playtested
 on the owner's tablet through the preview repo, `0.7.0-preview.1`: « went well »; the
-forest's red dots removed after it) · (d) home rounds ✔ · (d) home rounds ·
+forest's red dots removed after it) · (d) home rounds ✔ · (e) chain rounds ✔ · (d) home rounds ·
 (e) chain rounds · (f) level done, polish, full `checks.js`.
 
 ## Levels (7)
@@ -61,7 +61,20 @@ checks each has exactly one right answer.
   animal's card dances and its home glows while THAT card is held (+ 2 s right after
   the hint) — never while another animal is dragged (kid-ux review) → neutral lines. Tapping a card / a scene says its name.
   Ice floe = « près de la banquise » (orca, krill and fish don't live ON it).
-- Side-by-side scenes: the drag helper takes the first target whose enlarged hit area
+- Chain: the plant is in place; cards go into any empty slot (tap a placed card →
+  back to the tray). The chain is checked only when EVERY slot is full, by position
+  (`web.js chainCheck`): one slot alone can have two true answers (the seal eats krill
+  too), only the whole order is unique (tested). Wrong → the right ones stay, locked
+  (green ring); the others hop back. Hints per round (`chainHint`): « qui mange
+  l'herbe ? » about the first wrong slot (a question, never a claim that could be
+  false) → the right card for the first wrong slot glows → it dances → neutral
+  lines. Only that ONE card, until it's placed (kid-ux review: re-picking after
+  every placement walked the child through the whole chain). Taps on locked cards
+  are ignored during the win, so the spoken chain isn't cut off. Slots ≥ 64px.
+  Right → the arrows light up one by one (pop), the voice says every link (« Le lapin
+  mange l'herbe. Le renard mange le lapin. ») + « Miam ! », 1 star. Spoken links are
+  the lesson; nothing is ever drawn being eaten.
+- Side-by-side scenes / slots: the drag helper takes the first target whose enlarged hit area
   contains the finger, and neighbours' areas overlap; `common.js nearestFirst` sorts
   the scenes nearest-to-the-finger first (checked by an edge-drop worst case).
 - 1 star per round (home: when the tray is empty). No bonus star, no free mode.
@@ -71,8 +84,8 @@ checks each has exactly one right answer.
 - `web.js` — pure logic, tested in `tests/food.test.mjs`: `eats`, `foodCards`,
   `homeOf`, `chainOk`, `chainSolutions`, `levelRounds` (every round of a level,
   cached), `makeRound`.
-- `food.js` — level map, level dispatch, level done (home/chain levels: placeholder
-  until (e)). `feed.js` — feed rounds. `home.js` — home rounds. `common.js` — cap,
+- `food.js` — level map, level dispatch, level done. `feed.js` — feed rounds.
+  `home.js` — home rounds. `chain.js` — chain rounds. `common.js` — cap,
   pickOne, restartAnimation, timerSet, nearestFirst (tested). `strings.js`,
   `food.css` (classes `fd-`).
 - `art.js` — `ART[id]` (every plant/animal, 100×100, standing on y ≈ 95) and
@@ -81,7 +94,9 @@ checks each has exactly one right answer.
 - `checks.js` — dev-only worst cases: level map, feed round (level 4), two wrong
   cards (beurk + glow), level 4 three wrong (dance), level done (5 rounds + sticker).
   Home: level 3 round (3 scenes + 6 animals), edge drops + 3 wrong drops (glow),
-  level 2 everyone home (one star, new round).
+  level 2 everyone home (one star, new round). Chain: level 7 (4 slots), level 6
+  wrong orders ×3 (decoy back, hint dances), level 5 tap-back + right chain (arrows
+  lit, one star, new round).
   Offline: level 1, wrong card → no star, right → one star, next animal.
 
 ## Layout
@@ -93,6 +108,10 @@ Home: portrait = scenes stacked, tray under them (3 or 4 per row); landscape = s
 side by side, tray as 2 columns on the right. Scenes share the space equally
 (cropped drawings); animals at home = min(62% of the scene's height, 44% of its
 width). Tray cards: clamp(64px, 17vmin, 7.5rem).
+Chain: on its scene (cropped drawing); portrait = slots top → bottom (arrows turned
+down), landscape = left → right; tray under it. Slot `--s` = the box's length along
+the chain / `--k` (n slots + (n-1) arrows of 0.4 slot, set by chain.js), at most 60%
+across and 9rem.
 
 ## Playtest history
 —

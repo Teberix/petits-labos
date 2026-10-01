@@ -145,6 +145,24 @@ function chainRounds(level) {
   return out;
 }
 
+// A full chain built by the child (`slots`: one id per slot) checked against the
+// round's chain: true for each slot that holds the right one. (The right order is
+// the only real food chain the cards can make — chainSolutions, tested — so a slot
+// is judged by position, never by "does it eat the one before", which can be true
+// for a wrong order: the seal also eats krill.)
+export function chainCheck(round, slots) {
+  return slots.map((id, i) => id === round.chain[i]);
+}
+
+// The hint after the n-th wrong full chain of a round (n = 1, 2, …):
+//   'ask'   « qui mange l'herbe ? » about the first wrong slot — points to no card
+//   'glow'  the card for the first empty slot glows
+//   'dance' it dances
+//   null    no new hint: a neutral line (it keeps dancing)
+export function chainHint(misses) {
+  return ['ask', 'glow', 'dance'][misses - 1] ?? null;
+}
+
 // Every full chain a child could build from a chain round that is a real food chain.
 // The round is fair when there is exactly one (tested for every round).
 export function chainSolutions(round) {
