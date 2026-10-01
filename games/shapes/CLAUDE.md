@@ -8,7 +8,8 @@ IN PROGRESS — design approved on 2026-10-01 (owner + external review, see
 `docs/mailbox/game-08-proposal.md`). Steps:
 (a) scaffold + data + logic ✔ · (b) art ✔ → mailbox contact sheet at 360px scale
 (`docs/mailbox/game-08-b-art.png`; the rabbit's round tail blended into its body in
-silhouette → swapped for a big carrot) ·
+silhouette → swapped for a big carrot; after the review: plane tail twice as big, tiny
+puzzle pieces dropped/merged, sails light blue instead of white) ·
 (c) sorter (level 1) + silhouettes (levels 2–3) → mailbox first playable + preview ·
 (d) puzzles (levels 4–6) with tap-to-turn · (e) mirror (levels 7–8), level done,
 polish, full `checks.js` → mailbox final gate report.
@@ -33,6 +34,9 @@ Progress is saved by level `id` — never renumber.
   square, rectangle, bar, half circle — no circle or square; tested). Every piece starts
   at an angle that fits NO slot of its shape; every slot is reachable in 1–3 taps of
   90° (tested on every round makeRound builds).
+- Puzzle pieces are big (owner, step (b) review): smallest side ≥ 44px when the
+  picture is `PICTURE_PX` (260px, the smallest phone picture) wide, and every piece
+  touches the picture (one connected group; no floating sun or grass). Both tested.
 - Same shape twice in a picture → same size and colour: the pieces are identical and
   either one fits either slot (tested). Pieces never overlap in the frame (tested with
   `footprint`).

@@ -9,7 +9,9 @@ import {
   ANGLES, turn, sameAngle, fits, tapsToFit, startAngles, footprint, mirrorTarget, mirrorStart,
   rightTap, mirrorCell, mirrorDone, nextMirrorCell, hintStep, shuffle, makeRound, rightShadow,
 } from '../games/shapes/logic.js';
-import { SHAPES, OBJECTS, PICTURES, MIRRORS, MIRROR_COLORS, LEVELS } from '../games/shapes/levels.js';
+import {
+  SHAPES, OBJECTS, PICTURES, PICTURE_PX, MIN_PIECE_PX, MIRRORS, MIRROR_COLORS, LEVELS,
+} from '../games/shapes/levels.js';
 import STRINGS from '../games/shapes/strings.js';
 import meta from '../games/shapes/meta.js';
 
@@ -94,6 +96,39 @@ test('pictures: known shapes, angles 0/90/180/270, inside the frame, no overlap'
         assert.ok(!overlap, `${id}: pieces ${i} and ${j} overlap`);
       }
     }
+  }
+});
+
+// Owner's review (2026-10-01): big pieces only — dragging and turning tiny pieces tests
+// fine motor skills, not spatial reasoning.
+test('pictures: every piece\'s smallest side is ≥ 44px when the picture is PICTURE_PX wide', () => {
+  assert.ok(PICTURE_PX <= 360 - 32, 'PICTURE_PX must fit a 360px phone');
+  for (const [id, slots] of Object.entries(PICTURES)) {
+    slots.forEach((slot, i) => {
+      const box = footprint(slot);
+      const px = (Math.min(box.right - box.left, box.bottom - box.top) * PICTURE_PX) / 100;
+      assert.ok(px >= MIN_PIECE_PX - 1e-9, `${id}[${i}] ${slot.shape}: smallest side ${px.toFixed(1)}px < ${MIN_PIECE_PX}px`);
+    });
+  }
+});
+
+// Every piece touches the rest of the picture (chimney on the roof, flag on the mast; no
+// floating grass): the pieces' boxes form one connected group (touching = less than 1
+// frame unit apart).
+test('pictures: every piece touches the picture (one connected group)', () => {
+  const gap = (a, b) => Math.max(a.left - b.right, b.left - a.right, a.top - b.bottom, b.top - a.bottom);
+  for (const [id, slots] of Object.entries(PICTURES)) {
+    const boxes = slots.map(footprint);
+    const seen = new Set([0]);
+    const todo = [0];
+    while (todo.length) {
+      const i = todo.pop();
+      boxes.forEach((b, j) => {
+        if (!seen.has(j) && gap(boxes[i], b) <= 1) { seen.add(j); todo.push(j); }
+      });
+    }
+    const alone = slots.map((s, i) => (seen.has(i) ? null : `${i} ${s.shape}`)).filter(Boolean);
+    assert.deepEqual(alone, [], `${id}: pieces not touching the picture`);
   }
 });
 

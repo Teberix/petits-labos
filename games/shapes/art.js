@@ -123,7 +123,7 @@ const OBJECT_LAYERS = {
   ],
   plane: [
     ['wings', [['path d="M50 36L96 54V62L50 54L4 62V54Z"', '#2E86DE']]],
-    ['tail', [['path d="M50 76L76 88V95L50 89L24 95V88Z"', '#2E86DE']]],
+    ['tail', [['path d="M50 70L84 84V97L50 88L16 97V84Z"', '#2E86DE']]],
     ['body', [['ellipse cx="50" cy="50" rx="9" ry="46"', '#D9D9E0'],
       ['ellipse cx="50" cy="16" rx="5" ry="6"', '#7FC8F8', 1]]],
   ],

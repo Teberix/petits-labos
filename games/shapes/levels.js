@@ -48,62 +48,67 @@ export const OBJECTS = {
 //   color          the piece's colour
 // One piece per slot. Two slots with the same shape must have the same size and colour
 // (the pieces are then identical, either one fits either slot; tested).
+// Big pieces only (owner's review, 2026-10-01: tiny pieces test fine motor skills, not
+// spatial reasoning): every piece's smallest side is ≥ 44px when the picture is
+// PICTURE_PX wide (tested). Every piece touches the rest of the picture — no floating
+// suns or grass (tested).
+export const PICTURE_PX = 260; // the picture's smallest side on any phone (640 × 360 landscape)
+export const MIN_PIECE_PX = 44;
 export const PICTURES = {
   // ---- no turning (level 4): any shape ----
   house: [
-    { shape: 'square', angle: 0, x: 50, y: 66, size: 40, color: '#F2C14E' },
-    { shape: 'triangle', angle: 0, x: 50, y: 26, size: 40, color: '#E4572E' },
-    { shape: 'circle', angle: 0, x: 84, y: 16, size: 22, color: '#FFD23F' },
+    { shape: 'square', angle: 0, x: 36, y: 70, size: 40, color: '#F2C14E' },
+    { shape: 'triangle', angle: 0, x: 36, y: 30, size: 40, color: '#E4572E' },
+    { shape: 'rectangle', angle: 0, x: 74, y: 81, size: 36, color: '#2E86DE' },     // garage
   ],
   tree: [
-    { shape: 'triangle', angle: 0, x: 50, y: 36, size: 50, color: '#3FA34D' },
-    { shape: 'rectangle', angle: 90, x: 50, y: 78, size: 30, color: '#8B5E3C' },
-    { shape: 'circle', angle: 0, x: 15, y: 15, size: 20, color: '#FFD23F' },
+    { shape: 'triangle', angle: 0, x: 50, y: 24, size: 48, color: '#3FA34D' },
+    { shape: 'rectangle', angle: 90, x: 50, y: 65, size: 34, color: '#8B5E3C' },
+    { shape: 'bar', angle: 0, x: 50, y: 91, size: 72, color: '#7CB342' },           // the ground
   ],
   car: [
-    { shape: 'rectangle', angle: 0, x: 50, y: 60, size: 64, color: '#2E86DE' },
-    { shape: 'halfCircle', angle: 0, x: 50, y: 34, size: 40, color: '#7FC8F8' },
-    { shape: 'circle', angle: 0, x: 32, y: 86, size: 18, color: '#3B2F2A' },
-    { shape: 'circle', angle: 0, x: 68, y: 86, size: 18, color: '#3B2F2A' },
+    { shape: 'rectangle', angle: 0, x: 50, y: 56, size: 70, color: '#2E86DE' },
+    { shape: 'halfCircle', angle: 0, x: 50, y: 27.5, size: 44, color: '#7FC8F8' },
+    { shape: 'circle', angle: 0, x: 32, y: 84.5, size: 22, color: '#3B2F2A' },
+    { shape: 'circle', angle: 0, x: 68, y: 84.5, size: 22, color: '#3B2F2A' },
   ],
   // ---- turning (levels 5–6): only shapes with a real orientation ----
   sailboat: [
-    { shape: 'halfCircle', angle: 180, x: 50, y: 80, size: 56, color: '#8B5E3C' },
-    { shape: 'triangle', angle: 0, x: 40, y: 44, size: 40, color: '#F4F4F4' },
-    { shape: 'halfSquare', angle: 0, x: 74, y: 50, size: 26, color: '#E4572E' },
+    { shape: 'halfCircle', angle: 180, x: 50, y: 78, size: 70, color: '#8B5E3C' },
+    { shape: 'triangle', angle: 0, x: 36, y: 40, size: 40, color: '#7FC8F8' },
+    { shape: 'halfSquare', angle: 0, x: 73, y: 45, size: 30, color: '#E4572E' },    // jib
   ],
   mushroom: [
-    { shape: 'halfCircle', angle: 0, x: 50, y: 38, size: 64, color: '#E4572E' },
-    { shape: 'rectangle', angle: 90, x: 50, y: 70, size: 32, color: '#F2E6D0' },
-    { shape: 'halfSquare', angle: 0, x: 20, y: 84, size: 16, color: '#3FA34D' },
-    { shape: 'halfSquare', angle: 270, x: 80, y: 84, size: 16, color: '#3FA34D' },
+    { shape: 'halfCircle', angle: 0, x: 50, y: 28, size: 70, color: '#E4572E' },
+    { shape: 'rectangle', angle: 90, x: 50, y: 63.5, size: 36, color: '#F2E6D0' },
+    { shape: 'bar', angle: 0, x: 50, y: 90.5, size: 72, color: '#7CB342' },         // the ground
   ],
   tent: [
-    { shape: 'triangle', angle: 0, x: 50, y: 58, size: 56, color: '#F28C28' },
-    { shape: 'bar', angle: 90, x: 50, y: 16, size: 28, color: '#8B5E3C' },
-    { shape: 'halfSquare', angle: 0, x: 62, y: 10, size: 16, color: '#E4572E' },
+    { shape: 'triangle', angle: 0, x: 50, y: 64, size: 60, color: '#F28C28' },
+    { shape: 'rectangle', angle: 90, x: 50, y: 17, size: 34, color: '#8B5E3C' },    // pole
+    { shape: 'halfSquare', angle: 0, x: 68.5, y: 10, size: 20, color: '#E4572E' },  // flag
   ],
   // level 6: 5 pieces with look-alikes (triangle / half square, rectangle / bar)
   rocket: [
-    { shape: 'rectangle', angle: 90, x: 50, y: 52, size: 52, color: '#D9D9E0' },
-    { shape: 'triangle', angle: 0, x: 50, y: 13, size: 24, color: '#E4572E' },
-    { shape: 'halfSquare', angle: 270, x: 26, y: 70, size: 20, color: '#2E86DE' },
-    { shape: 'halfSquare', angle: 0, x: 74, y: 70, size: 20, color: '#2E86DE' },
-    { shape: 'halfCircle', angle: 180, x: 50, y: 88, size: 24, color: '#F28C28' },
+    { shape: 'rectangle', angle: 90, x: 50, y: 54, size: 56, color: '#D9D9E0' },
+    { shape: 'triangle', angle: 0, x: 50, y: 13, size: 26, color: '#E4572E' },
+    { shape: 'halfSquare', angle: 270, x: 25, y: 71, size: 22, color: '#2E86DE' },
+    { shape: 'halfSquare', angle: 0, x: 75, y: 71, size: 22, color: '#2E86DE' },
+    { shape: 'halfCircle', angle: 180, x: 50, y: 90.5, size: 34, color: '#F28C28' },
   ],
   ship: [
-    { shape: 'halfCircle', angle: 180, x: 50, y: 80, size: 70, color: '#8B5E3C' },
-    { shape: 'bar', angle: 90, x: 50, y: 40, size: 44, color: '#5C4033' },
-    { shape: 'halfSquare', angle: 270, x: 30, y: 44, size: 28, color: '#F4F4F4' },
-    { shape: 'triangle', angle: 0, x: 70, y: 44, size: 28, color: '#F4F4F4' },
-    { shape: 'rectangle', angle: 0, x: 64, y: 22, size: 16, color: '#E4572E' },
+    { shape: 'halfCircle', angle: 180, x: 50, y: 84, size: 64, color: '#8B5E3C' },
+    { shape: 'bar', angle: 90, x: 50, y: 34, size: 68, color: '#5C4033' },          // mast
+    { shape: 'halfSquare', angle: 270, x: 26.5, y: 53, size: 30, color: '#7FC8F8' },
+    { shape: 'triangle', angle: 0, x: 73.5, y: 53, size: 30, color: '#7FC8F8' },
+    { shape: 'rectangle', angle: 0, x: 75.5, y: 8.5, size: 34, color: '#E4572E' },  // flag
   ],
   cottage: [
-    { shape: 'triangle', angle: 0, x: 50, y: 24, size: 48, color: '#E4572E' },
-    { shape: 'rectangle', angle: 0, x: 50, y: 62, size: 48, color: '#F2C14E' },
-    { shape: 'bar', angle: 90, x: 84, y: 30, size: 24, color: '#8B5E3C' },
-    { shape: 'halfCircle', angle: 0, x: 14, y: 10, size: 20, color: '#FFD23F' },
-    { shape: 'halfSquare', angle: 0, x: 90, y: 88, size: 18, color: '#3FA34D' },
+    { shape: 'triangle', angle: 0, x: 45, y: 25, size: 50, color: '#E4572E' },
+    { shape: 'rectangle', angle: 0, x: 45, y: 62.5, size: 50, color: '#F2C14E' },
+    { shape: 'halfSquare', angle: 270, x: 10, y: 65, size: 20, color: '#8B5E3C' }, // sheds
+    { shape: 'halfSquare', angle: 0, x: 80, y: 65, size: 20, color: '#8B5E3C' },
+    { shape: 'bar', angle: 0, x: 50, y: 86.25, size: 90, color: '#7CB342' },        // the ground
   ],
 };
 
