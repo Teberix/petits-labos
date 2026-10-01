@@ -1,0 +1,64 @@
+/* "Formes & Silhouettes" — layout + animations. All classes start with sh- so nothing
+   clashes with other games' stylesheets (they stay loaded after a game closes).
+   Step (a): level map + placeholder level screen. Nothing scrolls during play. */
+
+/* ---------- Level map ---------- */
+
+.sh-levels {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto; /* many levels on a small landscape phone: scroll the MAP, never the game */
+  display: flex;
+  flex-wrap: wrap;
+  align-content: center;
+  justify-content: center;
+  gap: var(--gap);
+  padding: var(--gap);
+}
+.sh-level-btn {
+  position: relative;
+  width: clamp(6rem, 22vmin, 10rem);
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  border: none;
+  border-radius: 1.5rem;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+.sh-level-btn:active { transform: translateY(0.2rem); box-shadow: none; }
+.sh-level-btn.done { background: #DCEBFA; }
+.sh-level-btn.locked { opacity: 0.55; }
+.sh-level-num { font-size: clamp(2rem, 8vmin, 3.5rem); font-weight: 800; color: #2E6FB8; }
+.sh-level-lock { position: absolute; bottom: 0.6rem; width: 1.8rem; height: 1.8rem; color: var(--ink-soft); }
+
+/* ---------- Level done (and the placeholder) ---------- */
+
+.sh-done {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--gap);
+}
+.sh-done-art { width: clamp(6rem, 30vmin, 12rem); animation: sh-hop 0.6s ease-in-out infinite; }
+.sh-done-art svg { display: block; width: 100%; height: auto; }
+.sh-continue {
+  width: var(--tap);
+  height: var(--tap);
+  padding: 0.9rem;
+  border: none;
+  border-radius: 50%;
+  background: var(--green);
+  color: #fff;
+  box-shadow: var(--shadow);
+}
+.sh-continue svg { width: 100%; height: 100%; }
+
+/* ---------- Animations ---------- */
+
+.sh-wiggle { animation: sh-shake 0.4s ease-in-out; }
+
+@keyframes sh-shake { 25% { transform: rotate(-6deg); } 75% { transform: rotate(6deg); } }
+@keyframes sh-hop { 50% { transform: translateY(-8%); } }
