@@ -10,7 +10,7 @@ IN PROGRESS — design approved on 2026-10-01 (owner + external review, see
 (`docs/mailbox/game-08-b-art.png`; the rabbit's round tail blended into its body in
 silhouette → swapped for a big carrot; after the review: plane tail twice as big, tiny
 puzzle pieces dropped/merged, sails light blue instead of white) ·
-(c) sorter (level 1) + silhouettes (levels 2–3) → mailbox first playable + preview ·
+(c) sorter (level 1) + silhouettes (levels 2–3) ✔ → mailbox first playable + preview ·
 (d) puzzles (levels 4–6) with tap-to-turn · (e) mirror (levels 7–8), level done,
 polish, full `checks.js` → mailbox final gate report.
 
@@ -43,6 +43,12 @@ Progress is saved by level `id` — never renumber.
 - Mirror: 4 columns at most (64px cells on a 360px phone), 3–4 rows. A wrong tap = the
   cell wobbles and stays empty (it's a mistake: hint step). Level 8 patterns use both
   colours (tested).
+- Sorter: hints count per PIECE (« Le triangle a 3 coins. Cherche le trou de la même
+  forme ! » → its hole glows → the piece dances, until it is placed). The piece turns
+  into the hole's angle as it drops in. 1 star when the box is full.
+- Silhouettes: hints per round; clue level 2 « Regarde bien la forme de la maison. »,
+  level 3 « il manque un morceau à deux ombres ! ». Answers only by dragging the
+  object onto a shadow; tapping it says its name + the question.
 - Hints, one step per mistake in the round (`hintStep`): 1 spoken clue → 2 the right
   target glows → 3 it dances → neutral « essaie encore » lines.
 - 1 star per round, sticker every 5 stars. No bonus star, no free mode.
@@ -60,14 +66,27 @@ Progress is saved by level `id` — never renumber.
   missing })` (objects as layers: body + one layer per detail; eyes and windows only
   in colour), `pictureSvg(id, filled)` (pieces in colour, the rest as dashed holes),
   `BUTTERFLY_BODY`. No ids/gradients (tested).
-- `shapes.js` — level map, level dispatch (placeholder screen until each kind of round
-  is built). `strings.js`, `art.js`, `shapes.css` (classes `sh-`).
-- `checks.js` — dev-only worst cases: level map, placeholder level. Offline: open level
-  1 and come back (becomes level 1's wrong/right hole in step (c)).
+- `shapes.js` — level map, level dispatch, level done (puzzle/mirror levels show a
+  placeholder until steps (d)–(e)). `sort.js` — sorter rounds. `shadow.js` —
+  silhouette rounds. `common.js` — cap, pickOne, restartAnimation, timerSet,
+  nearestFirst (a copy of Qui mange qui ?'s). `strings.js`, `shapes.css` (classes `sh-`).
+- `checks.js` — dev-only worst cases: level map; sorter round (5 holes + 5 pieces);
+  one piece 3× in a wrong hole (its hole glows, the piece really dances — checked on
+  the computed animation); full box (one star, new round); level-3 silhouette round;
+  level 3, 3 wrong drops (glow + dance); level 2 done (5 rounds + sticker);
+  placeholder level. Offline: level 1, wrong hole → no star, full box → one star,
+  new round.
 
 ## Layout
 Level map: wrapping grid of 8 buttons (the map may scroll on a small landscape phone,
-never the game). Round layouts come with steps (c)–(e).
+never the game).
+Sorter: portrait = the box (3 holes per row) over the tray; landscape = box + tray as
+2 columns on the right. Hole side --h = min(29% of the stage's width, 44% of its
+height, 10rem). Pieces clamp(64px, 17vmin, 7rem).
+Silhouettes: portrait = the object, 3 shadows in a row at the bottom (≈ 104px each on
+a 360px phone, as on the contact sheet); landscape = object left, shadows right.
+Shadows are drop targets only (the object is dragged; `nearestFirst` picks the one
+under the finger).
 
 ## Playtest history
 —

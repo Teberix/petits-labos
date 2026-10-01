@@ -336,7 +336,10 @@ test('shuffle keeps every item', () => {
 test('strings: same keys in fr/es/en, a name for every shape and object', () => {
   const keys = Object.keys(STRINGS.fr).sort();
   for (const lang of ['es', 'en']) assert.deepEqual(Object.keys(STRINGS[lang]).sort(), keys, lang);
-  for (const id of Object.keys(SHAPES)) assert.ok(STRINGS.fr[`shapes.shape.${id}`], `shape ${id}`);
+  for (const id of Object.keys(SHAPES)) {
+    assert.ok(STRINGS.fr[`shapes.shape.${id}`], `shape ${id}`);
+    assert.ok(STRINGS.fr[`shapes.clue.${id}`], `clue for ${id}`);
+  }
   for (const id of Object.keys(OBJECTS)) assert.ok(STRINGS.fr[`shapes.object.${id}`], `object ${id}`);
   for (const lang of ['fr', 'es', 'en']) assert.ok(meta.strings[lang]['shapes.title'], lang);
 });

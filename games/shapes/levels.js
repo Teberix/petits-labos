@@ -151,7 +151,7 @@ export const LEVELS = [
     id: 1, type: 'sort', rounds: 5, count: 5,
     shapes: ['circle', 'square', 'rectangle', 'triangle', 'halfCircle', 'star', 'heart', 'diamond'],
   },
-  { id: 2, type: 'shadow', rounds: 5, decoys: 'other', objects: Object.keys(OBJECTS) },
+  { id: 2, type: 'shadow', rounds: 5, decoys: 'other', objects: Object.keys(OBJECTS), intro: 'shapes.intro.shadow' },
   { id: 3, type: 'shadow', rounds: 5, decoys: 'missing', objects: Object.keys(OBJECTS), intro: 'shapes.intro.missing' },
   { id: 4, type: 'puzzle', rounds: 5, turn: false, pictures: ['house', 'tree', 'car'] },
   { id: 5, type: 'puzzle', rounds: 5, turn: true, pictures: ['sailboat', 'mushroom', 'tent'], intro: 'shapes.intro.turn' },

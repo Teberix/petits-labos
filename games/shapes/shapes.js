@@ -2,11 +2,15 @@
 //
 // Flow: level map → level (5 rounds) → level done → map.
 // Files: levels.js (shapes, objects, pictures, mirror patterns, levels), logic.js (pure
-//        logic, tested), strings.js, art.js, shapes.css. The four kinds of rounds come
-//        in steps (c)–(e); until then a level shows a "soon" screen.
+//        logic, tested), sort.js / shadow.js (the kinds of rounds built so far),
+//        common.js (small helpers), strings.js, art.js, shapes.css. Puzzles and mirrors
+//        come in steps (d)–(e); until then those levels show a "soon" screen.
 import { h } from '../../js/dom.js';
 import { addStrings } from '../../js/i18n.js';
 import { LEVELS } from './levels.js';
+import { playSort } from './sort.js';
+import { playShadow } from './shadow.js';
+import { restartAnimation } from './common.js';
 import STRINGS from './strings.js';
 import * as art from './art.js';
 import meta from './meta.js';
@@ -18,13 +22,6 @@ function loadStylesheet() {
     href: new URL('./shapes.css', import.meta.url).href,
     'data-game': 'shapes',
   }));
-}
-
-// Restarts a one-shot CSS animation on `el` (removing and re-adding the class).
-function restartAnimation(el, className) {
-  el.classList.remove(className);
-  void el.offsetWidth; // forces the browser to notice the removal
-  el.classList.add(className);
 }
 
 function createGame(container, ctx) {
@@ -80,8 +77,9 @@ function createGame(container, ctx) {
 
   function playLevel(level) {
     stopLevel();
-    // Each kind of round (sort, shadow, puzzle, mirror) arrives in steps (c)–(e).
-    showSoon(level);
+    const play = { sort: playSort, shadow: playShadow }[level.type];
+    if (!play) { showSoon(level); return; } // puzzle / mirror: steps (d)–(e)
+    rounds = play(ctx, level, container, () => levelDone(level));
   }
 
   // Placeholder until the level's kind of round is built.
@@ -94,6 +92,24 @@ function createGame(container, ctx) {
       }),
     ));
     ctx.speak(t('shapes.soon'));
+  }
+
+  // ---------- Level complete ----------
+
+  function levelDone(level) {
+    stopLevel();
+    const p = progress();
+    if (!p.completed.includes(level.id)) p.completed.push(level.id);
+    ctx.save(p);
+    sfx.fanfare();
+    container.replaceChildren(h('div', { class: 'sh-done' },
+      h('div', { class: 'sh-done-art', html: meta.icon }),
+      h('button', {
+        class: 'sh-continue', type: 'button', 'aria-label': t('shapes.continue'),
+        html: art.ICON_NEXT, onclick: () => { sfx.pop(); showLevels(); },
+      }),
+    ));
+    ctx.speak(t('shapes.levelDone'));
   }
 
   return {
