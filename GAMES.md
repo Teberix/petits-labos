@@ -11,7 +11,7 @@ owner confirms it was playtested with the kids.
 | 4 | Le Marché | counting, addition, CHF coins | DONE |
 | 5 | Le Train des Suites | patterns/logic | DONE |
 | 6 | La Balance | heavier/lighter, equality | DONE |
-| 7 | Qui mange qui ? | food chains, habitats | IN PROGRESS |
+| 7 | Qui mange qui ? | food chains, habitats | DONE |
 | 8 | Formes & Silhouettes | shapes, spatial reasoning, symmetry | planned |
 | 9 | Duo Mémoire | memory, turn-taking, 2 players on one device | planned |
 | 10 | Le Jardin | plant life cycle, grows over real days | planned |

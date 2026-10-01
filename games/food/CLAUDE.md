@@ -4,7 +4,9 @@ Who eats what, where animals live, food chains. Non-linguistic → app language 
 by default); every plant/animal name is said aloud when touched.
 
 ## Status
-IN PROGRESS — design approved by the owner on 2026-09-30; built in steps (a)–(f):
+DONE — released as v0.8.0 on 2026-10-01; the kids played all 7 levels in the preview
+(owner's confirmation: « todo bien »). Design approved on 2026-09-30; built in steps
+(a)–(f):
 (a) scaffold + data + logic ✔ · (b) art ✔ (contact sheet reviewed by the owner;
 redrawn: flat-fill zebra, raspberries, hazelnut in its husk, ibex horns, turtle
 flippers, shaded ice floe, sunflower seeds) · (c) feed rounds ✔ (level 1 playtested
