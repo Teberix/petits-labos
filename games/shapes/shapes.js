@@ -2,14 +2,12 @@
 //
 // Flow: level map → level (5 rounds) → level done → map.
 // Files: levels.js (shapes, objects, pictures, mirror patterns, levels), logic.js (pure
-//        logic, tested), sort.js / shadow.js / puzzle.js (the kinds of rounds built so far),
-//        common.js (small helpers), strings.js, art.js, shapes.css. Mirrors come in
-//        step (e); until then those levels show a "soon" screen.
+//        logic, tested), puzzle.js (picture puzzles, levels 1–7), common.js (small
+//        helpers), strings.js, art.js, shapes.css. Level 8 (tangram) comes in step (h);
+//        until then it shows a "soon" screen.
 import { h } from '../../js/dom.js';
 import { addStrings } from '../../js/i18n.js';
 import { LEVELS } from './levels.js';
-import { playSort } from './sort.js';
-import { playShadow } from './shadow.js';
 import { playPuzzle } from './puzzle.js';
 import { restartAnimation } from './common.js';
 import STRINGS from './strings.js';
@@ -78,8 +76,8 @@ function createGame(container, ctx) {
 
   function playLevel(level) {
     stopLevel();
-    const play = { sort: playSort, shadow: playShadow, puzzle: playPuzzle }[level.type];
-    if (!play) { showSoon(level); return; } // mirror: step (e)
+    const play = { puzzle: playPuzzle }[level.type];
+    if (!play) { showSoon(level); return; } // tangram: step (h)
     rounds = play(ctx, level, container, () => levelDone(level));
   }
 

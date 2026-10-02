@@ -1,5 +1,5 @@
 // "Formes & Silhouettes" — pure logic (no DOM), tested in tests/shapes.test.mjs.
-import { SHAPES, OBJECTS, PICTURES, MIRRORS } from './levels.js';
+import { SHAPES, PICTURES } from './levels.js';
 
 export const ANGLES = [0, 90, 180, 270];
 
@@ -50,47 +50,6 @@ export function footprint(slot) {
   };
 }
 
-// ---------- mirror ----------
-
-// The whole grid a pattern asks for: rows of numbers, the left half as written and
-// the right half its mirror image. ['12'] → [[1, 2, 2, 1]].
-export function mirrorTarget(pattern) {
-  return pattern.map((row) => {
-    const left = [...row].map(Number);
-    return [...left, ...[...left].reverse()];
-  });
-}
-
-// The grid at the start of a round: the left half coloured, the right half empty.
-export function mirrorStart(pattern) {
-  const half = pattern[0].length;
-  return mirrorTarget(pattern).map((row) => row.map((v, c) => (c < half ? v : 0)));
-}
-
-// Is tapping cell (r, c) with `color` right? Only an EMPTY cell of the right half that
-// the target colours with exactly that colour.
-export function rightTap(grid, target, r, c, color) {
-  const half = grid[0].length / 2;
-  return c >= half && grid[r][c] === 0 && target[r][c] === color;
-}
-
-// The mirror of cell (r, c): same row, the other side of the line.
-export const mirrorCell = (grid, r, c) => [r, grid[0].length - 1 - c];
-
-export function mirrorDone(grid, target) {
-  return grid.every((row, r) => row.every((v, c) => v === target[r][c]));
-}
-
-// The first cell still to colour (for the "dance" hint), or null.
-export function nextMirrorCell(grid, target) {
-  for (let r = 0; r < grid.length; r++) {
-    for (let c = 0; c < grid[r].length; c++) {
-      if (grid[r][c] !== target[r][c]) return [r, c];
-    }
-  }
-  return null;
-}
-
 // ---------- hints ----------
 
 // One step per mistake in the round: 1 → a spoken clue, 2 → the right target glows,
@@ -114,60 +73,38 @@ export function shuffle(list, rand = Math.random) {
 
 const pick = (list, rand) => list[Math.floor(rand() * list.length)];
 
-// Every round a level can make, as a key (what "the same round twice in a row" means):
-// sort → never the same set of shapes; shadow → never the same object; puzzle → the
-// same picture; mirror → the same pattern.
-export function roundKeys(level) {
-  if (level.type === 'shadow') return level.objects;
-  if (level.type === 'puzzle') return level.pictures;
-  if (level.type === 'mirror') return level.patterns;
-  return null; // sort: too many sets to list; makeRound compares sets
+// The order of a level's pictures: `rounds` keys from `pool`, shuffled. No picture
+// twice in a level when the pool is big enough; with a smaller pool, the deck is
+// reshuffled as needed and never gives the same picture twice in a row.
+export function roundOrder(pool, rounds, rand = Math.random) {
+  const order = [];
+  while (order.length < rounds) {
+    let deck = shuffle(pool, rand);
+    // (a new deck must not start with the picture the last one ended on)
+    if (deck.length > 1 && deck[0] === order.at(-1)) deck = [...deck.slice(1), deck[0]];
+    order.push(...deck);
+  }
+  return order.slice(0, rounds);
 }
 
-// A new round for `level`, never the same as `last` (the previous round's key).
-// Returns { key, …what the screen needs }:
-//   sort    { holes: [{ shape, angle }], pieces: [shape…] (shuffled) }
-//   shadow  { object, shadows: [{ object, missing }] (shuffled; missing = null → right) }
-//   puzzle  { picture, slots, pieces: [{ shape, angle, slot }] (shuffled) }
-//   mirror  { pattern, target, grid }
-export function makeRound(level, last = null, rand = Math.random) {
-  if (level.type === 'sort') {
-    let shapes;
-    let key;
-    do {
-      shapes = shuffle(level.shapes, rand).slice(0, level.count);
-      key = [...shapes].sort().join(',');
-    } while (key === last);
-    const holes = shapes.map((shape) => ({ shape, angle: pick(ANGLES, rand) }));
-    return { key, holes, pieces: shuffle(shapes, rand) };
-  }
+// Can a piece of this shape start "turned" (fit no slot of its shape)? Circles and
+// squares can't (they fit at every angle); others can, unless two slots of that shape
+// already cover every angle (the tests forbid that in the pictures).
+const canTurn = (shape, slots) => startAngles(shape, slots.filter((s) => s.shape === shape)).length > 0;
 
-  const keys = roundKeys(level).filter((k) => k !== last);
-  const key = pick(keys, rand);
-
-  if (level.type === 'shadow') {
-    const decoys = level.decoys === 'missing'
-      ? OBJECTS[key].details.map((missing) => ({ object: key, missing }))
-      : shuffle(level.objects.filter((o) => o !== key), rand).slice(0, 2)
-        .map((object) => ({ object, missing: null }));
-    return { key, object: key, shadows: shuffle([{ object: key, missing: null }, ...decoys], rand) };
-  }
-
-  if (level.type === 'puzzle') {
-    const slots = PICTURES[key];
-    const pieces = slots.map((slot, i) => {
-      const angle = level.turn
-        ? pick(startAngles(slot.shape, slots.filter((s) => s.shape === slot.shape)), rand)
-        : slot.angle;
-      return { shape: slot.shape, angle, slot: i };
-    });
-    return { key, picture: key, slots, pieces: shuffle(pieces, rand) };
-  }
-
-  // mirror
-  const pattern = MIRRORS[key];
-  return { key, pattern, target: mirrorTarget(pattern), grid: mirrorStart(pattern) };
+// The round for picture `key` in `level`: { key, picture, slots, pieces } with
+// pieces = [{ shape, angle, slot }] (shuffled). level.turn:
+//   'one' → exactly one piece (that can turn) starts turned, the others face the right way;
+//   'all' → every piece that can turn starts turned.
+export function makeRound(level, key, rand = Math.random) {
+  const slots = PICTURES[key];
+  const turnable = slots.map((s, i) => i).filter((i) => canTurn(slots[i].shape, slots));
+  const turned = new Set(level.turn === 'one' ? [pick(turnable, rand)] : turnable);
+  const pieces = slots.map((slot, i) => {
+    const angle = turned.has(i)
+      ? pick(startAngles(slot.shape, slots.filter((s) => s.shape === slot.shape)), rand)
+      : slot.angle;
+    return { shape: slot.shape, angle, slot: i };
+  });
+  return { key, picture: key, slots, pieces: shuffle(pieces, rand) };
 }
-
-// Is this shadow the right one for the round's object?
-export const rightShadow = (round, shadow) => shadow.object === round.object && shadow.missing === null;

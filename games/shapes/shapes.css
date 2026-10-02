@@ -1,6 +1,6 @@
 /* "Formes & Silhouettes" — layout + animations. All classes start with sh- so nothing
    clashes with other games' stylesheets (they stay loaded after a game closes).
-   Step (a): level map + placeholder level screen. Nothing scrolls during play. */
+   Nothing scrolls during play. */
 
 /* ---------- Level map ---------- */
 
@@ -89,39 +89,22 @@
 .sh-cheer { animation: sh-hop 0.5s ease-in-out 2; }
 .sh-play svg { pointer-events: none; } /* scoped: this stylesheet stays loaded after the game closes */
 
-/* ---------- Sorter (level 1) ----------
-   Portrait:              Landscape:
-   [  the box: holes  ]   [ the box | tray ]   (the tray: 2 columns on the right)
-   [  tray: pieces    ]
-   Holes: 3 per row, side --h = the most that fits 3 across and 2 down. */
-.sh-sort { grid-template-rows: minmax(0, 1fr) auto; }
-@media (orientation: landscape) {
-  .sh-sort { grid-template-rows: minmax(0, 1fr); grid-template-columns: minmax(0, 1fr) auto; }
-}
-.sh-box {
-  --h: min(29cqw, 44cqh, 10rem);
-  display: grid;
-  grid-template-columns: repeat(3, var(--h));
+/* ---------- Tray + progress dots (beside / under the picture) ---------- */
+
+.sh-side {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   justify-content: center;
-  gap: calc(var(--h) * 0.12);
-  padding: calc(var(--h) * 0.14);
-  border-radius: var(--radius);
-  background: #C99B6D;
-  box-shadow: inset 0 -0.4rem 0 #A87A4E, var(--shadow);
+  gap: calc(var(--gap) / 2);
+  min-height: 0;
 }
-.sh-hole {
-  width: var(--h);
-  height: var(--h);
-  padding: calc(var(--h) * 0.14);
-  border: none;
-  border-radius: 1rem;
-  background: #B3855A;
-  box-shadow: inset 0 0.25rem 0.4rem rgba(0, 0, 0, 0.25);
-}
-.sh-hole svg { display: block; width: 100%; height: 100%; }
-.sh-hole.sh-filled { background: #D9B48A; }
-.sh-snap { width: 100%; height: 100%; animation: sh-snap 0.35s ease-out; }
-.sh-snap svg { display: block; width: 100%; height: 100%; }
+/* One dot per picture of the level: filled = done, the current one bigger. Not a
+   touch target (aria-hidden). */
+.sh-dots { display: flex; gap: 0.5rem; }
+.sh-dot { width: 0.8rem; height: 0.8rem; border-radius: 50%; background: #E2D6C6; transition: transform 0.3s; }
+.sh-dot.done { background: #5CD68A; }
+.sh-dot.now { transform: scale(1.35); box-shadow: 0 0 0 0.15rem #5CD68A inset; }
 
 .sh-tray {
   display: flex;
@@ -148,61 +131,10 @@
 }
 .sh-piece svg { display: block; width: 100%; height: 100%; }
 
-/* ---------- Silhouettes (levels 2–3) ----------
-   Portrait:                 Landscape:
-   [     the object     ]    [ object | shadow shadow shadow ]
-   [ shadow shadow shadow ]
-   Shadows: 3 across (≈ 104px on a 360px phone, as on the contact sheet). */
-.sh-shadow-play {
-  grid-template-rows: minmax(0, 1fr) auto;
-  place-items: center;
-}
-@media (orientation: landscape) {
-  .sh-shadow-play { grid-template-rows: minmax(0, 1fr); grid-template-columns: auto minmax(0, 1fr); }
-}
-.sh-holder { display: grid; place-items: center; }
-.sh-object, .sh-holder .sh-spot {
-  --o: clamp(64px, 34vmin, 12rem);
-  width: var(--o);
-  height: var(--o);
-}
-.sh-object {
-  padding: calc(var(--o) * 0.08);
-  border: none;
-  border-radius: 1.25rem;
-  background: var(--surface);
-  box-shadow: var(--shadow);
-}
-.sh-object svg { display: block; width: 100%; height: 100%; }
-.sh-shadows { display: flex; justify-content: center; gap: var(--gap); }
-.sh-shadow {
-  --s: min(calc((100vw - 4 * var(--gap)) / 3), 10rem);
-  width: var(--s);
-  height: var(--s);
-  padding: calc(var(--s) * 0.08);
-  border-radius: 1.25rem;
-  background: var(--surface);
-  box-shadow: var(--shadow);
-}
-@media (orientation: landscape) {
-  .sh-shadow { --s: min(21vw, 42vh, 10rem); }
-}
-.sh-shadow svg { display: block; width: 100%; height: 100%; }
-.sh-shadow.sh-matched { box-shadow: 0 0 0 0.3rem #8BC34A, var(--shadow); }
-
-/* Where a dragged piece would land: an OUTLINE, so it still shows on a glowing target
-   (the glow animates box-shadow; kid-ux review). */
-.sh-hole.drop-hover, .sh-shadow.drop-hover, .sh-pic-hole.drop-hover { outline: 0.25rem solid #2E86DE; outline-offset: 0.15rem; }
-
-@keyframes sh-glow { 50% { box-shadow: 0 0 0 0.35rem #FFD54F, 0 0 1rem 0.3rem rgba(255, 179, 0, 0.6); } }
-@keyframes sh-dance { 25% { transform: translateY(-8%) rotate(-8deg); } 75% { transform: translateY(-8%) rotate(8deg); } }
-@keyframes sh-bounce { 35% { transform: translateY(-25%); } 65% { transform: translateY(5%); } 85% { transform: translateY(-3%); } }
-@keyframes sh-pop-in { from { transform: scale(0.4); } }
-@keyframes sh-snap { from { transform: rotate(var(--from)) scale(1.15); } }
-
-/* ---------- Picture puzzles (levels 4–6) ----------
+/* ---------- Picture puzzles (levels 1–7) ----------
    Portrait:                Landscape:
-   [  the picture  ]        [ the picture | tray ]   (the tray: 2 columns)
+   [  the picture  ]        [ the picture | dots ]
+   [     dots      ]        [             | tray ]   (the tray: 2 columns)
    [  tray: pieces ]
    The picture is a square card as big as its stage allows; its 0–100 frame
    (.sh-pic-art / .sh-pic-holes) is the whole card (pieces may touch its edge). levels.js PICTURE_PX = the

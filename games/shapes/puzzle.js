@@ -1,19 +1,19 @@
-// "Formes & Silhouettes" picture puzzles (levels 4–6): a picture made of shape holes
-// and its pieces in the tray. The child DRAGS each piece onto its hole:
-//   level 4      the pieces already face the right way;
-//   levels 5–6   every piece starts turned so it fits nowhere: TAP a piece to turn it
-//                a quarter turn (it turns smoothly, always clockwise).
-//   right → the piece fills the hole (pop); when the picture is complete: chime,
+// "Formes & Silhouettes" picture puzzles (levels 1–7): a picture made of shape holes
+// and its pieces in the tray. The child DRAGS each piece onto its hole, and TAPS a
+// piece to turn it a quarter turn (smoothly, always clockwise):
+//   turn 'one'   exactly one piece starts turned (level 1: learning to turn);
+//   turn 'all'   every piece that can turn starts turned so it fits nowhere.
+//   right → the piece fills the hole (pop + « Oui ! Le trapèze ! »); when the picture is complete: chime,
 //           « Bravo ! C'est la fusée ! », +1 star, the next round;
 //   wrong → a soft "boing", the piece hops back; hints for THAT piece (hintStep):
 //           a clue (right shape but turned the wrong way: « Bonne forme ! Touche-la
 //           pour la tourner. »; wrong shape: its shape's clue) → the hole where it
 //           fits glows → the piece dances too → neutral « essaie encore » lines.
-// Levels 4 (no turning): tapping a piece says its name.
+// 5 dots show the pictures of the level (filled = done), so it never feels endless.
 import { speak } from '../../js/audio.js';
 import { draggable } from '../../js/dragdrop.js';
 import { h } from '../../js/dom.js';
-import { makeRound, hintStep, fits, turn, footprint } from './logic.js';
+import { makeRound, roundOrder, hintStep, fits, turn, footprint } from './logic.js';
 import { shapeSvg, pictureSvg } from './art.js';
 import { cap, nearestFirst, pickOne, restartAnimation, timerSet } from './common.js';
 
@@ -30,6 +30,7 @@ export function playPuzzle(ctx, level, container, onDone) {
   let cleanups = [];
   let index = 0;     // rounds played in this level
   let round = null;  // logic.js makeRound() + { filled, misses, spins, glow, dance, busy }
+  const order = roundOrder(level.pictures, level.rounds); // this level's pictures, in order
   let stopped = false;
   let finger = null; // where the finger is (nearestFirst)
 
@@ -47,12 +48,14 @@ export function playPuzzle(ctx, level, container, onDone) {
   const holesEl = h('div', { class: 'sh-pic-holes' });
   const picEl = h('div', { class: 'sh-pic' }, drawingEl, holesEl);
   const trayEl = h('div', { class: 'sh-tray', role: 'group', 'aria-label': t('shapes.pieces') });
-  container.replaceChildren(h('div', { class: 'sh-play sh-puzzle' }, h('div', { class: 'sh-stage' }, picEl), trayEl));
+  const dotsEl = h('div', { class: 'sh-dots', 'aria-hidden': 'true' });
+  container.replaceChildren(h('div', { class: 'sh-play sh-puzzle' },
+    h('div', { class: 'sh-stage' }, picEl), h('div', { class: 'sh-side' }, dotsEl, trayEl)));
   let holeEls = [];
 
   function start() {
     round = {
-      ...makeRound(level, round?.key ?? null),
+      ...makeRound(level, order[index]),
       filled: new Set(),  // slot indexes already filled
       misses: new Map(),  // piece index → wrong drops
       spins: new Map(),   // piece index → total degrees turned (for a smooth clockwise turn)
@@ -62,8 +65,10 @@ export function playPuzzle(ctx, level, container, onDone) {
     };
     round.pieces = round.pieces.map((p, i) => ({ ...p, id: i }));
     round.pieces.forEach((p) => round.spins.set(p.id, p.angle));
+    picEl.dataset.picture = round.picture; // (for checks.js)
     drawPicture();
     renderTray();
+    drawDots();
     picEl.classList.remove('sh-cheer'); // (it would win over the pop-in: later CSS rule)
     restartAnimation(picEl, 'sh-pop-in');
     let line = t('shapes.ask.puzzle');
@@ -91,6 +96,13 @@ export function playPuzzle(ctx, level, container, onDone) {
     holesEl.replaceChildren(...holeEls);
   }
 
+  // One dot per picture of the level: done ones filled, the current one bigger.
+  function drawDots(done = index) {
+    dotsEl.replaceChildren(...order.map((_, i) => h('span', {
+      class: `sh-dot${i < done ? ' done' : ''}${i === done ? ' now' : ''}`,
+    })));
+  }
+
   // The tray; a placed piece leaves an empty spot (keeps the others in place).
   function renderTray() {
     stopInputs();
@@ -116,7 +128,6 @@ export function playPuzzle(ctx, level, container, onDone) {
   function tap(p, piece, turner) {
     if (round.busy) return;
     sfx.pop();
-    if (!level.turn) { remark(cap(name(p.shape))); return; }
     // A quarter turn clockwise. The drawing turns by the same 90° (spins only grows,
     // so 270° → 360° turns forward instead of spinning back).
     p.angle = turn(p.angle);
@@ -141,6 +152,7 @@ export function playPuzzle(ctx, level, container, onDone) {
     drawPicture();
     renderTray();
     if (round.filled.size === round.slots.length) win();
+    else remark(t('shapes.placed', { A: cap(name(p.shape)) })); // the shape's name, when it fits
   }
 
   // The free hole for piece `p`: one it fits as it is turned now, else the first free
@@ -157,7 +169,7 @@ export function playPuzzle(ctx, level, container, onDone) {
     const step = hintStep(misses);
     const oops = t(`shapes.wrong.${pickOne(3)}`);
     // Right shape, turned the wrong way → the clue is about turning.
-    const needsTurn = level.turn && !round.slots.some((s, j) => !round.filled.has(j) && fits(p, s));
+    const needsTurn = !round.slots.some((s, j) => !round.filled.has(j) && fits(p, s));
     const sameShape = round.slots[i].shape === p.shape;
     if (step === 'clue') {
       restartAnimation(piece, 'sh-bounce');
@@ -189,6 +201,7 @@ export function playPuzzle(ctx, level, container, onDone) {
     sfx.chime();
     remark(t('shapes.puzzle.done', { a: t(`shapes.picture.${round.picture}`) }));
     restartAnimation(picEl, 'sh-cheer');
+    drawDots(index + 1);
     // 1 star per round (it flies from the picture). Every 5th star also brings a sticker.
     const sticker = ctx.rewards.star(picEl);
     later(async () => {
