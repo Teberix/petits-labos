@@ -12,6 +12,7 @@ import {
 import {
   SHAPES, PICTURES, PICTURE_PX, MIN_PIECE_PX, LEVELS,
 } from '../games/shapes/levels.js';
+import { OUTLINES, outlineOf, boundsOf, gapBetween } from '../games/shapes/geometry.js';
 import STRINGS from '../games/shapes/strings.js';
 import meta from '../games/shapes/meta.js';
 
@@ -67,6 +68,34 @@ test('every shape has a valid symmetry and size', () => {
   }
 });
 
+// SHAPES w/h (used for footprints, sizes, overlaps) must match the drawn outline, and
+// the outline must really look the same after `sym` degrees (fits() relies on it).
+test('geometry: outlines match SHAPES w/h and symmetry', () => {
+  const near = (a, b) => Math.abs(a - b) <= 0.6;
+  for (const [id, s] of Object.entries(SHAPES)) {
+    assert.ok(OUTLINES[id], `${id}: no outline`);
+    for (const angle of ANGLES) {
+      const slot = { shape: id, angle, x: 50, y: 50, size: 100 };
+      const b = boundsOf(outlineOf(slot));
+      const f = footprint(slot);
+      assert.ok(near(b.left, f.left) && near(b.right, f.right) && near(b.top, f.top) && near(b.bottom, f.bottom),
+        `${id} at ${angle}°: drawn ${JSON.stringify(b)} ≠ footprint ${JSON.stringify(f)}`);
+    }
+    // turned by sym°, every point lands on the outline at 0° (and back)
+    if (s.sym < 360) {
+      const a = outlineOf({ shape: id, angle: 0, x: 50, y: 50, size: 100 });
+      const t = outlineOf({ shape: id, angle: s.sym, x: 50, y: 50, size: 100 });
+      for (const p of t) assert.ok(gapBetween([p], a) < 0.6, `${id}: not the same after ${s.sym}°`);
+    } else {
+      const a = outlineOf({ shape: id, angle: 0, x: 50, y: 50, size: 100 });
+      for (const angle of [90, 180, 270]) {
+        const t = outlineOf({ shape: id, angle, x: 50, y: 50, size: 100 });
+        assert.ok(t.some((p) => gapBetween([p], a) > 2), `${id} looks the same at ${angle}° (sym should be smaller)`);
+      }
+    }
+  }
+});
+
 test('pictures: known shapes, angles 0/90/180/270, inside the frame, no overlap', () => {
   for (const [id, slots] of Object.entries(PICTURES)) {
     assert.ok(slots.length >= 3, `${id}: at least 3 pieces`);
@@ -76,8 +105,10 @@ test('pictures: known shapes, angles 0/90/180/270, inside the frame, no overlap'
       assert.match(slot.color, /^#[0-9A-F]{6}$/i, `${id}[${i}]: colour`);
       assert.ok(slot.size >= 14, `${id}[${i}]: too small to aim at (${slot.size})`);
       const box = footprint(slot);
-      assert.ok(box.left >= 0 && box.top >= 0 && box.right <= 100 && box.bottom <= 100,
-        `${id}[${i}]: outside the frame ${JSON.stringify(box)}`);
+      // 2 units inside the frame: the picture card has rounded corners
+      const m = 2 - 1e-9;
+      assert.ok(box.left >= m && box.top >= m && box.right <= 100 - m && box.bottom <= 100 - m,
+        `${id}[${i}]: not 2 units inside the frame ${JSON.stringify(box)}`);
       return box;
     });
     for (let i = 0; i < boxes.length; i++) {
@@ -106,18 +137,18 @@ test('pictures: every piece\'s smallest side is ≥ 44px when the picture is PIC
 });
 
 // Every piece touches the rest of the picture (chimney on the roof, flag on the mast; no
-// floating grass): the pieces' boxes form one connected group (touching = less than 1
-// frame unit apart).
+// floating grass): the pieces form one connected group, touching = their REAL outlines
+// (geometry.js) less than 1 frame unit apart. Boxes weren't enough: a box can touch
+// while the drawn shape floats (kid-ux review, step (f)).
 test('pictures: every piece touches the picture (one connected group)', () => {
-  const gap = (a, b) => Math.max(a.left - b.right, b.left - a.right, a.top - b.bottom, b.top - a.bottom);
   for (const [id, slots] of Object.entries(PICTURES)) {
-    const boxes = slots.map(footprint);
+    const outlines = slots.map(outlineOf);
     const seen = new Set([0]);
     const todo = [0];
     while (todo.length) {
       const i = todo.pop();
-      boxes.forEach((b, j) => {
-        if (!seen.has(j) && gap(boxes[i], b) <= 1) { seen.add(j); todo.push(j); }
+      outlines.forEach((o, j) => {
+        if (!seen.has(j) && gapBetween(outlines[i], o) <= 1) { seen.add(j); todo.push(j); }
       });
     }
     const alone = slots.map((s, i) => (seen.has(i) ? null : `${i} ${s.shape}`)).filter(Boolean);
@@ -185,12 +216,28 @@ test('turning: every slot reachable; every picture has a piece that can start tu
   }
 });
 
-test('level 6: 5 pieces with look-alikes (triangle + half square, rectangle or bar)', () => {
-  const l = LEVELS.find((x) => x.id === 6);
-  for (const id of l.pictures) {
-    const shapes = PICTURES[id].map((s) => s.shape);
-    assert.equal(shapes.length, 5, id);
-    assert.ok(shapes.includes('triangle') && shapes.includes('halfSquare'), `${id}: both triangles`);
+// The curve (owner, 2026-10-02): level 1 three pieces, level 2 three or four, levels
+// 3–4 four or five; at least 6 pictures per level so none repeats in its 5 rounds.
+test('levels 1–4: pieces per picture and pool size follow the curve', () => {
+  const range = { 1: [3, 3], 2: [3, 4], 3: [4, 5], 4: [4, 5] };
+  for (const [id, [lo, hi]] of Object.entries(range)) {
+    const l = LEVELS.find((x) => x.id === Number(id));
+    assert.ok(l.pictures.length >= 6, `level ${id}: ${l.pictures.length} pictures`);
+    for (const key of l.pictures) {
+      const n = PICTURES[key].length;
+      assert.ok(n >= lo && n <= hi, `level ${id}, ${key}: ${n} pieces (expected ${lo}–${hi})`);
+    }
+  }
+});
+
+// Harder never gets easier: the average number of pieces never goes down from one
+// level to the next (kid-ux review, step (f): level 4 had fewer than level 3).
+test('levels: average pieces per picture never goes down', () => {
+  const avg = (l) => l.pictures.reduce((n, key) => n + PICTURES[key].length, 0) / l.pictures.length;
+  const puzzles = levelsOf('puzzle');
+  for (let i = 1; i < puzzles.length; i++) {
+    assert.ok(avg(puzzles[i]) >= avg(puzzles[i - 1]) - 1e-9,
+      `level ${puzzles[i].id}: ${avg(puzzles[i]).toFixed(2)} pieces < level ${puzzles[i - 1].id}: ${avg(puzzles[i - 1]).toFixed(2)}`);
   }
 });
 

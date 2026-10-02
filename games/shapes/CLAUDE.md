@@ -10,7 +10,7 @@ IN PROGRESS. Design approved 2026-10-01 (`docs/mailbox/game-08-proposal.md`), st
 owner's playtest of levels 1–6, **redesigned on 2026-10-02**
 (`docs/mailbox/game-08-redesign.md`, approved with changes): all 8 levels are picture
 puzzles with turning; sorter, silhouettes and mirror removed (in git history).
-Steps: (e) engine ✔ · (f) pictures levels 1–4 → mailbox contact sheet · (g) pictures
+Steps: (e) engine ✔ · (f) 24 pictures for levels 1–4 ✔ → mailbox contact sheet · (g) pictures
 levels 5–6 + generated level 7 · (h) level 8 tangram → mailbox + preview · (i) full
 checks, polish → mailbox final gate report.
 
@@ -19,7 +19,7 @@ checks, polish → mailbox final gate report.
 2 simple pictures, every turnable piece turned · 3–4 small figures, 4–5 pieces, new
 shapes · 5–6 harder figures, 5–6 pieces, look-alikes · 7 abstract compositions
 (generated) · 8 tangram: fill a big square / rectangle / triangle, outline only
-(generated). Step (e): levels 1–7 still use the first 9 pictures; level 8 is a
+(generated). Until step (g), levels 5–7 reuse the pictures of levels 3–4; level 8 is a
 placeholder. Progress is saved by level `id` — never renumber.
 
 **Levels in `levels.js`, not `levels.json`** — current engine through game 10 (owner,
@@ -36,7 +36,10 @@ placeholder. Progress is saved by level `id` — never renumber.
   and never repeat back to back). 5 progress dots show the level's pictures (filled =
   done): the playtest felt "endless" without them (2026-10-02).
 - Big pieces: smallest side ≥ 44px when the picture is `PICTURE_PX` (260px, the
-  smallest phone picture) wide; every piece touches the picture (one connected group);
+  smallest phone picture) wide; every piece stays 2 units inside the frame (the card's
+  rounded corners); every piece touches the picture: one connected group measured on
+  the REAL outlines (`geometry.js`, gap ≤ 1 unit; boxes let floating pieces through —
+  kid-ux review, step (f));
   no piece colour too pale for a white card; same shape twice in a picture → same size
   and colour; pieces never overlap. All tested.
 - Hints per PIECE: clue (right shape turned wrong → « Bonne forme ! Touche-la pour la
@@ -56,6 +59,9 @@ placeholder. Progress is saved by level `id` — never renumber.
 
 ## Files
 - `levels.js` — SHAPES (symmetry, footprint), PICTURES, PICTURE_PX, LEVELS (data only).
+- `geometry.js` — every shape's real outline (polygons, curves sampled): art.js
+  draws from it and the tests measure with it (touching, footprints = drawing,
+  symmetry really holds). `outlineOf(slot)`, `gapBetween`, `boundsOf`.
 - `logic.js` — pure logic, tested in `tests/shapes.test.mjs`: `turn`, `sameAngle`,
   `fits`, `tapsToFit`, `startAngles`, `footprint`, `hintStep`, `roundOrder`,
   `makeRound(level, key)`.
@@ -67,6 +73,9 @@ placeholder. Progress is saved by level `id` — never renumber.
   from piece A to B; level 2 done (5 different pictures, dots fill in, sticker);
   placeholder. Offline: level 1, wrong drop → no star, picture → one star, next
   picture. The map wait has a 30 s timeout (it includes loading the game modules).
+
+- Curve: levels 1 / 2 / 3–4 have 3 / 3–4 / 4–5 pieces per picture, ≥ 6 pictures each,
+  and the average never goes down from one level to the next (tested).
 
 ## Layout
 Portrait = the picture (a square card as big as the stage) over the dots and the
