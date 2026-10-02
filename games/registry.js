@@ -10,6 +10,7 @@ import market from './market/meta.js';
 import train from './train/meta.js';
 import balance from './balance/meta.js';
 import food from './food/meta.js';
+import shapes from './shapes/meta.js';
 
 export const GAMES = [
   { ...potion, load: () => import('./potion/potion.js') },
@@ -18,4 +19,5 @@ export const GAMES = [
   { ...train, load: () => import('./train/train.js') },
   { ...balance, load: () => import('./balance/balance.js') },
   { ...food, load: () => import('./food/food.js') },
+  { ...shapes, load: () => import('./shapes/shapes.js') },
 ];
