@@ -188,11 +188,43 @@
   .sh-shadow { --s: min(21vw, 42vh, 10rem); }
 }
 .sh-shadow svg { display: block; width: 100%; height: 100%; }
-.sh-shadow.drop-hover { box-shadow: 0 0 0 0.3rem #7FC8F8, var(--shadow); }
 .sh-shadow.sh-matched { box-shadow: 0 0 0 0.3rem #8BC34A, var(--shadow); }
+
+/* Where a dragged piece would land: an OUTLINE, so it still shows on a glowing target
+   (the glow animates box-shadow; kid-ux review). */
+.sh-hole.drop-hover, .sh-shadow.drop-hover, .sh-pic-hole.drop-hover { outline: 0.25rem solid #2E86DE; outline-offset: 0.15rem; }
 
 @keyframes sh-glow { 50% { box-shadow: 0 0 0 0.35rem #FFD54F, 0 0 1rem 0.3rem rgba(255, 179, 0, 0.6); } }
 @keyframes sh-dance { 25% { transform: translateY(-8%) rotate(-8deg); } 75% { transform: translateY(-8%) rotate(8deg); } }
 @keyframes sh-bounce { 35% { transform: translateY(-25%); } 65% { transform: translateY(5%); } 85% { transform: translateY(-3%); } }
 @keyframes sh-pop-in { from { transform: scale(0.4); } }
 @keyframes sh-snap { from { transform: rotate(var(--from)) scale(1.15); } }
+
+/* ---------- Picture puzzles (levels 4–6) ----------
+   Portrait:                Landscape:
+   [  the picture  ]        [ the picture | tray ]   (the tray: 2 columns)
+   [  tray: pieces ]
+   The picture is a square card as big as its stage allows; its 0–100 frame
+   (.sh-pic-art / .sh-pic-holes) is the whole card (pieces may touch its edge). levels.js PICTURE_PX = the
+   smallest frame on any phone (checked by checks.js). */
+.sh-puzzle { grid-template-rows: minmax(0, 1fr) auto; }
+@media (orientation: landscape) {
+  .sh-puzzle {
+    grid-template-rows: minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr) auto;
+    padding-bottom: calc(var(--gap) / 2); /* a 640 × 360 phone: every pixel of height counts */
+  }
+}
+.sh-pic {
+  position: relative;
+  width: min(100cqw, 100cqh);
+  aspect-ratio: 1;
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+.sh-pic-art, .sh-pic-holes { position: absolute; inset: 0; }
+.sh-pic-art svg { display: block; width: 100%; height: 100%; }
+.sh-pic-hole { position: absolute; border-radius: 0.5rem; }
+.sh-turner { width: 100%; height: 100%; transition: transform 0.25s ease-out; }
+.sh-turner svg { display: block; width: 100%; height: 100%; }

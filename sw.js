@@ -76,6 +76,7 @@ const PRECACHE = [
   'games/shapes/levels.js',
   'games/shapes/logic.js',
   'games/shapes/meta.js',
+  'games/shapes/puzzle.js',
   'games/shapes/shadow.js',
   'games/shapes/shapes.css',
   'games/shapes/shapes.js',

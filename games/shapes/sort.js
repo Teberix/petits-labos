@@ -62,6 +62,7 @@ export function playSort(ctx, level, container, onDone) {
       return hole;
     });
     boxEl.replaceChildren(...holeEls);
+    boxEl.classList.remove('sh-cheer'); // (it would win over the pop-in: later CSS rule)
     restartAnimation(boxEl, 'sh-pop-in');
     renderTray();
     let line = t('shapes.ask.sort');
@@ -129,7 +130,14 @@ export function playSort(ctx, level, container, onDone) {
       remark(`${oops} ${t(`shapes.clue.${shape}`)} ${t('shapes.sort.find')}`);
       return;
     }
+    // Glow and dance always point at the SAME piece: a hint for this piece ends any
+    // hint still running for another one.
+    holeEls.forEach((el) => el.classList.remove('sh-glow'));
     holeOf(shape).classList.add('sh-glow'); // until that piece is placed
+    if (round.dance && round.dance !== shape) {
+      round.dance = null;
+      renderTray();
+    }
     if (step === 'glow') {
       restartAnimation(piece, 'sh-bounce');
       remark(`${oops} ${t('shapes.sort.glow', { a: name(shape) })}`);

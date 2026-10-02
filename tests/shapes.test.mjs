@@ -132,6 +132,18 @@ test('pictures: every piece touches the picture (one connected group)', () => {
   }
 });
 
+// Pieces sit on white cards (tray + picture): a near-white piece vanishes.
+test('pictures: every piece colour shows on a white card', () => {
+  const lum = (hex) => {
+    const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255)
+      .map((c) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4));
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  };
+  for (const [id, slots] of Object.entries(PICTURES)) {
+    for (const s of slots) assert.ok(lum(s.color) <= 0.72, `${id}: ${s.shape} ${s.color} too pale`);
+  }
+});
+
 test('pictures: two slots of the same shape have the same size and colour', () => {
   for (const [id, slots] of Object.entries(PICTURES)) {
     for (const a of slots) {
@@ -341,6 +353,7 @@ test('strings: same keys in fr/es/en, a name for every shape and object', () => 
     assert.ok(STRINGS.fr[`shapes.clue.${id}`], `clue for ${id}`);
   }
   for (const id of Object.keys(OBJECTS)) assert.ok(STRINGS.fr[`shapes.object.${id}`], `object ${id}`);
+  for (const id of Object.keys(PICTURES)) assert.ok(STRINGS.fr[`shapes.picture.${id}`], `picture ${id}`);
   for (const lang of ['fr', 'es', 'en']) assert.ok(meta.strings[lang]['shapes.title'], lang);
 });
 

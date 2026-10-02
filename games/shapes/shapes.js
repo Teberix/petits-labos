@@ -2,14 +2,15 @@
 //
 // Flow: level map → level (5 rounds) → level done → map.
 // Files: levels.js (shapes, objects, pictures, mirror patterns, levels), logic.js (pure
-//        logic, tested), sort.js / shadow.js (the kinds of rounds built so far),
-//        common.js (small helpers), strings.js, art.js, shapes.css. Puzzles and mirrors
-//        come in steps (d)–(e); until then those levels show a "soon" screen.
+//        logic, tested), sort.js / shadow.js / puzzle.js (the kinds of rounds built so far),
+//        common.js (small helpers), strings.js, art.js, shapes.css. Mirrors come in
+//        step (e); until then those levels show a "soon" screen.
 import { h } from '../../js/dom.js';
 import { addStrings } from '../../js/i18n.js';
 import { LEVELS } from './levels.js';
 import { playSort } from './sort.js';
 import { playShadow } from './shadow.js';
+import { playPuzzle } from './puzzle.js';
 import { restartAnimation } from './common.js';
 import STRINGS from './strings.js';
 import * as art from './art.js';
@@ -77,8 +78,8 @@ function createGame(container, ctx) {
 
   function playLevel(level) {
     stopLevel();
-    const play = { sort: playSort, shadow: playShadow }[level.type];
-    if (!play) { showSoon(level); return; } // puzzle / mirror: steps (d)–(e)
+    const play = { sort: playSort, shadow: playShadow, puzzle: playPuzzle }[level.type];
+    if (!play) { showSoon(level); return; } // mirror: step (e)
     rounds = play(ctx, level, container, () => levelDone(level));
   }
 

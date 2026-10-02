@@ -80,7 +80,7 @@ export const PICTURES = {
   ],
   mushroom: [
     { shape: 'halfCircle', angle: 0, x: 50, y: 28, size: 70, color: '#E4572E' },
-    { shape: 'rectangle', angle: 90, x: 50, y: 63.5, size: 36, color: '#F2E6D0' },
+    { shape: 'rectangle', angle: 90, x: 50, y: 63.5, size: 36, color: '#D9B48A' },
     { shape: 'bar', angle: 0, x: 50, y: 90.5, size: 72, color: '#7CB342' },         // the ground
   ],
   tent: [

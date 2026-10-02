@@ -1,17 +1,20 @@
 // Dev-only (never precached): "Formes & Silhouettes" worst-case screens for
 // tools/check-layout.mjs and its offline interaction for tools/check-offline.mjs.
 // See tools/check-kit.mjs.
-// Puzzle and mirror rounds (steps (d)–(e)) add their worst cases later.
-import { LEVELS } from './levels.js';
+// Mirror rounds (step (e)) add their worst cases later.
+import { LEVELS, PICTURE_PX } from './levels.js';
+import { tapsToFit } from './logic.js';
 
 async function openMap(page, kit) {
   await kit.openGame(page, 'shapes');
   // Wait for shapes.css (loaded when the game mounts): before it applies, the level
-  // buttons aren't where they end up, and a tap can land next to them.
+  // buttons aren't where they end up, and a tap can land next to them. This includes
+  // loading the game's modules (lazy import), so it gets a page load's timeout: on a
+  // busy PC the 10 s action timeout was hit twice with the screen still empty.
   await page.waitForFunction(() => {
     const map = document.querySelector('.sh-levels');
     return map && getComputedStyle(map).display === 'flex';
-  });
+  }, null, { timeout: 30_000 }); // = check-kit's NAV_TIMEOUT
 }
 
 async function openLevel(page, kit, id) {
@@ -66,6 +69,51 @@ async function dancing(page, selector) {
 }
 
 const shadowAt = (i) => `.sh-shadow >> nth=${i}`;
+
+// ---------- puzzles ----------
+
+const puzzlePiece = (id) => `.sh-tray .sh-piece[data-piece="${id}"]`;
+const picHole = (i) => `.sh-pic-hole[data-index="${i}"]`;
+
+async function readPuzzle(page, kit) {
+  await page.locator('.sh-tray .sh-piece').first().waitFor();
+  await kit.settle(page);
+  return page.evaluate(() => ({
+    pieces: [...document.querySelectorAll('.sh-tray .sh-piece')].map((el) => ({
+      id: el.dataset.piece, shape: el.dataset.shape, angle: Number(el.dataset.angle),
+    })),
+    holes: [...document.querySelectorAll('.sh-pic-hole')].map((el) => ({
+      index: el.dataset.index, shape: el.dataset.shape, angle: Number(el.dataset.angle),
+    })),
+  }));
+}
+
+// The picture's 0–100 frame must be at least PICTURE_PX on every phone: the unit
+// tests' "≥ 44px per piece" rule is computed at that size.
+async function checkFrame(page) {
+  const box = await page.locator('.sh-pic-holes').boundingBox();
+  const side = Math.min(box.width, box.height);
+  const phone = await page.evaluate(() => Math.min(innerWidth, innerHeight) <= 450);
+  if (phone && side < PICTURE_PX - 0.5) throw new Error(`picture frame ${side.toFixed(0)}px < PICTURE_PX ${PICTURE_PX}`);
+}
+
+// Turns each piece (taps) until it fits a free hole, then drags it there.
+async function solvePuzzle(page, kit) {
+  for (;;) {
+    const { pieces, holes } = await readPuzzle(page, kit);
+    if (!pieces.length) return;
+    const piece = pieces[0];
+    const options = holes.map((h) => ({ h, taps: tapsToFit(piece.shape, piece.angle, h) })).filter((o) => o.taps !== null);
+    if (!options.length) throw new Error(`no hole for ${piece.shape}`);
+    options.sort((a, b) => a.taps - b.taps);
+    for (let i = 0; i < options[0].taps; i++) await kit.tap(page, page.locator(puzzlePiece(piece.id)));
+    await kit.settle(page);
+    await page.waitForTimeout(300); // the turn transition
+    await kit.drag(page, puzzlePiece(piece.id), picHole(options[0].h.index));
+    if (await page.locator(puzzlePiece(piece.id)).count()) throw new Error(`${piece.shape} was not placed`);
+    if (pieces.length === 1) return;
+  }
+}
 
 export default {
   touch: ['.sh-level-btn', '.sh-continue', '.sh-piece', '.sh-hole', '.sh-object'],
@@ -158,6 +206,75 @@ export default {
         await page.locator('.sh-done .sh-continue').waitFor({ timeout: 20000 });
         const done = await page.evaluate(() => JSON.parse(localStorage.getItem('petits-labos')).profiles[0].games.shapes?.completed ?? []);
         if (!done.includes(2)) throw new Error('level 2 not marked done');
+        await kit.settle(page);
+      },
+    },
+    {
+      name: 'puzzle: a level-4 round (no turning), picture big enough',
+      async setup(page, kit) {
+        await openLevel(page, kit, 4);
+        await readPuzzle(page, kit);
+        await checkFrame(page);
+      },
+    },
+    {
+      // Level 6: 5 pieces; one turned once (no piece fits before turning — tested).
+      name: 'puzzle: a level-6 round (5 pieces), a piece turned',
+      async setup(page, kit) {
+        await openLevel(page, kit, 6);
+        const { pieces } = await readPuzzle(page, kit);
+        if (pieces.length !== 5) throw new Error(`${pieces.length} pieces`);
+        await kit.tap(page, page.locator(puzzlePiece(pieces[0].id)));
+        const angle = Number(await page.locator(puzzlePiece(pieces[0].id)).getAttribute('data-angle'));
+        if (angle !== (pieces[0].angle + 90) % 360) throw new Error('a tap did not turn the piece');
+        await checkFrame(page);
+        await kit.settle(page);
+        await page.waitForTimeout(300);
+      },
+    },
+    {
+      // A piece dropped 3 times where it doesn't fit: clue → its hole glows → it dances.
+      name: 'puzzle: level 6, 3 wrong drops → its hole glows, the piece dances',
+      async setup(page, kit) {
+        await openLevel(page, kit, 6);
+        const { pieces, holes } = await readPuzzle(page, kit);
+        const piece = pieces[0];
+        const other = holes.find((h) => h.shape !== piece.shape);
+        for (let i = 0; i < 3; i++) await kit.drag(page, puzzlePiece(piece.id), picHole(other.index));
+        if (!(await page.locator('.sh-pic-hole.sh-glow').count())) throw new Error('no hole glows');
+        const glowShape = await page.locator('.sh-pic-hole.sh-glow').getAttribute('data-shape');
+        if (glowShape !== piece.shape) throw new Error(`a ${glowShape} hole glows for a ${piece.shape}`);
+        if (!(await dancing(page, puzzlePiece(piece.id)))) throw new Error('the piece does not dance');
+        await kit.settle(page);
+      },
+    },
+    {
+      // Piece A dances (3 wrong drops), then piece B gets 2 wrong drops: the hints now
+      // point only at B (its hole glows, A stops dancing) — never at two pieces.
+      name: 'puzzle: hints move to the piece that needs them',
+      async setup(page, kit) {
+        await openLevel(page, kit, 6);
+        const { pieces, holes } = await readPuzzle(page, kit);
+        const [a, b] = pieces.filter((p, i, all) => all.findIndex((q) => q.shape === p.shape) === i);
+        const otherThan = (p) => holes.find((h) => h.shape !== p.shape).index;
+        for (let i = 0; i < 3; i++) await kit.drag(page, puzzlePiece(a.id), picHole(otherThan(a)));
+        for (let i = 0; i < 2; i++) await kit.drag(page, puzzlePiece(b.id), picHole(otherThan(b)));
+        if (await dancing(page, puzzlePiece(a.id))) throw new Error('piece A still dances');
+        const glow = await page.locator('.sh-pic-hole.sh-glow').evaluateAll((els) => els.map((el) => el.dataset.shape));
+        if (glow.length !== 1 || glow[0] !== b.shape) throw new Error(`glowing holes ${glow} for a ${b.shape}`);
+        await kit.settle(page);
+      },
+    },
+    {
+      name: 'puzzle: level 5 solved by turning every piece → one star, a new round',
+      async setup(page, kit) {
+        await openLevel(page, kit, 5);
+        const before = await savedStars(page);
+        const first = await page.locator('.sh-pic-hole').count();
+        await solvePuzzle(page, kit);
+        if (await savedStars(page) !== before + 1) throw new Error('expected exactly one star');
+        await page.waitForFunction(() => document.querySelectorAll('.sh-pic-hole').length > 0, null, { timeout: 20000 });
+        if (first < 3) throw new Error('too few holes');
         await kit.settle(page);
       },
     },

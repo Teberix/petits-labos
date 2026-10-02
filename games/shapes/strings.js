@@ -3,6 +3,7 @@
 // shapes.shape.<id>  = every shape in levels.js SHAPES (with its article, said aloud)
 // shapes.object.<id> = every object in levels.js OBJECTS
 // shapes.clue.<id>  = a spoken clue for every shape (first hint)
+// shapes.picture.<id> = every puzzle picture in levels.js PICTURES
 export default {
   fr: {
     'shapes.chooseLevel': 'Choisis un niveau !',
@@ -40,6 +41,14 @@ export default {
     'shapes.clue.missing': 'Regarde bien : il manque un morceau à deux ombres !',
     'shapes.shadow.glow': 'Regarde l’ombre qui brille !',
     'shapes.shadow.dance': 'Pose {a} sur l’ombre qui brille !',
+    'shapes.ask.puzzle': 'Remplis le dessin avec les pièces !',
+    'shapes.puzzle.turn': 'Bonne forme ! Touche-la pour la tourner.',
+    'shapes.puzzle.glow': 'Pose {a} sur la forme qui brille !',
+    'shapes.puzzle.danceTurn': 'Touche {a} pour la tourner, puis pose-la sur la forme qui brille !',
+    'shapes.puzzle.done': 'Bravo ! C’est {a} !',
+    'shapes.picture.house': 'la maison', 'shapes.picture.tree': 'l’arbre', 'shapes.picture.car': 'la voiture',
+    'shapes.picture.sailboat': 'le voilier', 'shapes.picture.mushroom': 'le champignon', 'shapes.picture.tent': 'la tente',
+    'shapes.picture.rocket': 'la fusée', 'shapes.picture.ship': 'le bateau', 'shapes.picture.cottage': 'la petite maison',
     'shapes.shape.circle': 'le cercle', 'shapes.shape.square': 'le carré',
     'shapes.shape.rectangle': 'le rectangle', 'shapes.shape.bar': 'la barre',
     'shapes.shape.diamond': 'le losange', 'shapes.shape.triangle': 'le triangle',
@@ -86,6 +95,14 @@ export default {
     'shapes.clue.missing': '¡Mira bien: a dos sombras les falta un trozo!',
     'shapes.shadow.glow': '¡Mira la sombra que brilla!',
     'shapes.shadow.dance': '¡Pon {a} sobre la sombra que brilla!',
+    'shapes.ask.puzzle': '¡Completa el dibujo con las piezas!',
+    'shapes.puzzle.turn': '¡Buena forma! Tócala para girarla.',
+    'shapes.puzzle.glow': '¡Pon {a} sobre la forma que brilla!',
+    'shapes.puzzle.danceTurn': '¡Toca {a} para girarla, y luego ponla sobre la forma que brilla!',
+    'shapes.puzzle.done': '¡Bravo! ¡Es {a}!',
+    'shapes.picture.house': 'la casa', 'shapes.picture.tree': 'el árbol', 'shapes.picture.car': 'el coche',
+    'shapes.picture.sailboat': 'el velero', 'shapes.picture.mushroom': 'la seta', 'shapes.picture.tent': 'la tienda de campaña',
+    'shapes.picture.rocket': 'el cohete', 'shapes.picture.ship': 'el barco', 'shapes.picture.cottage': 'la casita',
     'shapes.shape.circle': 'el círculo', 'shapes.shape.square': 'el cuadrado',
     'shapes.shape.rectangle': 'el rectángulo', 'shapes.shape.bar': 'la barra',
     'shapes.shape.diamond': 'el rombo', 'shapes.shape.triangle': 'el triángulo',
@@ -132,6 +149,14 @@ export default {
     'shapes.clue.missing': 'Look carefully: two shadows are missing a piece!',
     'shapes.shadow.glow': 'Look at the shining shadow!',
     'shapes.shadow.dance': 'Put {a} on the shining shadow!',
+    'shapes.ask.puzzle': 'Fill the picture with the pieces!',
+    'shapes.puzzle.turn': 'Right shape! Tap it to turn it.',
+    'shapes.puzzle.glow': 'Put {a} on the shining shape!',
+    'shapes.puzzle.danceTurn': 'Tap {a} to turn it, then put it on the shining shape!',
+    'shapes.puzzle.done': 'Well done! It’s {a}!',
+    'shapes.picture.house': 'the house', 'shapes.picture.tree': 'the tree', 'shapes.picture.car': 'the car',
+    'shapes.picture.sailboat': 'the sailboat', 'shapes.picture.mushroom': 'the mushroom', 'shapes.picture.tent': 'the tent',
+    'shapes.picture.rocket': 'the rocket', 'shapes.picture.ship': 'the ship', 'shapes.picture.cottage': 'the cottage',
     'shapes.shape.circle': 'the circle', 'shapes.shape.square': 'the square',
     'shapes.shape.rectangle': 'the rectangle', 'shapes.shape.bar': 'the bar',
     'shapes.shape.diamond': 'the diamond', 'shapes.shape.triangle': 'the triangle',
