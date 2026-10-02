@@ -234,14 +234,18 @@ test('levels 1–7: pieces per picture and pool size follow the curve', () => {
 
 // Level 6 is about look-alikes (owner, 2026-10-02): every picture has at least two
 // shapes from the same family, so the child must look at more than "a triangle".
-test('level 6: every picture has look-alike pieces', () => {
+// Level 7 too (owner's review, step (g)): without look-alikes the abstract level would
+// be easier than level 6 on that axis.
+test('levels 6–7: every picture has look-alike pieces', () => {
   const FAMILIES = [
     ['triangle', 'halfSquare', 'longTriangle'], ['square', 'rectangle', 'bar'],
     ['trapezoid', 'parallelogram'], ['trapezoid', 'halfCircle'],
   ];
-  for (const key of LEVELS.find((l) => l.id === 6).pictures) {
-    const shapes = new Set(PICTURES[key].map((s) => s.shape));
-    assert.ok(FAMILIES.some((f) => f.filter((s) => shapes.has(s)).length >= 2), `${key}: no look-alikes`);
+  for (const id of [6, 7]) {
+    for (const key of LEVELS.find((l) => l.id === id).pictures) {
+      const shapes = new Set(PICTURES[key].map((s) => s.shape));
+      assert.ok(FAMILIES.some((f) => f.filter((s) => shapes.has(s)).length >= 2), `level ${id}, ${key}: no look-alikes`);
+    }
   }
 });
 

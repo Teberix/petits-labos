@@ -233,12 +233,12 @@ export const PICTURES = {
     { shape: 'halfSquare', angle: 0, x: 77.5, y: 64.5, size: 25, color: SAND },      // shed
     { shape: 'bar', angle: 0, x: 50, y: 87, size: 80, color: GRASS },
   ],
-  shuttle: [
-    { shape: 'rectangle', angle: 90, x: 50, y: 50, size: 50, color: GREY },
-    { shape: 'triangle', angle: 0, x: 50, y: 14, size: 22, color: RED },             // nose
-    { shape: 'halfSquare', angle: 270, x: 27.5, y: 65, size: 20, color: BLUE },      // fins
-    { shape: 'halfSquare', angle: 0, x: 72.5, y: 65, size: 20, color: BLUE },
-    { shape: 'trapezoid', angle: 180, x: 50, y: 85, size: 40, color: ORANGE },       // flame
+  camel: [
+    { shape: 'halfCircle', angle: 0, x: 37, y: 45, size: 50, color: SAND },          // hump
+    { shape: 'rectangle', angle: 90, x: 20.5, y: 74.5, size: 34, color: BROWN },     // legs
+    { shape: 'rectangle', angle: 90, x: 53.5, y: 74.5, size: 34, color: BROWN },
+    { shape: 'rectangle', angle: 90, x: 70.5, y: 40.5, size: 34, color: BROWN },     // neck
+    { shape: 'square', angle: 0, x: 87.5, y: 32, size: 17, color: SAND },            // head
   ],
   // ---- level 6: 5–6 pieces with look-alikes (triangles, boxes, slanted shapes) ----
   robot2: [
@@ -412,7 +412,7 @@ export const LEVELS = [
   { id: 4, type: 'puzzle', rounds: 5, turn: 'all',
     pictures: ['turtle', 'chalet', 'butterfly', 'cup', 'plane', 'lighthouse'] },
   { id: 5, type: 'puzzle', rounds: 5, turn: 'all',
-    pictures: ['truck', 'duck', 'castle', 'spaceship', 'farm', 'shuttle'] },
+    pictures: ['truck', 'duck', 'castle', 'spaceship', 'farm', 'camel'] },
   { id: 6, type: 'puzzle', rounds: 5, turn: 'all', intro: 'shapes.intro.lookalike',
     pictures: ['robot2', 'sun', 'bridge', 'farmhouse', 'pirate', 'tractor'] },
   { id: 7, type: 'puzzle', rounds: 5, turn: 'all', intro: 'shapes.intro.abstract',
