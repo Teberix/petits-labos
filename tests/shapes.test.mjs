@@ -339,3 +339,81 @@ test('art: every shape and picture is drawn; no ids or gradients', async () => {
   const all = Object.keys(PICTURES).map((id) => art.pictureSvg(id, new Set([0]))).join('');
   assert.ok(!/\sid=|Gradient|url\(#/.test(all), 'ids/gradients would clash when a drawing appears twice');
 });
+
+// ---------- level 8: tangram grid + boards (the same solver gives the hints) ----------
+
+test('grid: 4 quarter turns = no turn; looks per piece; areas', async () => {
+  const g = await import('../games/shapes/grid.js');
+  const k = (tris) => tris.map(g.key).join(' ');
+  for (const type of Object.keys(g.TPIECES)) assert.equal(k(g.shapeAt(type, 360)), k(g.shapeAt(type, 0)), type);
+  const looks = Object.fromEntries(Object.keys(g.TPIECES).map((t) => [t, g.distinctAngles(t).length]));
+  assert.deepEqual(looks, { square: 1, smallTri: 4, medTri: 4, bigTri: 4, rectangle: 2, parallelogram: 2, trapezoid: 4 });
+  assert.deepEqual(Object.keys(g.TPIECES).map(g.area), [1, 0.5, 1, 2, 2, 1, 2]);
+});
+
+test('grid: solve and diagnose (dead end → the misplaced piece)', async () => {
+  const g = await import('../games/shapes/grid.js');
+  const cells = (list) => new Set(list.flatMap(([c, r]) => [0, 1, 2, 3].map((t) => g.key([c, r, t]))));
+  const square2 = cells([[0, 0], [1, 0], [0, 1], [1, 1]]);
+  assert.ok(g.solve(square2, new Set(), ['bigTri', 'bigTri']));
+  assert.equal(g.solve(square2, new Set(), ['square', 'square', 'square']), null, 'wrong area');
+  // a row of 3 cells, a square in the middle: the rectangle can't go anywhere
+  const row = cells([[0, 0], [1, 0], [2, 0]]);
+  const middle = { type: 'square', angle: 0, dc: 1, dr: 0, id: 7 };
+  const d = g.diagnose(row, [middle], ['rectangle']);
+  assert.equal(d.ok, false);
+  assert.equal(d.misplaced.id, 7);
+  assert.ok(g.diagnose(row, [{ ...middle, dc: 0 }], ['rectangle']).ok);
+  // snap: dropped near a placement's middle → that placement
+  const pl = g.snap('rectangle', 0, [2, 0.5], row, new Set());
+  assert.deepEqual([pl.dc, pl.dr], [1, 0]);
+  assert.equal(g.snap('rectangle', 90, [1.5, 0.5], row, new Set()), null, 'a standing rectangle does not fit a row');
+});
+
+test('level 8 boards: the big outline, 3–5 pieces, solvable, big enough cells', async () => {
+  const g = await import('../games/shapes/grid.js');
+  const { TANGRAMS } = await import('../games/shapes/levels.js');
+  const full = (c, r) => [0, 1, 2, 3].map((t) => g.key([c, r, t]));
+  const OUTLINE = {
+    square: (n) => [...Array(n)].flatMap((_, r) => [...Array(n)].flatMap((__, c) => full(c, r))),
+    rectangle: (w, hh) => [...Array(hh)].flatMap((_, r) => [...Array(w)].flatMap((__, c) => full(c, r))),
+    triangle: (n) => [...Array(n)].flatMap((_, r) => [
+      ...[...Array(r)].flatMap((__, c) => full(c, r)), g.key([r, r, 3]), g.key([r, r, 2])]),
+  };
+  const level = LEVELS.find((l) => l.id === 8);
+  assert.ok(level.boards.length >= 6, 'at least 6 boards');
+  for (const id of level.boards) {
+    const b = TANGRAMS[id];
+    assert.ok(b, id);
+    const [kind, size] = b.outline.split(' ');
+    const dims = size.split('x').map(Number);
+    const expected = new Set(OUTLINE[kind](...dims));
+    const region = g.regionOf(b);
+    assert.deepEqual([...region].sort(), [...expected].sort(), `${id}: not a ${b.outline}`);
+    assert.ok(b.solution.length >= 3 && b.solution.length <= 5, `${id}: ${b.solution.length} pieces`);
+    assert.ok(new Set(b.solution.map((p) => p.type)).size >= 2, `${id}: one kind of piece only`);
+    const types = b.solution.map((p) => p.type);
+    assert.ok(g.solve(region, new Set(), types), `${id}: no solution`);
+    // the skill is reaching a dead end and undoing (owner, 2026-10-02): some placement
+    // that fits must leave the rest unsolvable, or the board is too easy
+    const deadEnd = [...new Set(types)].some((type) => {
+      const rest = [...types];
+      rest.splice(rest.indexOf(type), 1);
+      return g.distinctAngles(type).some((angle) => [...Array(6)].some((_, dc) => [...Array(6)].some((__, dr) => {
+        const tris = g.trianglesOf({ type, angle, dc, dr }).map(g.key);
+        return tris.every((k) => region.has(k)) && !g.solve(region, new Set(tris), rest);
+      })));
+    });
+    assert.ok(deadEnd, `${id}: no dead end — too easy`);
+    const cols = Math.max(...dims);
+    const rows = kind === 'rectangle' ? dims[1] : dims[0];
+    const cellPx = ((92 / Math.max(cols, rows)) * PICTURE_PX) / 100;
+    assert.ok(cellPx >= MIN_PIECE_PX, `${id}: cells ${cellPx.toFixed(0)}px < ${MIN_PIECE_PX}px`);
+  }
+});
+
+test('strings: level 8 names (pieces, big shapes)', async () => {
+  const g = await import('../games/shapes/grid.js');
+  for (const type of Object.keys(g.TPIECES)) assert.ok(STRINGS.fr[`shapes.tpiece.${type}`], type);
+  for (const kind of ['square', 'rectangle', 'triangle']) assert.ok(STRINGS.fr[`shapes.outline.${kind}`], kind);
+});

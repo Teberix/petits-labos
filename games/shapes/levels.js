@@ -391,13 +391,99 @@ export const PICTURES = {
   ],
 };
 
+// Level 8 boards — GENERATED (seed 8) by the owner's private build-time script;
+// don't edit by hand, regenerate. outline = the big shape and its size (cells); solution =
+// one way to fill it (the game accepts any). Checked by the unit tests with grid.js solve().
+export const TANGRAMS = {
+  board1: { outline: 'square 2', solution: [
+    { type: 'bigTri', angle: 0, dc: 0, dr: 0 },
+    { type: 'parallelogram', angle: 90, dc: 0, dr: 0 },
+    { type: 'smallTri', angle: 180, dc: 0, dr: 1 },
+    { type: 'smallTri', angle: 180, dc: 1, dr: 1 },
+  ] },
+  board2: { outline: 'square 3', solution: [
+    { type: 'trapezoid', angle: 180, dc: 0, dr: 0 },
+    { type: 'trapezoid', angle: 90, dc: 0, dr: 0 },
+    { type: 'trapezoid', angle: 270, dc: 2, dr: 0 },
+    { type: 'square', angle: 0, dc: 1, dr: 1 },
+    { type: 'trapezoid', angle: 0, dc: 0, dr: 2 },
+  ] },
+  board3: { outline: 'rectangle 3x2', solution: [
+    { type: 'bigTri', angle: 0, dc: 0, dr: 0 },
+    { type: 'parallelogram', angle: 90, dc: 0, dr: 0 },
+    { type: 'rectangle', angle: 90, dc: 2, dr: 0 },
+    { type: 'smallTri', angle: 180, dc: 0, dr: 1 },
+    { type: 'smallTri', angle: 180, dc: 1, dr: 1 },
+  ] },
+  board4: { outline: 'rectangle 4x2', solution: [
+    { type: 'rectangle', angle: 90, dc: 0, dr: 0 },
+    { type: 'bigTri', angle: 270, dc: 1, dr: 0 },
+    { type: 'parallelogram', angle: 0, dc: 2, dr: 0 },
+    { type: 'medTri', angle: 90, dc: 3, dr: 0 },
+    { type: 'trapezoid', angle: 0, dc: 1, dr: 1 },
+  ] },
+  board5: { outline: 'triangle 3', solution: [
+    { type: 'bigTri', angle: 180, dc: 0, dr: 0 },
+    { type: 'rectangle', angle: 0, dc: 0, dr: 2 },
+    { type: 'smallTri', angle: 180, dc: 2, dr: 2 },
+  ] },
+  board6: { outline: 'triangle 4', solution: [
+    { type: 'trapezoid', angle: 90, dc: 0, dr: 0 },
+    { type: 'parallelogram', angle: 90, dc: 1, dr: 1 },
+    { type: 'medTri', angle: 180, dc: 0, dr: 2 },
+    { type: 'bigTri', angle: 180, dc: 2, dr: 2 },
+    { type: 'rectangle', angle: 0, dc: 0, dr: 3 },
+  ] },
+  board7: { outline: 'square 2', solution: [
+    { type: 'smallTri', angle: 0, dc: 0, dr: 0 },
+    { type: 'bigTri', angle: 180, dc: 0, dr: 0 },
+    { type: 'square', angle: 0, dc: 1, dr: 0 },
+    { type: 'smallTri', angle: 0, dc: 1, dr: 1 },
+  ] },
+  board8: { outline: 'square 3', solution: [
+    { type: 'rectangle', angle: 0, dc: 0, dr: 0 },
+    { type: 'square', angle: 0, dc: 2, dr: 0 },
+    { type: 'bigTri', angle: 0, dc: 0, dr: 1 },
+    { type: 'bigTri', angle: 180, dc: 0, dr: 1 },
+    { type: 'rectangle', angle: 90, dc: 2, dr: 1 },
+  ] },
+  board9: { outline: 'rectangle 3x2', solution: [
+    { type: 'medTri', angle: 0, dc: 0, dr: 0 },
+    { type: 'smallTri', angle: 180, dc: 0, dr: 0 },
+    { type: 'bigTri', angle: 90, dc: 0, dr: 0 },
+    { type: 'rectangle', angle: 90, dc: 2, dr: 0 },
+    { type: 'smallTri', angle: 270, dc: 0, dr: 1 },
+  ] },
+  board10: { outline: 'rectangle 4x2', solution: [
+    { type: 'bigTri', angle: 270, dc: 0, dr: 0 },
+    { type: 'medTri', angle: 180, dc: 1, dr: 0 },
+    { type: 'bigTri', angle: 0, dc: 2, dr: 0 },
+    { type: 'parallelogram', angle: 0, dc: 0, dr: 1 },
+    { type: 'trapezoid', angle: 0, dc: 1, dr: 1 },
+  ] },
+  board11: { outline: 'triangle 3', solution: [
+    { type: 'smallTri', angle: 180, dc: 0, dr: 0 },
+    { type: 'rectangle', angle: 90, dc: 0, dr: 1 },
+    { type: 'smallTri', angle: 180, dc: 1, dr: 1 },
+    { type: 'square', angle: 0, dc: 1, dr: 2 },
+    { type: 'smallTri', angle: 180, dc: 2, dr: 2 },
+  ] },
+  board12: { outline: 'triangle 4', solution: [
+    { type: 'medTri', angle: 270, dc: 0, dr: 0 },
+    { type: 'medTri', angle: 180, dc: 0, dr: 1 },
+    { type: 'bigTri', angle: 0, dc: 0, dr: 2 },
+    { type: 'bigTri', angle: 180, dc: 0, dr: 2 },
+    { type: 'bigTri', angle: 180, dc: 2, dr: 2 },
+  ] },
+};
+
 // Level fields:
 //   id         number on the level map (levels unlock in this order; progress is saved
 //              by id — never renumber)
-//   type       'puzzle' (levels 1–7) | 'tangram' (level 8, step (h))
+//   type       'puzzle' (levels 1–7) | 'tangram' (level 8)
 //   rounds     pictures to finish the level (5); drawn from a shuffled deck of
 //              `pictures`: no picture twice in a level when there are enough
-//   pictures   the level's pictures (keys of PICTURES)
+//   pictures   the level's pictures (keys of PICTURES); tangram: boards (keys of TANGRAMS)
 //   turn       'one' → exactly one piece starts turned (it fits nowhere until turned),
 //              the others already face the right way; 'all' → every piece that can
 //              be turned starts turned (only circles and squares can't)
@@ -418,5 +504,7 @@ export const LEVELS = [
   { id: 7, type: 'puzzle', rounds: 5, turn: 'all', intro: 'shapes.intro.abstract',
     pictures: ['abstract1', 'abstract2', 'abstract3', 'abstract4', 'abstract5', 'abstract6',
       'abstract7', 'abstract8', 'abstract9', 'abstract10', 'abstract11', 'abstract12'] },
-  { id: 8, type: 'tangram', rounds: 5 },
+  { id: 8, type: 'tangram', rounds: 5, intro: 'shapes.intro.tangram',
+    boards: ['board1', 'board2', 'board3', 'board4', 'board5', 'board6',
+      'board7', 'board8', 'board9', 'board10', 'board11', 'board12'] },
 ];

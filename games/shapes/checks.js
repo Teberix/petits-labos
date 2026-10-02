@@ -1,9 +1,9 @@
 // Dev-only (never precached): "Formes & Silhouettes" worst-case screens for
 // tools/check-layout.mjs and its offline interaction for tools/check-offline.mjs.
 // See tools/check-kit.mjs.
-// Level 8 (tangram, step (h)) adds its worst cases later.
-import { LEVELS, PICTURES, PICTURE_PX } from './levels.js';
+import { LEVELS, PICTURES, PICTURE_PX, MIN_PIECE_PX, TANGRAMS } from './levels.js';
 import { tapsToFit } from './logic.js';
+import { regionOf, trianglesOf, centroid, solve, snap, key, distinctAngles } from './grid.js';
 
 async function openMap(page, kit) {
   await kit.openGame(page, 'shapes');
@@ -95,6 +95,78 @@ async function nextRound(page, before) {
 
 const biggest = (id) => LEVELS.find((l) => l.id === id).pictures
   .reduce((a, b) => (PICTURES[b].length > PICTURES[a].length ? b : a));
+
+// ---------- tangram (level 8) ----------
+
+// The board on screen: its key, region, and how cell coordinates map to the screen
+// (same arithmetic as tangram.js).
+async function readBoard(page, kit) {
+  await page.locator('.sh-tg-board[data-board]').waitFor();
+  await page.locator('.sh-tray .sh-piece').first().waitFor();
+  await kit.settle(page);
+  const id = await page.locator('.sh-tg-board').getAttribute('data-board');
+  const board = TANGRAMS[id];
+  const region = regionOf(board);
+  const cells = [...region].map((k) => k.split(',').map(Number));
+  const cols = Math.max(...cells.map((c) => c[0])) + 1;
+  const rows = Math.max(...cells.map((c) => c[1])) + 1;
+  const cs = 92 / Math.max(cols, rows);
+  const rect = await page.locator('.sh-tg-board').boundingBox();
+  const screen = ([x, y]) => ({
+    x: rect.x + (((100 - cols * cs) / 2 + x * cs) / 100) * rect.width,
+    y: rect.y + (((100 - rows * cs) / 2 + y * cs) / 100) * rect.height,
+  });
+  return { id, board, region, cs, rect, screen };
+}
+
+const trayPiece = (type) => `.sh-tray .sh-piece[data-type="${type}"]`;
+const placedPiece = (id) => `.sh-tg-placed[data-piece="${id}"]`;
+
+async function dragTo(page, from, point) {
+  const a = await page.locator(from).first().boundingBox();
+  await page.mouse.move(a.x + a.width / 2, a.y + a.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(point.x, point.y, { steps: 8 });
+  await page.mouse.up();
+}
+
+// Turns a tray piece of `type` until it has `angle`, then drops it so its middle
+// lands on the placement's middle.
+async function putPiece(page, kit, b, pl) {
+  const sel = trayPiece(pl.type);
+  for (let i = 0; i < 4; i++) {
+    if (Number(await page.locator(sel).first().getAttribute('data-angle')) === pl.angle) break;
+    await kit.tap(page, page.locator(sel).first());
+  }
+  await kit.settle(page);
+  await page.waitForTimeout(300); // the turn transition
+  await dragTo(page, sel, b.screen(centroid(trianglesOf(pl))));
+}
+
+// A placement that fits but leaves the rest unsolvable, or null if the board has none.
+function deadEnd(b, types) {
+  for (const type of new Set(types)) {
+    const rest = [...types];
+    rest.splice(rest.indexOf(type), 1);
+    for (const angle of distinctAngles(type)) {
+      for (let dc = 0; dc < 6; dc++) {
+        for (let dr = 0; dr < 6; dr++) {
+          const tris = trianglesOf({ type, angle, dc, dr }).map(key);
+          if (tris.every((k) => b.region.has(k)) && !solve(b.region, new Set(tris), rest)) {
+            return { type, angle, dc, dr };
+          }
+        }
+      }
+    }
+  }
+  return null;
+}
+
+async function solveBoard(page, kit, b) {
+  for (const pl of b.board.solution) await putPiece(page, kit, b, pl);
+}
+
+const occupied = (b, placed) => new Set(placed.flatMap((pl) => trianglesOf(pl).map(key)));
 
 export default {
   touch: ['.sh-level-btn', '.sh-continue', '.sh-piece'],
@@ -212,10 +284,96 @@ export default {
       },
     },
     {
-      name: 'a level not built yet (placeholder)',
+      // Cells must stay ≥ 44px on phones (the small triangle's sides are one cell).
+      name: 'tangram: a board, cells big enough',
       async setup(page, kit) {
-        await openLevel(page, kit, LEVELS.at(-1).id);
-        await page.locator('.sh-continue').waitFor();
+        await openLevel(page, kit, 8);
+        const b = await readBoard(page, kit);
+        const phone = await page.evaluate(() => Math.min(innerWidth, innerHeight) <= 450);
+        const cellPx = (b.cs / 100) * b.rect.width;
+        if (phone && cellPx < MIN_PIECE_PX - 0.5) throw new Error(`cells ${cellPx.toFixed(0)}px < ${MIN_PIECE_PX}px`);
+        if (await page.locator('.sh-tray .sh-piece').count() !== b.board.solution.length) throw new Error('not every piece in the tray');
+      },
+    },
+    {
+      name: 'tangram: board filled → one star, a new board',
+      async setup(page, kit) {
+        await openLevel(page, kit, 8);
+        const b = await readBoard(page, kit);
+        const before = await savedStars(page);
+        await solveBoard(page, kit, b);
+        if (await savedStars(page) !== before + 1) throw new Error('expected exactly one star');
+        await page.waitForFunction((id) => {
+          const el = document.querySelector('.sh-tg-board');
+          return el && el.dataset.board !== id && !document.querySelector('.sh-tg-placed');
+        }, b.id, { timeout: 20000 });
+        await kit.settle(page);
+      },
+    },
+    {
+      // A placement that fits but leaves the rest unsolvable is accepted; then 3 drops
+      // that fit nowhere: clue → the misplaced piece glows → a blue outline shows where
+      // a piece goes and the dropped piece dances. Then the misplaced piece is dragged
+      // back to the tray.
+      name: 'tangram: dead end → hints, piece back to the tray',
+      async setup(page, kit) {
+        await openLevel(page, kit, 8);
+        // Some boards have no dead end at all (every placement that fits can be
+        // finished): solve those and go on until a board with one shows.
+        let b = null;
+        let bad = null;
+        let types = null;
+        for (let i = 0; i < 12 && !bad; i++) {
+          b = await readBoard(page, kit);
+          types = b.board.solution.map((pl) => pl.type);
+          bad = deadEnd(b, types);
+          if (bad) break;
+          await solveBoard(page, kit, b);
+          const next = await Promise.race([
+            page.waitForFunction((id) => {
+              const el = document.querySelector('.sh-tg-board');
+              return el && el.dataset.board !== id && !document.querySelector('.sh-tg-placed');
+            }, b.id, { timeout: 20000 }).then(() => 'round'),
+            page.locator('.sh-done .sh-continue').waitFor({ timeout: 20000 }).then(() => 'done'),
+          ]);
+          if (next === 'done') {
+            await kit.tap(page, page.locator('.sh-continue'));
+            await kit.tap(page, page.locator('.sh-level-btn').nth(LEVELS.findIndex((l) => l.id === 8)));
+          }
+        }
+        if (!bad) throw new Error('no board with a dead end shown');
+        await putPiece(page, kit, b, bad);
+        await page.locator('.sh-tg-placed').first().waitFor();
+        // a tray piece and a spot on the board where it fits nowhere
+        const other = types.find((t, i) => i !== types.indexOf(bad.type)) ?? bad.type;
+        const angle = Number(await page.locator(trayPiece(other)).first().getAttribute('data-angle'));
+        let spot = null;
+        for (let y = 0.2; y < 6 && !spot; y += 0.25) {
+          for (let x = 0.2; x < 6 && !spot; x += 0.25) {
+            const pt = b.screen([x, y]);
+            const inside = pt.x > b.rect.x + 4 && pt.x < b.rect.x + b.rect.width - 4
+              && pt.y > b.rect.y + 4 && pt.y < b.rect.y + b.rect.height - 4;
+            if (inside && !snap(other, angle, [x, y], b.region, occupied(b, [bad]))) spot = pt;
+          }
+        }
+        if (!spot) throw new Error('no spot where the piece fits nowhere');
+        for (let i = 0; i < 3; i++) await dragTo(page, trayPiece(other), spot);
+        const glow = await page.locator('.sh-tg-placed.sh-glow-shape').evaluateAll((els) =>
+          els.some((el) => el.getAnimations().some((a) => a.animationName === 'sh-glow-shape' && a.playState === 'running')));
+        if (!glow) throw new Error('the misplaced piece does not glow');
+        if (!(await page.locator('.sh-tg-hint svg').count())) throw new Error('no blue outline');
+        if (!(await dancing(page, trayPiece(other)))) throw new Error('the dropped piece does not dance');
+        await kit.settle(page);
+        // the misplaced piece back to the tray
+        const id = await page.locator('.sh-tg-placed').first().getAttribute('data-piece');
+        const from = b.screen(centroid(trianglesOf(bad)));
+        const tray = await page.locator('.sh-tray').boundingBox();
+        await page.mouse.move(from.x, from.y);
+        await page.mouse.down();
+        await page.mouse.move(tray.x + tray.width / 2, tray.y + tray.height / 2, { steps: 8 });
+        await page.mouse.up();
+        if (await page.locator(placedPiece(id)).count()) throw new Error('the piece did not go back to the tray');
+        if (await page.locator(`.sh-tray .sh-piece[data-piece="${id}"]`).count() !== 1) throw new Error('the piece is not in the tray');
         await kit.settle(page);
       },
     },

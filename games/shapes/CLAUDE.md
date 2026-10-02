@@ -1,25 +1,27 @@
 # Formes & Silhouettes — game notes (dev-only, never precached)
 
 Shapes, rotation, spatial reasoning: picture puzzles where pieces must be turned to
-fit. Non-linguistic → app language (French by default); every shape is named when it
-fits.
+fit, then a tangram. Non-linguistic → app language (French by default); every shape is
+named when it fits.
 
 ## Status
 IN PROGRESS. Design approved 2026-10-01 (`docs/mailbox/game-08-proposal.md`), steps
 (a)–(d) built (sorter, silhouettes, puzzles; preview `0.8.0-preview.2`). After the
 owner's playtest of levels 1–6, **redesigned on 2026-10-02**
-(`docs/mailbox/game-08-redesign.md`, approved with changes): all 8 levels are picture
-puzzles with turning; sorter, silhouettes and mirror removed (in git history).
-Steps: (e) engine ✔ · (f) 24 pictures for levels 1–4 ✔ → mailbox contact sheet · (g) 12 pictures
-for levels 5–6 + 12 generated for level 7 ✔ (review: shuttle → camel) · (h) level 8 tangram → mailbox + preview · (i) full
-checks, polish → mailbox final gate report.
+(`docs/mailbox/game-08-redesign.md`, approved with changes): all levels are picture
+puzzles with turning + a tangram; sorter, silhouettes and mirror removed (in git
+history). Steps: (e) engine ✔ · (f) 24 pictures for levels 1–4 ✔ · (g) 12 pictures for
+levels 5–6 + 12 generated for level 7 ✔ (review: shuttle → camel) · (h) level 8 tangram
+✔ → mailbox + preview `0.8.0-preview.3` · (i) full checks, polish → mailbox final gate
+report.
 
-## Levels (8 × 5 pictures)
+## Levels (8 × 5 rounds)
 1 simple pictures, 3 pieces, exactly ONE piece starts turned (learning to turn) ·
 2 simple pictures, every turnable piece turned · 3–4 small figures, 4–5 pieces, new
-shapes · 5–6 harder figures, 5–6 pieces, look-alikes · 7 abstract compositions
-(generated) · 8 tangram: fill a big square / rectangle / triangle, outline only
-(generated). Level 8 is a placeholder until step (h). Progress is saved by level `id` — never renumber.
+shapes · 5 bigger figures, 5 pieces · 6 figures with look-alikes, 5–6 pieces ·
+7 abstract compositions (generated), 6–7 pieces · 8 tangram: fill a big square /
+rectangle / triangle, outline only (generated), 3–5 pieces. Progress is saved by level
+`id` — never renumber.
 
 **Levels in `levels.js`, not `levels.json`** — current engine through game 10 (owner,
 2026-10-01). `tests/shapes.test.mjs` acts as the solver.
@@ -32,70 +34,88 @@ shapes · 5–6 harder figures, 5–6 pieces, look-alikes · 7 abstract composit
   shape. Circles and squares can't turn (sym 90). Every slot is reachable in 1–3 taps.
   All tested on every round.
 - No picture twice in a level (`roundOrder`: a shuffled deck; smaller pools reshuffle
-  and never repeat back to back). 5 progress dots show the level's pictures (filled =
+  and never repeat back to back). 5 progress dots show the level's rounds (filled =
   done): the playtest felt "endless" without them (2026-10-02).
 - Big pieces: smallest side ≥ 44px when the picture is `PICTURE_PX` (260px, the
   smallest phone picture) wide; every piece stays 2 units inside the frame (the card's
   rounded corners); every piece touches the picture: one connected group measured on
   the REAL outlines (`geometry.js`, gap ≤ 1 unit; boxes let floating pieces through —
-  kid-ux review, step (f));
-  no piece colour too pale for a white card; same shape twice in a picture → same size
-  and colour; pieces never overlap. All tested.
+  kid-ux review, step (f)); no piece colour too pale for a white card; same shape twice
+  in a picture → same size and colour; pieces never overlap. All tested.
+- Curve: levels 1 / 2 / 3–4 / 5 / 6 / 7 have 3 / 3–4 / 4–5 / 5 / 5–6 / 6–7 pieces per
+  picture, ≥ 6 pictures each, and the average never goes down from one level to the
+  next (tested). The flat pairs (3–4, 5–6) are by design: look-alikes add the
+  difficulty (owner, 2026-10-02). Levels 6–7: every picture has a look-alike pair (two
+  of triangle / half square / long triangle, square / rectangle / bar, trapezoid /
+  parallelogram, trapezoid / half circle; tested).
 - Hints per PIECE: clue (right shape turned wrong → « Bonne forme ! Touche-la pour la
   tourner. »; wrong shape → its shape clue) → the hole where it fits glows → it dances
   → neutral lines. Glow and dance always point at the same piece (kid-ux review;
-  checked). Hover feedback is an outline (the glow animates box-shadow).
+  checked). Hover feedback is an outline (the glow animates box-shadow). A dragged
+  copy never keeps a dance/bounce animation (it would not follow the finger).
 - A placed piece: pop + « Oui ! Le trapèze ! ». Finished picture: chime, « Bravo !
   C'est la fusée ! », 1 star; sticker every 5 stars. No bonus star, no free mode.
-- Level 8 (owner, 2026-10-02): any non-overlapping placement inside the outline is
-  accepted; placed pieces can be dragged back off. The solver is used for stuck hints
-  only: « un morceau n'est pas à sa bonne place » → the misplaced piece glows → a
-  faint outline where the next piece goes. Reaching a dead end and undoing is the
-  skill.
-- Level 7 and 8 boards are generated by a build-time script and verified by the same
-  solver; only the OUTPUT is committed into `levels.js`. The generator itself never
-  goes in this public repo (root CLAUDE.md: `private/` or the private repo).
-
-## Files
-- `levels.js` — SHAPES (symmetry, footprint), PICTURES, PICTURE_PX, LEVELS (data only).
-- `geometry.js` — every shape's real outline (polygons, curves sampled): art.js
-  draws from it and the tests measure with it (touching, footprints = drawing,
-  symmetry really holds). `outlineOf(slot)`, `gapBetween`, `boundsOf`.
-- `logic.js` — pure logic, tested in `tests/shapes.test.mjs`: `turn`, `sameAngle`,
-  `fits`, `tapsToFit`, `startAngles`, `footprint`, `hintStep`, `roundOrder`,
-  `makeRound(level, key)`.
-- `shapes.js` — level map, dispatch, level done. `puzzle.js` — picture puzzles.
-  `common.js` — cap, pickOne, restartAnimation, timerSet, nearestFirst.
-  `strings.js`, `art.js` (`shapeSvg`, `pictureSvg`), `shapes.css` (classes `sh-`).
-- `checks.js` — dev-only worst cases: level map; level 1 (one piece to turn, 5 dots,
-  frame size); level 7 with a 7-piece picture (solves / replays until one shows) + a turn; 3 wrong drops (glow + dance); hints moving
-  from piece A to B; level 2 done (5 different pictures, dots fill in, sticker);
-  placeholder. Offline: level 1, wrong drop → no star, picture → one star, next
-  picture. The map wait has a 30 s timeout (it includes loading the game modules).
-
-- Curve: levels 1 / 2 / 3–4 / 5 / 6 / 7 have 3 / 3–4 / 4–5 / 5 / 5–6 / 6–7 pieces per
-  picture, ≥ 6 pictures each, and the average never goes down from one level to the next
-  (tested). Level 6: every picture has look-alike pieces (two of triangle / half square /
-  long triangle, square / rectangle / bar, trapezoid / parallelogram, trapezoid / half
-  circle; tested). The flat pairs (3–4, 5–6) are by design (owner, 2026-10-02).
 - Level 7 = 12 abstract compositions GENERATED by the owner's private script
   (`petits-labos-private`, cloned at `private/`: `shapes/abstract-gen.mjs`; seed in the
-  levels.js comment). New pieces must share ≥ 6 units of edge, not just a corner; every
-  composition has a look-alike pair (tested, like level 6).
-  Never edit them by hand: regenerate. They pass the same tests as the drawn ones.
-  Spoken name for all of them: « une œuvre d'art » (`pictureNameKey`).
-- Landscape tray: 2 columns, 3 when a picture has 7 pieces (`--cols`).
+  levels.js comment). New pieces must share ≥ 6 units of edge, not just a corner. One
+  spoken name for all: « une œuvre d'art » (`pictureNameKey`). Never edit by hand:
+  regenerate. Same tests as the drawn pictures.
+- Level 8 tangram (owner, 2026-10-02): any non-overlapping placement inside the
+  outline is accepted, even a dead end; placed pieces can be dragged elsewhere or back
+  to the tray (lifted outside the board's real box = back to the tray; a tray piece let
+  go beside the board stays in the tray, no "boing"). The solver is used for hints
+  only, after drops that fit nowhere: board still solvable → « Tourne-la, ou essaie un
+  autre endroit ! » (a piece already on the board: « Essaie un autre endroit ! ») → a
+  blue outline where it can go → it dances; dead end → « Un morceau n'est pas à sa
+  bonne place. » → the misplaced piece glows → blue outline where the next piece goes
+  (+ dance). Two pieces misplaced (no single fix): keep pointing at the glowing one.
+  Board full → « Bravo ! Tu as rempli le grand carré ! », 1 star.
+- Level 8 boards: GENERATED by `private/shapes/tangram-gen.mjs` (seed in the levels.js
+  comment), 3–5 pieces, ≥ 2 kinds, cells ≥ 44px on the smallest phone, and every board
+  has a dead end — some fitting placement leaves the rest unsolvable (a board without
+  one is too easy; tested). The game accepts any solution, not just the stored one.
+- Placed tangram pieces: only the piece takes touches (its shape + an invisible 24px
+  rim, so thin pieces are ≥ 64px to touch); smaller pieces are layered on top so their
+  rim wins (kid-ux review).
+
+## Files
+- `levels.js` — SHAPES (symmetry, footprint), PICTURES, PICTURE_PX, TANGRAMS, LEVELS
+  (data only).
+- `geometry.js` — every shape's real outline (polygons, curves sampled): art.js draws
+  from it and the tests measure with it (touching, footprints = drawing, symmetry
+  really holds). `outlineOf(slot)`, `gapBetween`, `boundsOf`.
+- `logic.js` — pure logic, tested: `turn`, `sameAngle`, `fits`, `tapsToFit`,
+  `startAngles`, `footprint`, `hintStep`, `roundOrder`, `makeRound(level, key)`,
+  `pictureNameKey`.
+- `grid.js` — level 8, pure, tested: the triangle grid (each cell cut into 4
+  triangles), the 7 tangram pieces (`TPIECES`), turning (`shapeAt`, `distinctAngles`),
+  `placementsOf`, `snap`, `solve` (exact cover), `diagnose` (dead end → the misplaced
+  piece), `outlinePolygon` (one seamless polygon per piece / board).
+- `shapes.js` — level map, dispatch, level done. `puzzle.js` — picture puzzles
+  (levels 1–7). `tangram.js` — level 8. `common.js` — cap, pickOne, restartAnimation,
+  timerSet, nearestFirst. `strings.js`, `art.js` (`shapeSvg`, `pictureSvg`),
+  `shapes.css` (classes `sh-`).
+- `checks.js` — dev-only worst cases: level map; level 1 (one piece to turn, 5 dots,
+  frame size); level 7 with a 7-piece picture (plays / replays until one shows) + a
+  turn; 3 wrong drops (glow + dance, checked on running animations); hints moving from
+  piece A to B; level 2 done (5 different pictures, dots fill in, sticker); tangram:
+  board + cell size, board filled (one star, next board), dead end → the three hints +
+  a piece dragged back to the tray. Offline: level 1, wrong drop → no star, picture →
+  one star, next picture. The map wait has a 30 s timeout (it loads the game modules).
 
 ## Layout
-Portrait = the picture (a square card as big as the stage) over the dots and the
-tray; landscape = picture + a side column (dots, tray as 2 columns). The picture
-frame is the whole card, with half the bottom padding in landscape: on a 640 × 360
-phone it is just ≥ PICTURE_PX (`checkFrame` fails below that on phones). Tray pieces
-are drawn to fit their card (not at picture scale). Drop targets = each empty hole's
-real shape box (`footprint`), nearest first.
+Portrait = the picture / board (a square card as big as the stage) over the dots and
+the tray; landscape = card + a side column (dots, tray as 2 columns; 3 when a picture
+has 7 pieces, `--cols`). The picture frame is the whole card, with half the bottom
+padding in landscape: on a 640 × 360 phone it is just ≥ PICTURE_PX (`checkFrame`
+fails below that on phones). Puzzle tray pieces are drawn to fit their card; tangram
+tray pieces share one scale (sizes compare). Puzzle drop targets = each empty hole's
+real shape box (`footprint`), nearest first; tangram: the board, snapping to the grid
+from where the piece's middle lands.
 
 ## Playtest history
 - `0.8.0-preview.1` (2026-10-01, levels 1–3): « went well ».
 - `0.8.0-preview.2` (2026-10-02, levels 1–6): figures + rotation « very good »;
   levels 1–3 too easy; levels 4–5 felt like a loop (3 pictures for 5 rounds, no
   progress shown) → redesign.
+- `0.8.0-preview.3` (levels 1–8 after the redesign): waiting for the playtest.

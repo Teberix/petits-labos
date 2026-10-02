@@ -2,13 +2,14 @@
 //
 // Flow: level map → level (5 rounds) → level done → map.
 // Files: levels.js (shapes, objects, pictures, mirror patterns, levels), logic.js (pure
-//        logic, tested), puzzle.js (picture puzzles, levels 1–7), common.js (small
-//        helpers), strings.js, art.js, shapes.css. Level 8 (tangram) comes in step (h);
-//        until then it shows a "soon" screen.
+//        logic, tested), puzzle.js (picture puzzles, levels 1–7), tangram.js + grid.js
+//        (level 8), common.js (small helpers), strings.js, art.js, geometry.js,
+//        shapes.css.
 import { h } from '../../js/dom.js';
 import { addStrings } from '../../js/i18n.js';
 import { LEVELS } from './levels.js';
 import { playPuzzle } from './puzzle.js';
+import { playTangram } from './tangram.js';
 import { restartAnimation } from './common.js';
 import STRINGS from './strings.js';
 import * as art from './art.js';
@@ -76,21 +77,8 @@ function createGame(container, ctx) {
 
   function playLevel(level) {
     stopLevel();
-    const play = { puzzle: playPuzzle }[level.type];
-    if (!play) { showSoon(level); return; } // tangram: step (h)
+    const play = { puzzle: playPuzzle, tangram: playTangram }[level.type];
     rounds = play(ctx, level, container, () => levelDone(level));
-  }
-
-  // Placeholder until the level's kind of round is built.
-  function showSoon(level) {
-    container.replaceChildren(h('div', { class: 'sh-done', 'data-level': String(level.id) },
-      h('div', { class: 'sh-done-art', html: meta.icon }),
-      h('button', {
-        class: 'sh-continue', type: 'button', 'aria-label': t('shapes.continue'),
-        html: art.ICON_NEXT, onclick: () => { sfx.pop(); showLevels(); },
-      }),
-    ));
-    ctx.speak(t('shapes.soon'));
   }
 
   // ---------- Level complete ----------
