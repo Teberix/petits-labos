@@ -65,9 +65,16 @@ playtest).
 ## How to work
 
 - Build in small steps. New game: `/new-game <n>` (design → OK → steps).
-- **Verification = `/gate`** (`tools/gate.mjs` + the `kid-ux-reviewer` / `pwa-guardian`
-  subagents). Don't re-verify manually what the gate covers; report only failures and
-  what the gate can't check (e.g. real touch feel, voice quality).
+- **Verification = `/gate`, sized to what changed** (owner, 2026-10-02 — the full gate
+  takes ~18 min on this PC):
+  - build step (only `games/<id>/`, its tests, its data): `node tools/gate.mjs --game <id>`
+    + `node tools/gate.mjs --only unit,privacy`;
+  - mailbox / playable checkpoint: the above + the `kid-ux-reviewer` subagent;
+  - shared code changed (`js/`, `css/`, `index.html`, `sw.js` logic — a PRECACHE-only
+    change does not count) or a release: full gate + the `pwa-guardian` subagent;
+  - the full gate runs alone; reviewers run after it, never at the same time.
+  Don't re-verify manually what the gate covers. On PASS report one line; read the
+  details only on failure. Report what the gate can't check (real touch feel, voice).
 - Ask only on real blockers/ambiguity. Don't add unrequested features — propose them.
 - Windows: commit with a message file (`git commit -F <file>`); never pipe the message
   through PowerShell (a here-string piped to `git commit -F -` is taken as a pathspec).
@@ -102,9 +109,12 @@ tests/                 dev-only unit tests: node --test tests/*.test.mjs
 
 Conventions:
 - **All URLs relative** (`./sw.js`, `css/base.css`) — the app lives at `/petits-labos/`.
-- **New/removed app file → `node tools/update-precache.mjs`** (release does it too).
-  Dev-only files (`checks.js`, `solver.mjs`, `levels.schema.json`, `*.md`) are never
-  precached (`isDevOnly()` in `tools/precache.mjs`).
+- **PRECACHE: don't regenerate it during build steps — `release.mjs` does it.** Only
+  exception: a step that adds or removes an app file the game loads runs
+  `node tools/update-precache.mjs`, otherwise the game gate's offline check fails (the
+  new file isn't cached when the network is cut). Dev-only files (`checks.js`,
+  `solver.mjs`, `levels.schema.json`, `*.md`) are never precached
+  (`isDevOnly()` in `tools/precache.mjs`).
 - Game contract and `ctx` fields are documented at the top of `js/screens/game.js`.
 - Game-specific strings go in the game's `strings.js` / `meta.js`, not in `js/i18n/`.
 - Updates are applied only at safe moments: app launch, entering hub/profiles, or the app
