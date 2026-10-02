@@ -26,10 +26,14 @@ async function savedStars(page) {
   return page.evaluate(() => JSON.parse(localStorage.getItem('petits-labos')).profiles[0].rewards.stars);
 }
 
-// The class alone isn't enough: another animation class can override it (kid-ux review).
-async function dancing(page, selector) {
-  return page.locator(selector).evaluateAll((els) => els.some((el) => getComputedStyle(el).animationName.includes('sh-dance')));
+// The class alone isn't enough: another animation class can override it, and a
+// missing @keyframes leaves the name set but nothing running (both happened; kid-ux
+// review). So: a RUNNING animation of that name.
+async function animating(page, selector, name) {
+  return page.locator(selector).evaluateAll((els, n) => els.some((el) =>
+    el.getAnimations().some((a) => a.animationName === n && a.playState === 'running')), name);
 }
+const dancing = (page, selector) => animating(page, selector, 'sh-dance');
 
 const piece = (id) => `.sh-tray .sh-piece[data-piece="${id}"]`;
 const hole = (i) => `.sh-pic-hole[data-index="${i}"]`;
@@ -142,7 +146,7 @@ export default {
         const p = pieces[0];
         const other = holes.find((h) => h.shape !== p.shape);
         for (let i = 0; i < 3; i++) await kit.drag(page, piece(p.id), hole(other.index));
-        if (!(await page.locator('.sh-pic-hole.sh-glow').count())) throw new Error('no hole glows');
+        if (!(await animating(page, '.sh-pic-hole.sh-glow', 'sh-glow'))) throw new Error('no hole glows');
         const glowShape = await page.locator('.sh-pic-hole.sh-glow').getAttribute('data-shape');
         if (glowShape !== p.shape) throw new Error(`a ${glowShape} hole glows for a ${p.shape}`);
         if (!(await dancing(page, piece(p.id)))) throw new Error('the piece does not dance');

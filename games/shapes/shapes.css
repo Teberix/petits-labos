@@ -160,3 +160,12 @@
 .sh-pic-hole { position: absolute; border-radius: 0.5rem; }
 .sh-turner { width: 100%; height: 100%; transition: transform 0.25s ease-out; }
 .sh-turner svg { display: block; width: 100%; height: 100%; }
+
+/* Where a dragged piece would land: an OUTLINE, so it still shows on a glowing hole
+   (the glow animates box-shadow; kid-ux review). */
+.sh-pic-hole.drop-hover { outline: 0.25rem solid #2E86DE; outline-offset: 0.15rem; }
+
+@keyframes sh-pop-in { from { transform: scale(0.4); } }
+@keyframes sh-glow { 50% { box-shadow: 0 0 0 0.35rem #FFD54F, 0 0 1rem 0.3rem rgba(255, 179, 0, 0.6); } }
+@keyframes sh-dance { 25% { transform: translateY(-8%) rotate(-8deg); } 75% { transform: translateY(-8%) rotate(8deg); } }
+@keyframes sh-bounce { 35% { transform: translateY(-25%); } 65% { transform: translateY(5%); } 85% { transform: translateY(-3%); } }

@@ -186,7 +186,8 @@ export function playPuzzle(ctx, level, container, onDone) {
     }
     const where = needsTurn ? t('shapes.puzzle.danceTurn', { a: name(p.shape) }) : t('shapes.puzzle.glow', { a: name(p.shape) });
     if (step === 'glow') {
-      restartAnimation(piece, 'sh-bounce');
+      // (the tray may have been redrawn above: bounce the piece now on screen)
+      restartAnimation(trayEl.querySelector(`[data-piece="${p.id}"]`) ?? piece, 'sh-bounce');
       remark(`${oops} ${where}`);
     } else {
       round.dance = p.id;
