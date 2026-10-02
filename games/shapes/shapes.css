@@ -114,7 +114,9 @@
   gap: var(--gap);
 }
 @media (orientation: landscape) {
-  .sh-tray { display: grid; grid-template-columns: repeat(2, auto); }
+  /* 2 columns; 3 when a picture has 7 pieces (4 rows don't fit a landscape phone).
+     --cols is set by puzzle.js. */
+  .sh-tray { display: grid; grid-template-columns: repeat(var(--cols, 2), auto); }
 }
 .sh-piece, .sh-spot {
   --p: clamp(64px, 17vmin, 7rem);

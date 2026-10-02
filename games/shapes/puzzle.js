@@ -13,7 +13,7 @@
 import { speak } from '../../js/audio.js';
 import { draggable } from '../../js/dragdrop.js';
 import { h } from '../../js/dom.js';
-import { makeRound, roundOrder, hintStep, fits, turn, footprint } from './logic.js';
+import { makeRound, roundOrder, hintStep, fits, turn, footprint, pictureNameKey } from './logic.js';
 import { shapeSvg, pictureSvg } from './art.js';
 import { cap, nearestFirst, pickOne, restartAnimation, timerSet } from './common.js';
 
@@ -106,6 +106,7 @@ export function playPuzzle(ctx, level, container, onDone) {
   // The tray; a placed piece leaves an empty spot (keeps the others in place).
   function renderTray() {
     stopInputs();
+    trayEl.style.setProperty('--cols', round.pieces.length > 6 ? 3 : 2); // (landscape only)
     trayEl.replaceChildren(...round.pieces.map((p) => {
       if (p.placed) return h('div', { class: 'sh-spot' });
       const turner = h('div', { class: 'sh-turner', html: shapeSvg(p.shape, round.slots[p.slot].color) });
@@ -200,7 +201,7 @@ export function playPuzzle(ctx, level, container, onDone) {
     round.busy = true;
     stopInputs();
     sfx.chime();
-    remark(t('shapes.puzzle.done', { a: t(`shapes.picture.${round.picture}`) }));
+    remark(t('shapes.puzzle.done', { a: t(pictureNameKey(round.picture)) }));
     restartAnimation(picEl, 'sh-cheer');
     drawDots(index + 1);
     // 1 star per round (it flies from the picture). Every 5th star also brings a sticker.

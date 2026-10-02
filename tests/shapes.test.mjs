@@ -7,7 +7,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   ANGLES, turn, sameAngle, fits, tapsToFit, startAngles, footprint, hintStep, shuffle,
-  makeRound, roundOrder,
+  makeRound, roundOrder, pictureNameKey,
 } from '../games/shapes/logic.js';
 import {
   SHAPES, PICTURES, PICTURE_PX, MIN_PIECE_PX, LEVELS,
@@ -217,9 +217,11 @@ test('turning: every slot reachable; every picture has a piece that can start tu
 });
 
 // The curve (owner, 2026-10-02): level 1 three pieces, level 2 three or four, levels
-// 3–4 four or five; at least 6 pictures per level so none repeats in its 5 rounds.
-test('levels 1–4: pieces per picture and pool size follow the curve', () => {
-  const range = { 1: [3, 3], 2: [3, 4], 3: [4, 5], 4: [4, 5] };
+// 3–4 four or five, level 5 five, level 6 five or six, level 7 (generated) six or
+// seven; at least 6 pictures per level so
+// none repeats in its 5 rounds.
+test('levels 1–7: pieces per picture and pool size follow the curve', () => {
+  const range = { 1: [3, 3], 2: [3, 4], 3: [4, 5], 4: [4, 5], 5: [5, 5], 6: [5, 6], 7: [6, 7] };
   for (const [id, [lo, hi]] of Object.entries(range)) {
     const l = LEVELS.find((x) => x.id === Number(id));
     assert.ok(l.pictures.length >= 6, `level ${id}: ${l.pictures.length} pictures`);
@@ -227,6 +229,19 @@ test('levels 1–4: pieces per picture and pool size follow the curve', () => {
       const n = PICTURES[key].length;
       assert.ok(n >= lo && n <= hi, `level ${id}, ${key}: ${n} pieces (expected ${lo}–${hi})`);
     }
+  }
+});
+
+// Level 6 is about look-alikes (owner, 2026-10-02): every picture has at least two
+// shapes from the same family, so the child must look at more than "a triangle".
+test('level 6: every picture has look-alike pieces', () => {
+  const FAMILIES = [
+    ['triangle', 'halfSquare', 'longTriangle'], ['square', 'rectangle', 'bar'],
+    ['trapezoid', 'parallelogram'], ['trapezoid', 'halfCircle'],
+  ];
+  for (const key of LEVELS.find((l) => l.id === 6).pictures) {
+    const shapes = new Set(PICTURES[key].map((s) => s.shape));
+    assert.ok(FAMILIES.some((f) => f.filter((s) => shapes.has(s)).length >= 2), `${key}: no look-alikes`);
   }
 });
 
@@ -308,7 +323,7 @@ test('strings: same keys in fr/es/en, a name and a clue for every shape', () => 
     assert.ok(STRINGS.fr[`shapes.shape.${id}`], `shape ${id}`);
     assert.ok(STRINGS.fr[`shapes.clue.${id}`], `clue for ${id}`);
   }
-  for (const id of Object.keys(PICTURES)) assert.ok(STRINGS.fr[`shapes.picture.${id}`], `picture ${id}`);
+  for (const id of Object.keys(PICTURES)) assert.ok(STRINGS.fr[pictureNameKey(id)], `picture ${id}`);
   for (const lang of ['fr', 'es', 'en']) assert.ok(meta.strings[lang]['shapes.title'], lang);
 });
 

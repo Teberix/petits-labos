@@ -126,9 +126,26 @@ export default {
       name: 'puzzle: level 7, most pieces, a piece turned',
       async setup(page, kit) {
         await openLevel(page, kit, 7);
-        const { pieces } = await readPuzzle(page, kit);
+        // Pictures come in random order: solve them until one with the most pieces shows
+        // (the level has several; the tray then needs its widest layout).
+        // After the 5th picture the level ends: play it again (5 of its 12 pictures have
+        // the most pieces, so this ends fast; capped so it can't loop forever).
         const most = PICTURES[biggest(7)].length;
-        if (pieces.length > most) throw new Error(`${pieces.length} pieces > ${most}`);
+        let { pieces } = await readPuzzle(page, kit);
+        for (let i = 0; i < 15 && pieces.length < most; i++) {
+          const key = await pictureKey(page);
+          await solvePuzzle(page, kit);
+          const next = await Promise.race([
+            nextRound(page, key).then(() => 'round'),
+            page.locator('.sh-done .sh-continue').waitFor({ timeout: 20000 }).then(() => 'done'),
+          ]);
+          if (next === 'done') {
+            await kit.tap(page, page.locator('.sh-continue'));
+            await kit.tap(page, page.locator('.sh-level-btn').nth(LEVELS.findIndex((l) => l.id === 7)));
+          }
+          ({ pieces } = await readPuzzle(page, kit));
+        }
+        if (pieces.length !== most) throw new Error(`no ${most}-piece picture shown`);
         await kit.tap(page, page.locator(piece(pieces[0].id)));
         const angle = Number(await page.locator(piece(pieces[0].id)).getAttribute('data-angle'));
         if (angle !== (pieces[0].angle + 90) % 360) throw new Error('a tap did not turn the piece');

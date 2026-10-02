@@ -50,6 +50,11 @@ export function footprint(slot) {
   };
 }
 
+// The string key of a picture's spoken name. Level 7's generated pictures
+// (abstract1, abstract2…) share one: « une œuvre d'art ».
+export const pictureNameKey = (key) =>
+  `shapes.picture.${key.startsWith('abstract') ? 'abstract' : key}`;
+
 // ---------- hints ----------
 
 // One step per mistake in the round: 1 → a spoken clue, 2 → the right target glows,
