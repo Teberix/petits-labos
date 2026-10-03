@@ -9,7 +9,8 @@ fit, then a tangram. Non-linguistic → app language (French by default); every 
 named when it fits.
 
 ## Status
-IN PROGRESS. Design approved 2026-10-01 (`docs/mailbox/game-08-proposal.md`), steps
+DONE — released as v0.9.0 on 2026-10-03 after the owner's phone playtest of
+`0.8.0-preview.4` (« now is great »). History: Design approved 2026-10-01 (`docs/mailbox/game-08-proposal.md`), steps
 (a)–(d) built (sorter, silhouettes, puzzles; preview `0.8.0-preview.2`). After the
 owner's playtest of levels 1–6, **redesigned on 2026-10-02**
 (`docs/mailbox/game-08-redesign.md`, approved with changes): all levels are picture
@@ -127,6 +128,6 @@ from where the piece's middle lands.
   levels 1–3 too easy; levels 4–5 felt like a loop (3 pictures for 5 rounds, no
   progress shown) → redesign.
 - `0.8.0-preview.3` (2026-10-02, levels 1–8 after the redesign): « level 6 repeats
-  the rocket » — level 6 has no rocket and never repeats (checked by playing it); most
-  likely the phone still ran `preview.2` (level 6 = 3 pictures incl. the rocket).
-  Asked the owner to check the version. Board landscape size + order fixed after.
+  the rocket » — the phone hadn't updated (still `preview.2`, level 6 = 3 pictures
+  incl. the rocket); confirmed by the owner. Board landscape size + order fixed after.
+- `0.8.0-preview.4` (2026-10-03): « playtest went well… now is great ». Released v0.9.0.
