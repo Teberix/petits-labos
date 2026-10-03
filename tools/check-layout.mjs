@@ -1,13 +1,14 @@
-// Layout check: every game × its worst-case screens (games/<id>/checks.js) × the 7 sizes.
-//   node tools/check-layout.mjs [--game <id>]
+// Layout check: every game × its worst-case screens (games/<id>/checks.js) × the 7 sizes
+// (3 with --quick: 360x640, 640x360, 1366x657 — for build steps).
+//   node tools/check-layout.mjs [--game <id>] [--quick]
 // Fails on: page scroll, touch targets < 64px / off-screen / overlapping, grid cells
 // smaller than the game's minCell. Boxes are measured with offsetTop/offsetWidth
 // (layout boxes, not animated/transformed ones) after finite animations are finished.
 // Screenshots of failures only: tools/.check-output/.
 import { chromium } from 'playwright';
 import {
-  SIZES, MIN_TOUCH, SHELL_TOUCH, STEP_TIMEOUT, describeFailure, isMain, kit, loadGameChecks,
-  newContext, screenshotPath, selectedGames, startServer, watchErrors, withTimeout,
+  MIN_TOUCH, SHELL_TOUCH, STEP_TIMEOUT, describeFailure, isMain, kit, loadGameChecks,
+  newContext, screenshotPath, selectedGames, sizesFor, startServer, watchErrors, withTimeout,
 } from './check-kit.mjs';
 
 // Runs in the page: measures everything and returns the problems found.
@@ -55,6 +56,7 @@ function measure({ touch, cells, minCell, minTouch }) {
 
 export async function checkLayout(args = []) {
   const games = selectedGames(args);
+  const sizes = sizesFor(args); // 7 sizes, or 3 with --quick
   const server = await startServer();
   const browser = await chromium.launch();
   const failures = [];
@@ -67,11 +69,11 @@ export async function checkLayout(args = []) {
         continue;
       }
       // Progress line, so a slow run isn't silent.
-      console.log(`  … layout: ${game.id} (${checks.worstCases.length} worst cases × ${SIZES.length} sizes)`);
+      console.log(`  … layout: ${game.id} (${checks.worstCases.length} worst cases × ${sizes.length} sizes)`);
       // A worst case that timed out, or broke on a JS error, would fail the same way at
       // every size: try it only once. (Other setup failures can depend on the size.)
       const broken = new Set();
-      for (const size of SIZES) {
+      for (const size of sizes) {
         const context = await newContext(browser, size);
         for (const wc of checks.worstCases) {
           if (broken.has(wc)) continue;

@@ -67,9 +67,11 @@ playtest).
 - Build in small steps. New game: `/new-game <n>` (design → OK → steps).
 - **Verification = `/gate`, sized to what changed** (owner, 2026-10-02 — the full gate
   takes ~18 min on this PC):
-  - build step (only `games/<id>/`, its tests, its data): `node tools/gate.mjs --game <id>`
-    + `node tools/gate.mjs --only unit,privacy`;
-  - mailbox / playable checkpoint: the above + the `kid-ux-reviewer` subagent;
+  - build step (only `games/<id>/`, its tests, its data):
+    `node tools/gate.mjs --game <id> --quick` (its unit tests, levels, layout at 3 sizes,
+    offline) + `node tools/gate.mjs --only privacy`;
+  - mailbox / playable checkpoint: `--game <id>` without `--quick` (7 sizes) +
+    `--only privacy` + the `kid-ux-reviewer` subagent;
   - shared code changed (`js/`, `css/`, `index.html`, `sw.js` logic — a PRECACHE-only
     change does not count) or a release: full gate + the `pwa-guardian` subagent;
   - the full gate runs alone; reviewers run after it, never at the same time.
@@ -132,15 +134,21 @@ Conventions:
 
 ## Level data (level-based games)
 
-For games with many hand-made puzzle levels (games 11–14 onwards). Existing games keep
-their `levels.js`; don't convert them.
+The new engine, for games 9 onwards (owner, 2026-10-03). Games 1–8 keep their `levels.js`
+until they are migrated, one at a time.
+- **A level = a parameter set** (pieces, rules, look-alikes…), one per difficulty step at
+  least. Its **rounds are generated** by a build-time script in the private repo and
+  checked by the game's `solver.mjs`; only the output (+ the seed) is committed in
+  `levels.json` — like game 8's levels 7–8.
+- `difficulty` = whole steps 1, 2, 3… N; every step has a level (the gate fails on a
+  hole in the curve).
 - `games/<id>/levels.json` — the only place level content lives (no levels hard-coded
   in engine code):
   ```json
   { "schemaVersion": 1, "game": "<id>", "levels": [ { "id": 1, "difficulty": 1, "…": "game params" } ] }
   ```
-  `id` unique (progress is saved by id — never renumber), `difficulty` a number (the
-  intended curve). The engine loads it with a JSON module import —
+  `id` unique (progress is saved by id — never renumber), `difficulty` a whole step
+  (the intended curve). The engine loads it with a JSON module import —
   `import data from './levels.json' with { type: 'json' };` — never `fetch()` (the app
   makes no network calls; the service worker precaches `levels.json` like any app file).
 - `games/<id>/levels.schema.json` — JSON Schema for ONE level (the game's params).
@@ -158,12 +166,14 @@ their `levels.js`; don't convert them.
 
 ```bash
 node tools/gate.mjs                 # everything: unit + privacy + levels + layout + offline
-node tools/gate.mjs --game robot    # layout/offline for one game (during a build step)
+node tools/gate.mjs --game robot    # one game: its unit tests, levels, layout, offline
+node tools/gate.mjs --game robot --quick   # … layout at 3 sizes (build steps)
 node tools/gate.mjs --only unit,privacy
 ```
-- `check-layout.mjs`: every game × its `checks.js` worst cases × 7 sizes (touch contexts,
-  laptop with mouse). No page scroll, touch targets ≥ 64px / on screen / not overlapping,
-  grid cells ≥ the game's `minCell`. Failure screenshots → `tools/.check-output/`.
+- `check-layout.mjs`: every game × its `checks.js` worst cases × 7 sizes, or 3 with
+  `--quick` (360x640, 640x360, 1366x657) (touch contexts, laptop with mouse). No page
+  scroll, touch targets ≥ 64px / on screen / not overlapping, grid cells ≥ the game's
+  `minCell`. Failure screenshots → `tools/.check-output/`.
 - `check-offline.mjs`: service worker active, every PRECACHE file cached and no dev-only
   file, nothing fails to load; then server stopped + network cut, each game's `offline()`
   interaction must succeed.
@@ -173,8 +183,9 @@ node tools/gate.mjs --only unit,privacy
   (`git ls-files`) under `private/` or matching /generator/i.
 - `check-levels.mjs` (level-based games only — games without `levels.json` are
   skipped): `levels.json` shape + every level valid against `levels.schema.json` → FAIL
-  otherwise; if `solver.mjs` exists, every level must be solvable → FAIL otherwise; then a
-  difficulty table (id, difficulty, minMoves) — information only.
+  otherwise; difficulty steps 1…N with no hole → FAIL otherwise; if `solver.mjs` exists,
+  every level must be solvable → FAIL otherwise; then a difficulty table (id,
+  difficulty, minMoves) — information only.
 - Never hangs: 10 s per Playwright action, 30 s per page load, 60 s per worst case /
   `offline()` (constants in `check-kit.mjs`). Failures show the page's JS errors; a worst
   case that times out or hits a JS error is skipped at the remaining sizes.

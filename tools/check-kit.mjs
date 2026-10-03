@@ -35,6 +35,11 @@ export const SIZES = [
   { name: '1366x657', width: 1366, height: 657, touch: false }, // laptop: mouse
 ];
 
+// `--quick` (build steps): 3 sizes — the smallest phone both ways + the laptop. The 7
+// sizes stay for checkpoints and releases (owner, 2026-10-03).
+export const QUICK_SIZES = SIZES.filter((s) => ['360x640', '640x360', '1366x657'].includes(s.name));
+export const sizesFor = (args = []) => (args.includes('--quick') ? QUICK_SIZES : SIZES);
+
 export const MIN_TOUCH = 64;
 
 // Timeouts, so a broken game makes the gate FAIL instead of hanging forever.

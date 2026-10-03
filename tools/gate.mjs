@@ -1,11 +1,14 @@
 // The verification gate: unit tests + privacy + levels + layout + offline.
 //   node tools/gate.mjs                 everything (release.mjs always runs this)
-//   node tools/gate.mjs --game robot    layout/offline for one game only (during a build step)
+//   node tools/gate.mjs --game robot    one game only: its unit tests, levels, layout, offline
+//   node tools/gate.mjs --game robot --quick   … with layout at 3 sizes (build steps)
 //   node tools/gate.mjs --only unit,privacy   just some checks (unit, privacy, levels, layout, offline)
-// levels = level-based games only (games/<id>/levels.json): schema + solver; it also
-// prints a difficulty table (information, never a failure).
+// levels = level-based games only (games/<id>/levels.json): schema + solver + no gap in
+// the difficulty steps; it also prints a difficulty table (information).
 // Prints one line per check (+ its problems) and exits with code 1 if anything failed.
 import { spawnSync } from 'node:child_process';
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
 import { ROOT } from './precache.mjs';
 import { selectedGames } from './check-kit.mjs';
 import { checkPrivacy } from './check-privacy.mjs';
@@ -13,8 +16,15 @@ import { checkLevels } from './check-levels.mjs';
 import { checkLayout } from './check-layout.mjs';
 import { checkOffline } from './check-offline.mjs';
 
-function unitTests() {
-  const run = spawnSync(process.execPath, ['--test', 'tests/*.test.mjs'], { cwd: ROOT, encoding: 'utf8' });
+// All unit tests, or with --game <id> only that game's tests/<id>.test.mjs (a build step
+// doesn't need every other game's tests; the full gate still runs them all).
+function unitTests(args) {
+  const i = args.indexOf('--game');
+  const file = i >= 0 ? `tests/${args[i + 1]}.test.mjs` : 'tests/*.test.mjs';
+  if (i >= 0 && !existsSync(join(ROOT, file))) {
+    return { ok: false, summary: 'no tests', failures: [`${file} is missing (every game has its unit tests)`] };
+  }
+  const run = spawnSync(process.execPath, ['--test', file], { cwd: ROOT, encoding: 'utf8' });
   const out = `${run.stdout}\n${run.stderr}`;
   const count = (label) => Number(out.match(new RegExp(`ℹ ${label} (\\d+)`))?.[1] ?? 0);
   const failed = [...out.matchAll(/^✖ (.+?)(?: \(\d|$)/gm)].map((m) => m[1]).filter((t) => !t.startsWith('failing tests'));
@@ -26,7 +36,7 @@ function unitTests() {
 }
 
 const CHECKS = {
-  unit: () => unitTests(),
+  unit: (args) => unitTests(args),
   privacy: () => checkPrivacy(),
   levels: (args) => checkLevels(args),
   layout: (args) => checkLayout(args),
@@ -42,7 +52,7 @@ if (unknown.length) {
   process.exit(2);
 }
 const games = selectedGames(args).map((g) => g.id);
-console.log(`Gate: ${names.join(', ')}${args.includes('--game') ? ` — games: ${games.join(', ')}` : ''}`);
+console.log(`Gate: ${names.join(', ')}${args.includes('--game') ? ` — games: ${games.join(', ')}` : ''}${args.includes('--quick') ? ' (quick: 3 sizes)' : ''}`);
 
 const started = Date.now();
 let allOk = true;

@@ -2,7 +2,8 @@
 // For every level-based game — a folder games/<id>/ with a levels.json (see "Level data"
 // in the root CLAUDE.md). Games without levels.json are skipped.
 //   1. levels.json has the shared shape: { schemaVersion: 1, game: "<id>", levels: [
-//      { id, difficulty, …game params } ] } — ids unique, at least one level.
+//      { id, difficulty, …game params } ] } — ids unique, at least one level; difficulty
+//      = whole steps 1…N with no step missing (a hole in the curve → FAIL).
 //   2. Each level is valid against games/<id>/levels.schema.json (required file; it
 //      describes ONE level). Invalid → FAIL.
 //   3. If games/<id>/solver.mjs exists: solve(level) → { solvable, minMoves? } for every
@@ -69,6 +70,16 @@ async function checkGame(id, failures, info) {
   const { levels } = data;
   const ids = levels.map((l) => l.id);
   for (const dup of new Set(ids.filter((x, i) => ids.indexOf(x) !== i))) failures.push(`${where}/levels.json: level id ${dup} is used twice`);
+
+  // The difficulty curve has no holes (owner, 2026-10-03): difficulties are whole steps
+  // 1, 2, 3… N and every step has at least one level (a level = one parameter set; its
+  // rounds are generated and solver-checked).
+  const steps = [...new Set(levels.map((l) => l.difficulty))].sort((a, b) => a - b);
+  const notWhole = steps.filter((d) => !Number.isInteger(d) || d < 1);
+  if (notWhole.length) failures.push(`${where}/levels.json: difficulty must be a whole step ≥ 1 (found ${notWhole.join(', ')})`);
+  const missing = [];
+  for (let d = 1; d <= Math.max(0, ...steps); d++) if (!steps.includes(d)) missing.push(d);
+  if (missing.length) failures.push(`${where}/levels.json: no level at difficulty step ${missing.join(', ')} (a hole in the curve)`);
 
   // 2. The game's schema, level by level. (Invalid levels are not given to the solver:
   //    it may rely on the schema.)
