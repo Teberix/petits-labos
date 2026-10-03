@@ -8,15 +8,27 @@
 //     so a running game is never swapped out mid-play.
 //  3. app.js tells the waiting worker to take over only at a safe moment (app launch,
 //     or back at the hub with no game running). It sends 'SKIP_WAITING', then reloads.
-//  4. On activation, caches from older versions are deleted.
+//  4. On activation, caches from older versions of THIS app (same scope) are deleted.
 //
 // VERSION and PRECACHE are rewritten by tools/release.mjs / tools/update-precache.mjs.
 // All URLs are relative to this file, so the app works under any sub-path
 // (e.g. https://<user>.github.io/petits-labos/).
 
 const VERSION = '0.9.0';
-const CACHE_PREFIX = 'petits-labos-';
+// The live app (/petits-labos/) and the preview (/petits-labos-preview/) are on the SAME
+// origin, so they share Cache Storage. Each one's caches are named after its own scope,
+// so cleaning up old versions never deletes the other app's cache (pwa-guardian,
+// 2026-10-03: with one shared 'petits-labos-' prefix, each activation deleted the other
+// app's cache and broke its offline mode).
+const SCOPE = new URL(self.registration.scope).pathname; // e.g. '/petits-labos/'
+const CACHE_PREFIX = `petits-labos:${SCOPE}:`;
 const CACHE_NAME = CACHE_PREFIX + VERSION;
+// Caches from before that fix were 'petits-labos-<version>'. Each app removes only its
+// OWN old ones: the live app its x.y.z versions, the preview its x.y.z-preview.N ones
+// (pwa-guardian: never the other app's — it may still be using it).
+const OLD_LIVE = /^petits-labos-\d+\.\d+\.\d+$/;
+const OLD_PREVIEW = /^petits-labos-\d+\.\d+\.\d+-preview\.\d+$/;
+const IS_LIVE = SCOPE.endsWith('/petits-labos/');
 
 // PRECACHE:START — generated list, do not edit by hand (run: node tools/update-precache.mjs)
 const PRECACHE = [
@@ -105,6 +117,7 @@ const PRECACHE = [
   'js/i18n/fr.js',
   'js/icons.js',
   'js/parentgate.js',
+  'js/progress.js',
   'js/rewards.js',
   'js/screens/collection.js',
   'js/screens/game.js',
@@ -134,7 +147,8 @@ self.addEventListener('activate', (event) => {
     caches.keys()
       .then((names) => Promise.all(
         names
-          .filter((name) => name.startsWith(CACHE_PREFIX) && name !== CACHE_NAME)
+          .filter((name) => (name.startsWith(CACHE_PREFIX) && name !== CACHE_NAME)
+            || (IS_LIVE ? OLD_LIVE : OLD_PREVIEW).test(name))
           .map((name) => caches.delete(name))
       ))
       .then(() => self.clients.claim())

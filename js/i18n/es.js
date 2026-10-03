@@ -13,6 +13,16 @@ export default {
 
   // Parent area
   parentTitle: 'Zona de padres',
+  saveTitle: 'Copia de seguridad',
+  restoreBackup: 'Restaurar la copia {label}',
+  confirmRestore: '¿Volver a la copia {label} (la de antes de la actualización)? Lo jugado desde entonces se guardará aparte.',
+  restoreKept: 'Volver a la partida del {when}',
+  confirmRestoreKept: '¿Volver a la partida guardada aparte el {when}? La partida actual se guardará aparte a su vez.',
+  yesRestore: 'Sí, restaurar',
+  copySave: 'Copiar aquí la partida real',
+  confirmCopySave: '¿Reemplazar la partida de esta vista previa por la de la aplicación? La aplicación misma no cambia.',
+  yesCopySave: 'Sí, copiar',
+  saveFailed: 'No se pudo: no hay copia, o el dispositivo no tiene espacio.',
   version: 'Versión',
   checkUpdates: 'Buscar actualizaciones',
   updateChecking: 'Buscando…',

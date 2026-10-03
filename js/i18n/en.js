@@ -13,6 +13,16 @@ export default {
 
   // Parent area
   parentTitle: 'Parents',
+  saveTitle: 'Save',
+  restoreBackup: 'Restore backup {label}',
+  confirmRestore: 'Go back to backup {label} (from before the update)? What was played since will be kept aside.',
+  restoreKept: 'Bring back the save from {when}',
+  confirmRestoreKept: 'Bring back the save kept aside on {when}? The current save will be kept aside in turn.',
+  yesRestore: 'Yes, restore',
+  copySave: 'Copy the real save here',
+  confirmCopySave: 'Replace this preview’s save with the app’s save? The app itself does not change.',
+  yesCopySave: 'Yes, copy',
+  saveFailed: 'Not possible: no save found, or the device is out of space.',
   version: 'Version',
   checkUpdates: 'Check for updates',
   updateChecking: 'Checking…',

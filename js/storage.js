@@ -20,7 +20,15 @@
 //   2. add MIGRATIONS[oldVersion] = (data) => newData
 // Before migrating, the raw old data is copied to a backup key. Nothing is ever wiped.
 
-const KEY = 'petits-labos';
+// The live app's key. The preview (/petits-labos-preview/, same origin as the live app,
+// so the same localStorage on a phone) has its own key: it never writes the live save
+// (owner, 2026-10-03). It can COPY the live save in (copyLiveSave), never the reverse.
+export const LIVE_KEY = 'petits-labos';
+export const PREVIEW_KEY = 'petits-labos-preview';
+export const storageKey = (path = globalThis.location?.pathname ?? '') =>
+  (path.includes('/petits-labos-preview/') ? PREVIEW_KEY : LIVE_KEY);
+const KEY = storageKey();
+export const isPreview = () => KEY === PREVIEW_KEY;
 export const SCHEMA_VERSION = 2;
 
 // MIGRATIONS[n] turns schema n into schema n + 1. Only ADD fields (see above).
@@ -44,11 +52,14 @@ function emptyState() {
   return { schema: SCHEMA_VERSION, settings: { lang: 'fr' }, profiles: [] };
 }
 
+// Returns false if the copy couldn't be written (e.g. the device is out of space).
 function backup(raw, label) {
   try {
     localStorage.setItem(`${KEY}.backup-${label}`, raw);
+    return true;
   } catch (err) {
     console.warn('Could not write storage backup', err);
+    return false;
   }
 }
 
@@ -175,6 +186,65 @@ export function setRewards(profileId, rewards) {
   if (!profile) return;
   profile.rewards = rewards;
   save();
+}
+
+// ---- Backups (parent screen) ----
+// A migration keeps the raw old save as <key>.backup-v<N>. Restoring one puts it back
+// (it is migrated again on the next load); the save being replaced is kept first as
+// <key>.backup-before-restore-<time> (or before-copy-<time>), and those can be restored
+// too — so a restore can always be undone and nothing is ever lost.
+//   listBackups() → [{ label, kind: 'version' | 'restore' | 'copy', time? }]
+//   (versions first, then the kept saves, newest first)
+
+export function listBackups() {
+  const prefix = `${KEY}.backup-`;
+  const out = [];
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const label = localStorage.key(i)?.startsWith(prefix) ? localStorage.key(i).slice(prefix.length) : null;
+      const kept = label?.match(/^before-(restore|copy)-(\d+)$/);
+      if (label && /^v\d+$/.test(label)) out.push({ label, kind: 'version' });
+      else if (kept) out.push({ label, kind: kept[1], time: Number(kept[2]) });
+    }
+  } catch {
+    return [];
+  }
+  const versions = out.filter((b) => b.kind === 'version').sort((a, b) => a.label.localeCompare(b.label, 'en', { numeric: true }));
+  const kept = out.filter((b) => b.kind !== 'version').sort((a, b) => b.time - a.time);
+  return [...versions, ...kept];
+}
+
+// Replaces the save with a raw one (after keeping the current one aside); the next
+// read loads (and migrates) it. Returns false if `raw` isn't a save.
+function replaceSave(raw, keepLabel) {
+  try {
+    JSON.parse(raw);
+  } catch {
+    return false;
+  }
+  try {
+    const current = localStorage.getItem(KEY);
+    // never replace a save we couldn't keep a copy of
+    if (current && !backup(current, `${keepLabel}-${Date.now()}`)) return false;
+    localStorage.setItem(KEY, raw);
+  } catch (err) {
+    console.warn('Could not replace the save', err);
+    return false;
+  }
+  state = null;
+  return true;
+}
+
+export function restoreBackup(label) {
+  const raw = localStorage.getItem(`${KEY}.backup-${label}`);
+  return raw ? replaceSave(raw, 'before-restore') : false;
+}
+
+// Preview only: copy the live app's save into the preview's own key.
+export function copyLiveSave() {
+  if (!isPreview()) return false;
+  const raw = localStorage.getItem(LIVE_KEY);
+  return raw ? replaceSave(raw, 'before-copy') : false;
 }
 
 // ---- New engine: per profile and game, the adaptive difficulty (js/progress.js) ----

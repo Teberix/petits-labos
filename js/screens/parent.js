@@ -1,8 +1,12 @@
-// Parent area (behind the 3-second gate): version + updates, app language, profiles.
+// Parent area (behind the 3-second gate): version + updates, app language, profiles,
+// the save (restore a backup; on the preview: copy the live app's save in).
 import { h } from '../dom.js';
 import { LANGS, LANG_NAMES, getLang, setLang, t } from '../i18n.js';
 import { stopSpeaking } from '../audio.js';
-import { addProfile, deleteProfile, getProfile, getProfiles, setSetting, updateProfile } from '../storage.js';
+import {
+  addProfile, copyLiveSave, deleteProfile, getProfile, getProfiles, isPreview, listBackups, restoreBackup,
+  setSetting, updateProfile,
+} from '../storage.js';
 import { checkNow } from '../updates.js';
 import { VERSION } from '../version.js';
 import { iconButton, topBar } from '../ui.js';
@@ -28,7 +32,8 @@ export function render(root, params, app) {
     ? app.show('hub', { profileId: params.profileId })
     : app.show('profiles'));
 
-  let view = { name: 'main' }; // or { name: 'edit', id } / { name: 'confirmDelete', id }
+  // or { name: 'edit', id } / { name: 'confirmDelete', id } / { name: 'confirmSave', text, yes, run }
+  let view = { name: 'main' };
   let updateStatus = '';
 
   const body = h('section', { class: 'screen-body parent-body' });
@@ -43,7 +48,8 @@ export function render(root, params, app) {
     body.replaceChildren(
       view.name === 'edit' ? editView(view.id)
         : view.name === 'confirmDelete' ? confirmView(view.id)
-          : mainView(),
+          : view.name === 'confirmSave' ? confirmSaveView(view)
+            : mainView(),
     );
   }
 
@@ -88,6 +94,7 @@ export function render(root, params, app) {
         h('button', { class: 'btn btn-primary', type: 'button', onclick: () => go({ name: 'edit', id: null }) }, t('addProfile')),
       ),
       h('div', { class: 'card' }, h('h2', {}, t('appLanguage')), languages),
+      saveCard(),
       h('div', { class: 'card' },
         h('h2', {}, t('version')),
         h('p', { class: 'version' }, VERSION),
@@ -146,6 +153,49 @@ export function render(root, params, app) {
         h('button', { class: 'btn', type: 'button', onclick: () => go({ name: 'main' }) }, t('cancel')),
         saveButton,
       ),
+    );
+  }
+
+  // The save: only shown when there is something to do (a backup, or on the preview).
+  function saveCard() {
+    const backups = listBackups();
+    if (!backups.length && !isPreview()) return null;
+    // v1, v2…: the saves from before an update; the others: a save kept aside when a
+    // restore or a copy replaced it (named by its date).
+    const buttons = backups.map(({ label, kind, time }) => {
+      const when = time ? new Date(time).toLocaleString(getLang()) : '';
+      const name = kind === 'version' ? t('restoreBackup', { label }) : t('restoreKept', { when });
+      const text = kind === 'version' ? t('confirmRestore', { label }) : t('confirmRestoreKept', { when });
+      return h('button', {
+        class: 'btn', type: 'button',
+        onclick: () => go({ name: 'confirmSave', text, yes: t('yesRestore'), run: () => restoreBackup(label) }),
+      }, name);
+    });
+    if (isPreview()) {
+      buttons.unshift(h('button', {
+        class: 'btn', type: 'button',
+        onclick: () => go({ name: 'confirmSave', text: t('confirmCopySave'), yes: t('yesCopySave'), run: copyLiveSave }),
+      }, t('copySave')));
+    }
+    return h('div', { class: 'card' }, h('h2', {}, t('saveTitle')), ...buttons);
+  }
+
+  // Restore / copy: the whole app reloads afterwards (every screen reads the new save).
+  function confirmSaveView({ text, yes, run }) {
+    const status = h('p', { class: 'status', 'aria-live': 'polite' });
+    return h('div', { class: 'card' },
+      h('p', { class: 'confirm-text' }, text),
+      h('div', { class: 'actions' },
+        h('button', { class: 'btn', type: 'button', onclick: () => go({ name: 'main' }) }, t('cancel')),
+        h('button', {
+          class: 'btn btn-danger btn-solid', type: 'button',
+          onclick: () => {
+            if (run()) location.reload();
+            else status.textContent = t('saveFailed');
+          },
+        }, yes),
+      ),
+      status,
     );
   }
 

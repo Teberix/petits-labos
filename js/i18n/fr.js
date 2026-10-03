@@ -13,6 +13,16 @@ export default {
 
   // Parent area
   parentTitle: 'Espace parents',
+  saveTitle: 'Sauvegarde',
+  restoreBackup: 'Restaurer la sauvegarde {label}',
+  confirmRestore: 'Revenir à la sauvegarde {label} (celle d’avant la mise à jour) ? Ce qui a été joué depuis sera mis de côté.',
+  restoreKept: 'Remettre la partie du {when}',
+  confirmRestoreKept: 'Remettre la partie mise de côté le {when} ? La partie actuelle sera mise de côté à son tour.',
+  yesRestore: 'Oui, restaurer',
+  copySave: 'Copier la vraie sauvegarde ici',
+  confirmCopySave: 'Remplacer la sauvegarde de cet aperçu par celle de l’application ? L’application elle-même ne change pas.',
+  yesCopySave: 'Oui, copier',
+  saveFailed: 'Impossible : aucune sauvegarde trouvée, ou plus de place sur l’appareil.',
   version: 'Version',
   checkUpdates: 'Rechercher une mise à jour',
   updateChecking: 'Recherche en cours…',

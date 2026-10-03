@@ -10,14 +10,18 @@ const KEY = 'petits-labos';
 const V1_RAW = readFileSync(new URL('./fixtures/storage-v1.json', import.meta.url), 'utf8');
 const V1 = JSON.parse(V1_RAW);
 
-// A fake localStorage (a Map), installed before each module load.
-function fakeStorage(initial = {}) {
+// A fake localStorage (a Map), installed before each module load; `path` = where the
+// app is served from (the preview uses its own key).
+function fakeStorage(initial = {}, path = '/petits-labos/') {
   const map = new Map(Object.entries(initial));
   globalThis.localStorage = {
     getItem: (k) => (map.has(k) ? map.get(k) : null),
     setItem: (k, v) => map.set(k, String(v)),
     removeItem: (k) => map.delete(k),
+    get length() { return map.size; },
+    key: (i) => [...map.keys()][i] ?? null,
   };
+  globalThis.location = { pathname: path };
   return map;
 }
 
@@ -114,4 +118,69 @@ test('MIGRATIONS cover every schema step', async () => {
   fakeStorage();
   const s = await freshV2();
   for (let v = 1; v < s.SCHEMA_VERSION; v++) assert.equal(typeof s.MIGRATIONS[v], 'function', `MIGRATIONS[${v}]`);
+});
+
+// ---------- backups and the preview's own save (owner, 2026-10-03) ----------
+
+test('restore a backup: the v1 save comes back (and is migrated again); the replaced save is kept', async () => {
+  const map = fakeStorage({ [KEY]: V1_RAW });
+  let s = await freshV2();
+  const a = V1.profiles[0];
+  s.setRewards(a.id, { stars: 99, stickers: [] }); // played after the update
+  assert.deepEqual(s.listBackups().map((b) => b.label), ['v1']);
+  assert.equal(s.restoreBackup('v1'), true);
+  assert.deepEqual(s.getRewards(a.id), { stars: a.rewards.stars, stickers: a.rewards.stickers }, 'back to the v1 values');
+  assert.equal(s.getProfile(a.id).skills !== undefined, true, 'migrated again');
+  const kept = [...map.keys()].filter((k) => k.startsWith(`${KEY}.backup-before-restore-`));
+  assert.equal(kept.length, 1, 'the replaced save is kept aside');
+  assert.equal(JSON.parse(map.get(kept[0])).profiles[0].rewards.stars, 99);
+  assert.equal(s.restoreBackup('v7'), false, 'no such backup');
+  s = await freshV2();
+  assert.equal(s.getRewards(a.id).stars, a.rewards.stars, 'still restored after a reload');
+  // the restore can be undone: the kept save is listed (after the versions) and restorable
+  const list = s.listBackups();
+  assert.deepEqual(list.map((b) => b.kind), ['version', 'restore']);
+  assert.equal(s.restoreBackup(list[1].label), true);
+  assert.equal(s.getRewards(a.id).stars, 99, 'what was played since is back');
+  assert.equal(s.listBackups().filter((b) => b.kind === 'restore').length, 2, 'and the save it replaced is kept too');
+});
+
+test('a restore never replaces a save it could not keep a copy of', async () => {
+  const map = fakeStorage({ [KEY]: V1_RAW });
+  const s = await freshV2();
+  s.getProfiles();
+  const before = map.get(KEY);
+  const setItem = globalThis.localStorage.setItem;
+  globalThis.localStorage.setItem = (k, v) => {
+    if (k.includes('before-restore')) throw new Error('QuotaExceededError');
+    setItem(k, v);
+  };
+  assert.equal(s.restoreBackup('v1'), false);
+  assert.equal(map.get(KEY), before, 'the current save is untouched');
+});
+
+test('the preview uses its own key and NEVER writes the live save', async () => {
+  const map = fakeStorage({ [KEY]: V1_RAW }, '/petits-labos-preview/');
+  const s = await freshV2();
+  assert.equal(s.isPreview(), true);
+  assert.deepEqual(s.getProfiles(), [], 'the preview starts with its own (empty) save');
+  // copy the real save in → migrated in the preview's key only
+  assert.equal(s.copyLiveSave(), true);
+  const a = V1.profiles[0];
+  assert.deepEqual(s.getRewards(a.id), { stars: a.rewards.stars, stickers: a.rewards.stickers });
+  assert.deepEqual(s.getProfile(a.id).games, a.games);
+  s.setRewards(a.id, { stars: 500, stickers: [] });
+  s.addProfile({ name: 'Joueur C', avatar: '🐸', readingLang: 'fr' });
+  assert.equal(map.get(KEY), V1_RAW, 'the live save is byte-for-byte unchanged');
+  assert.equal(JSON.parse(map.get('petits-labos-preview')).schema, 2);
+  assert.ok(map.has('petits-labos-preview.backup-v1'), 'the preview keeps its own backup');
+  assert.ok(![...map.keys()].some((k) => k.startsWith(`${KEY}.`)), 'no live backup written either');
+});
+
+test('copyLiveSave does nothing on the live app', async () => {
+  const map = fakeStorage({ [KEY]: V1_RAW });
+  const s = await freshV2();
+  assert.equal(s.isPreview(), false);
+  assert.equal(s.copyLiveSave(), false);
+  assert.equal(map.has('petits-labos-preview'), false);
 });
