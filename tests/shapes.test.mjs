@@ -417,3 +417,29 @@ test('strings: level 8 names (pieces, big shapes)', async () => {
   for (const type of Object.keys(g.TPIECES)) assert.ok(STRINGS.fr[`shapes.tpiece.${type}`], type);
   for (const kind of ['square', 'rectangle', 'triangle']) assert.ok(STRINGS.fr[`shapes.outline.${kind}`], kind);
 });
+
+// Level 8 order (owner's review, step (h)): rounds 1–2 small boards, 3–5 big ones,
+// no board twice.
+test('boardOrder: small boards first, no repeat', async () => {
+  const { boardOrder } = await import('../games/shapes/logic.js');
+  const rand = seeded(9);
+  const small = new Set(['s1', 's2', 's3']);
+  for (let i = 0; i < 100; i++) {
+    const order = boardOrder(['s1', 'b1', 's2', 'b2', 's3', 'b3', 'b4'], 5, (k) => small.has(k), 2, rand);
+    assert.equal(order.length, 5);
+    assert.ok(order.slice(0, 2).every((k) => small.has(k)) && order.slice(2).every((k) => !small.has(k)), order.join());
+    assert.equal(new Set(order).size, 5, order.join());
+  }
+  const g = await import('../games/shapes/grid.js');
+  const { TANGRAMS } = await import('../games/shapes/levels.js');
+  const level = LEVELS.find((l) => l.id === 8);
+  const nSmall = level.boards.filter((id) => g.regionOf(TANGRAMS[id]).size / 4 <= 6).length;
+  assert.ok(nSmall >= 2 && level.boards.length - nSmall >= 3, `level 8: ${nSmall} small boards`);
+});
+
+test('data: every picture is used by a level; every picture name has its picture', () => {
+  const used = new Set(LEVELS.flatMap((l) => l.pictures ?? []));
+  assert.deepEqual(Object.keys(PICTURES).filter((k) => !used.has(k)), [], 'pictures in no level');
+  const names = Object.keys(STRINGS.fr).filter((k) => k.startsWith('shapes.picture.') && k !== 'shapes.picture.abstract');
+  assert.deepEqual(names.filter((k) => !PICTURES[k.slice('shapes.picture.'.length)]), [], 'names without a picture');
+});

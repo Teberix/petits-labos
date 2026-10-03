@@ -92,6 +92,15 @@ export function roundOrder(pool, rounds, rand = Math.random) {
   return order.slice(0, rounds);
 }
 
+// Level 8 order (owner's review, step (h)): the first `small` rounds use small boards,
+// the rest big ones — each part shuffled, no board twice when the pools allow.
+// `isSmall(key)` says which pool a board belongs to.
+export function boardOrder(keys, rounds, isSmall, small = 2, rand = Math.random) {
+  const smalls = keys.filter(isSmall);
+  const bigs = keys.filter((k) => !isSmall(k));
+  return [...roundOrder(smalls, small, rand), ...roundOrder(bigs, rounds - small, rand)];
+}
+
 // Can a piece of this shape start "turned" (fit no slot of its shape)? Circles and
 // squares can't (they fit at every angle); others can, unless two slots of that shape
 // already cover every angle (the tests forbid that in the pictures).

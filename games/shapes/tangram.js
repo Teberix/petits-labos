@@ -15,7 +15,7 @@ import { speak } from '../../js/audio.js';
 import { draggable } from '../../js/dragdrop.js';
 import { h } from '../../js/dom.js';
 import { TANGRAMS } from './levels.js';
-import { roundOrder, hintStep } from './logic.js';
+import { boardOrder, hintStep } from './logic.js';
 import {
   shapeAt, distinctAngles, trianglesOf, outlinePolygon, centroid, regionOf, snap, diagnose, key, area,
 } from './grid.js';
@@ -29,6 +29,9 @@ const COLORS = {
   rectangle: '#3FA34D', parallelogram: '#F28C28', trapezoid: '#00A6A6',
 };
 
+// Small board = at most 6 cells (2 × 2 square, 3 × 2 rectangle, triangle of 3).
+export const isSmallBoard = (id) => regionOf(TANGRAMS[id]).size / 4 <= 6;
+
 // "square 2" → "square" (the kind of big shape, for its spoken name).
 const kindOf = (outline) => outline.split(' ')[0];
 
@@ -38,7 +41,8 @@ export function playTangram(ctx, level, container, onDone) {
   const name = (type) => t(`shapes.tpiece.${type}`);
   const timers = timerSet();
   const later = timers.later;
-  const order = roundOrder(level.boards, level.rounds);
+  // Small boards first (rounds 1–2), then big ones (owner's review, step (h)).
+  const order = boardOrder(level.boards, level.rounds, isSmallBoard);
   let cleanups = [];
   let index = 0;
   let round = null; // { key, board, region, cols, rows, cs, ox, oy, pieces, misses, hint, busy }
@@ -62,7 +66,10 @@ export function playTangram(ctx, level, container, onDone) {
 
   // ---------- Geometry: cell units ↔ the board's 0–100 frame ↔ the screen ----------
 
-  const svg = (body, cls = '') => `<svg viewBox="0 0 100 100" class="${cls}" aria-hidden="true">${body}</svg>`;
+  const svg = (body) => `<svg viewBox="0 0 100 100" aria-hidden="true">${body}</svg>`; // a tray card
+  // The board's frame has the board's own proportions (vw × vh, the longer side = 100),
+  // so a 4 × 2 rectangle fills a 2:1 card instead of a third of a square one.
+  const boardSvg = (body) => `<svg viewBox="0 0 ${round.vw} ${round.vh}" aria-hidden="true">${body}</svg>`;
   const frame = ([x, y]) => [round.ox + x * round.cs, round.oy + y * round.cs];
   const pts = (points) => points.map((p) => frame(p).map((v) => +v.toFixed(2)).join(',')).join(' ');
   // A set of triangles drawn as ONE polygon (its outline): no seams between triangles.
@@ -72,15 +79,15 @@ export function playTangram(ctx, level, container, onDone) {
   // Screen point → cell coordinates on the board.
   function toCells({ x, y }) {
     const r = boardEl.getBoundingClientRect();
-    const u = ((x - r.left) / r.width) * 100;
-    const v = ((y - r.top) / r.height) * 100;
+    const u = ((x - r.left) / r.width) * round.vw;
+    const v = ((y - r.top) / r.height) * round.vh;
     return [(u - round.ox) / round.cs, (v - round.oy) / round.cs];
   }
   // Cell coordinates → screen point.
   function toScreen([cx, cy]) {
     const r = boardEl.getBoundingClientRect();
     const [u, v] = frame([cx, cy]);
-    return { x: r.left + (u / 100) * r.width, y: r.top + (v / 100) * r.height };
+    return { x: r.left + (u / round.vw) * r.width, y: r.top + (v / round.vh) * r.height };
   }
 
   // ---------- Rounds ----------
@@ -92,10 +99,13 @@ export function playTangram(ctx, level, container, onDone) {
     const cells = [...region].map((k) => k.split(',').map(Number));
     const cols = Math.max(...cells.map((c) => c[0])) + 1;
     const rows = Math.max(...cells.map((c) => c[1])) + 1;
-    const cs = 92 / Math.max(cols, rows);
+    const m = Math.max(cols, rows);
+    const vw = (100 * cols) / m;
+    const vh = (100 * rows) / m;
+    const cs = 92 / m;
     round = {
       key: key0, board, region, cols, rows, cs,
-      ox: (100 - cols * cs) / 2, oy: (100 - rows * cs) / 2,
+      vw, vh, ox: (vw - cols * cs) / 2, oy: (vh - rows * cs) / 2,
       // every piece starts in the tray at a random angle
       pieces: board.solution.map((pl, id) => {
         const angles = distinctAngles(pl.type);
@@ -113,7 +123,11 @@ export function playTangram(ctx, level, container, onDone) {
     }));
     boardEl.dataset.board = key0;               // (for checks.js)
     boardEl.dataset.cs = String(cs);
-    holesEl.innerHTML = svg(polyEl([...region].map((k) => k.split(',').map(Number)), HOLE,
+    boardEl.dataset.vw = String(vw);
+    // the card takes the board's proportions, as big as the stage allows
+    boardEl.style.aspectRatio = `${cols} / ${rows}`;
+    boardEl.style.width = `min(100cqw, ${((100 * cols) / rows).toFixed(2)}cqh)`;
+    holesEl.innerHTML = boardSvg(polyEl([...region].map((k) => k.split(',').map(Number)), HOLE,
       `stroke="${HOLE_LINE}" stroke-width="2.5" stroke-dasharray="6 4"`));
     drawAll();
     drawDots();
@@ -139,7 +153,7 @@ export function playTangram(ctx, level, container, onDone) {
 
   function drawHint() {
     const pl = round.hint.outline;
-    hintEl.innerHTML = pl ? svg(polyEl(trianglesOf(pl), 'rgba(46, 134, 222, 0.14)',
+    hintEl.innerHTML = pl ? boardSvg(polyEl(trianglesOf(pl), 'rgba(46, 134, 222, 0.14)',
       'stroke="#2E86DE" stroke-width="3" stroke-dasharray="5 4"')) : '';
   }
 
@@ -155,7 +169,7 @@ export function playTangram(ctx, level, container, onDone) {
       const el = h('div', {
         class: `sh-tg-placed${round.hint.glow === p.id ? ' sh-glow-shape' : ''}`,
         'data-piece': String(p.id), 'data-type': p.type,
-        html: svg(polyEl(tris, 'none', 'stroke="transparent" stroke-width="24"')
+        html: boardSvg(polyEl(tris, 'none', 'stroke="transparent" stroke-width="24"')
           + polyEl(tris, COLORS[p.type], 'stroke="rgba(0, 0, 0, 0.35)" stroke-width="1.5"')),
       });
       el.addEventListener('pointerdown', (e) => { grab = { x: e.clientX, y: e.clientY }; });

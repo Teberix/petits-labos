@@ -110,13 +110,16 @@ async function readBoard(page, kit) {
   const cells = [...region].map((k) => k.split(',').map(Number));
   const cols = Math.max(...cells.map((c) => c[0])) + 1;
   const rows = Math.max(...cells.map((c) => c[1])) + 1;
-  const cs = 92 / Math.max(cols, rows);
+  const m = Math.max(cols, rows);
+  const vw = (100 * cols) / m;
+  const vh = (100 * rows) / m;
+  const cs = 92 / m;
   const rect = await page.locator('.sh-tg-board').boundingBox();
   const screen = ([x, y]) => ({
-    x: rect.x + (((100 - cols * cs) / 2 + x * cs) / 100) * rect.width,
-    y: rect.y + (((100 - rows * cs) / 2 + y * cs) / 100) * rect.height,
+    x: rect.x + (((vw - cols * cs) / 2 + x * cs) / vw) * rect.width,
+    y: rect.y + (((vh - rows * cs) / 2 + y * cs) / vh) * rect.height,
   });
-  return { id, board, region, cs, rect, screen };
+  return { id, board, region, cs, vw, rect, screen };
 }
 
 const trayPiece = (type) => `.sh-tray .sh-piece[data-type="${type}"]`;
@@ -290,7 +293,7 @@ export default {
         await openLevel(page, kit, 8);
         const b = await readBoard(page, kit);
         const phone = await page.evaluate(() => Math.min(innerWidth, innerHeight) <= 450);
-        const cellPx = (b.cs / 100) * b.rect.width;
+        const cellPx = (b.cs / b.vw) * b.rect.width;
         if (phone && cellPx < MIN_PIECE_PX - 0.5) throw new Error(`cells ${cellPx.toFixed(0)}px < ${MIN_PIECE_PX}px`);
         if (await page.locator('.sh-tray .sh-piece').count() !== b.board.solution.length) throw new Error('not every piece in the tray');
       },
