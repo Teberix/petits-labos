@@ -88,7 +88,9 @@ index.html, manifest.webmanifest   app shell + PWA manifest (all paths RELATIVE)
 sw.js                  service worker: VERSION, PRECACHE (generated), cache-first, deferred update
 js/app.js              boot, screen switching, "safe moments" for applying updates
 js/updates.js          SW registration, applyIfWaiting(), manual check
-js/storage.js          localStorage document, schema version + MIGRATIONS
+js/storage.js          localStorage document, schema version + MIGRATIONS (v2: additive —
+                       the preview and the live app share it on a phone)
+js/progress.js         new engine (games 9+): adaptive difficulty, pure (skill, pickLevel)
 js/i18n.js, js/i18n/   t(), addStrings(); fr/es/en dictionaries
 js/audio.js            Web Audio sfx + speechSynthesis (prefers local voices)
 js/parentgate.js       3 s press-and-hold button

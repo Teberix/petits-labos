@@ -1,19 +1,18 @@
+// FROZEN COPY of js/storage.js as released in v0.9.0 (schema 1) — the code the live app
+// runs. tests/storage.test.mjs uses it to prove an OLDER app still works on a migrated
+// (v2) save: the preview and the live app share localStorage on a phone. Never edit.
 // Storage — everything is one JSON document in localStorage, on this device only.
 //
-// Shape (SCHEMA_VERSION 2):
+// Shape (SCHEMA_VERSION 1):
 // {
-//   schema: 2,
+//   schema: 1,
 //   settings: { lang: 'fr' },
 //   profiles: [
-//     { id, name, avatar, readingLang, unlockAll, games: { <gameId>: { ...game-owned data } },
-//       rewards: { stars: 12, stickers: ['sun', 'rocket'] },
-//       skills: { <gameId>: { skill, best, rounds, seen } },  // new engine (js/progress.js)
-//       fixedMap: false }                                       // parent switch: fixed level map
+//     { id, name, avatar, readingLang, unlockAll?, rewards?, games: { <gameId>: { ...game-owned data } } }
+//     unlockAll / rewards are optional (missing = off / nothing earned), so older data needs no migration.
+//     rewards = { stars: 12, stickers: ['sun', 'rocket'] }
 //   ]
 // }
-// v2 is ADDITIVE over v1 (owner, 2026-10-03): every v1 field stays where it was, so an
-// older app reading a v2 save keeps working — the preview and the live app share this
-// storage on a phone (same origin). tests/storage.test.mjs checks it with a real v1 save.
 //
 // Progress must survive every update. If the shape ever changes:
 //   1. bump SCHEMA_VERSION
@@ -21,22 +20,11 @@
 // Before migrating, the raw old data is copied to a backup key. Nothing is ever wiped.
 
 const KEY = 'petits-labos';
-export const SCHEMA_VERSION = 2;
+const SCHEMA_VERSION = 1;
 
-// MIGRATIONS[n] turns schema n into schema n + 1. Only ADD fields (see above).
-export const MIGRATIONS = {
-  // v1 → v2: every profile gets its rewards written out (they were optional), an empty
-  // skill table for the new engine, and the parent switch off. Nothing else changes.
-  1: (data) => {
-    for (const p of data.profiles ?? []) {
-      p.games ??= {};
-      p.rewards = { stars: p.rewards?.stars ?? 0, stickers: [...(p.rewards?.stickers ?? [])] };
-      p.skills ??= {};
-      p.fixedMap ??= false;
-    }
-    return data;
-  },
-};
+// MIGRATIONS[n] turns schema n into schema n + 1. Example for the future:
+//   1: (data) => { data.profiles.forEach(p => p.stickers ??= []); return data; },
+const MIGRATIONS = {};
 
 let state = null;
 
@@ -127,10 +115,7 @@ export function getProfile(id) {
 }
 
 export function addProfile({ name, avatar, readingLang, unlockAll = false }) {
-  const profile = {
-    id: newId(), name, avatar, readingLang, unlockAll, games: {},
-    rewards: { stars: 0, stickers: [] }, skills: {}, fixedMap: false,
-  };
+  const profile = { id: newId(), name, avatar, readingLang, unlockAll, games: {} };
   ensureLoaded().profiles.push(profile);
   save();
   return profile;
@@ -163,7 +148,7 @@ export function setGameData(profileId, gameId, data) {
 }
 
 // ---- Rewards (shared by all games): { stars: number, stickers: [stickerId, …] } ----
-// (Read defensively: a profile added by an older app on the same phone has none.)
+// Optional on the profile (missing = nothing earned yet), so no migration needed.
 
 export function getRewards(profileId) {
   const saved = getProfile(profileId)?.rewards ?? {};
@@ -174,21 +159,6 @@ export function setRewards(profileId, rewards) {
   const profile = getProfile(profileId);
   if (!profile) return;
   profile.rewards = rewards;
-  save();
-}
-
-// ---- New engine: per profile and game, the adaptive difficulty (js/progress.js) ----
-// { skill, best, rounds, seen } — missing = a fresh start (progress.js START).
-
-export function getSkill(profileId, gameId) {
-  return getProfile(profileId)?.skills?.[gameId] ?? null;
-}
-
-export function setSkill(profileId, gameId, value) {
-  const profile = getProfile(profileId);
-  if (!profile) return;
-  profile.skills ??= {}; // (a profile added by an older app on the same phone)
-  profile.skills[gameId] = value;
   save();
 }
 

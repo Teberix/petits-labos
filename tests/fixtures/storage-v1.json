@@ -1,0 +1,47 @@
+{
+  "schema": 1,
+  "settings": {
+    "lang": "fr"
+  },
+  "profiles": [
+    {
+      "id": "check",
+      "name": "Joueur A",
+      "avatar": "🦊",
+      "readingLang": "fr",
+      "unlockAll": false,
+      "games": {
+        "food": {
+          "completed": [
+            1
+          ]
+        },
+        "shapes": {
+          "completed": [
+            2
+          ]
+        }
+      },
+      "rewards": {
+        "stars": 18,
+        "stickers": [
+          "icecream",
+          "planet",
+          "apple"
+        ]
+      }
+    },
+    {
+      "id": "f98cf791-7cc3-4c0c-89cd-91c68e8b72d1",
+      "name": "Joueur B",
+      "avatar": "🐼",
+      "readingLang": "es",
+      "unlockAll": false,
+      "games": {},
+      "rewards": {
+        "stars": 2,
+        "stickers": []
+      }
+    }
+  ]
+}
