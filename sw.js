@@ -14,7 +14,7 @@
 // All URLs are relative to this file, so the app works under any sub-path
 // (e.g. https://<user>.github.io/petits-labos/).
 
-const VERSION = '0.8.0';
+const VERSION = '0.9.0';
 const CACHE_PREFIX = 'petits-labos-';
 const CACHE_NAME = CACHE_PREFIX + VERSION;
 
