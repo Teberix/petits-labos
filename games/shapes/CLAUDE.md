@@ -1,4 +1,8 @@
-# Formes & Silhouettes — game notes (dev-only, never precached)
+# Formes à tourner — game notes (dev-only, never precached)
+
+Title « Formes à tourner » / « Formas para girar » / « Turn the Shapes » since the
+final review (2026-10-03; was « Formes & Silhouettes » — the silhouettes were removed in
+the redesign). Only the title strings changed: id `shapes` and saved progress are the same.
 
 Shapes, rotation, spatial reasoning: picture puzzles where pieces must be turned to
 fit, then a tangram. Non-linguistic → app language (French by default); every shape is

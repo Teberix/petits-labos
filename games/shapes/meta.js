@@ -1,12 +1,12 @@
-// What the hub needs to know about "Formes & Silhouettes" without loading the whole game.
+// What the hub needs to know about "Formes à tourner" (formerly "Formes & Silhouettes") without loading the whole game.
 export default {
   id: 'shapes',
   // Non-linguistic game → played in the app language (French by default).
   titleKey: 'shapes.title',
   strings: {
-    fr: { 'shapes.title': 'Formes & Silhouettes' },
-    es: { 'shapes.title': 'Formas y Siluetas' },
-    en: { 'shapes.title': 'Shapes & Shadows' },
+    fr: { 'shapes.title': 'Formes à tourner' },
+    es: { 'shapes.title': 'Formas para girar' },
+    en: { 'shapes.title': 'Turn the Shapes' },
   },
   // Tile art: a red triangle, a yellow circle and a blue square, and the triangle's
   // shadow (a turned grey outline).
