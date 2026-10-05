@@ -6,6 +6,9 @@
 //   size        the scene's box [w, h]: any size; the world screen and the reveal keep
 //               its shape. New packs use [160, 160] (the meadow is the older 160 × 100).
 //               The "Mes mondes" tiles are 16:10 for every pack: cropped ("slice").
+//   ground      optional: where the ground starts, as a fraction of the height (default
+//               0.6, the meadow). Tap placement uses y = ground + 0.08 … 0.35, so
+//               draw the ground there. New square packs use 0.45 (ground from y ≈ 72).
 //   background  inline SVG drawn in that box
 //   items       [{ id, art }] — art in a 100 × 100 box, standing on y ≈ 95 (so items
 //               line up on the ground). items[0] is the gift when the world unlocks.

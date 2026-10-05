@@ -23,13 +23,19 @@ const ITEM_W = 0.15;
 const MIN_PX = 64;
 
 // Where a tapped item goes: the spot on the ground farthest from the placed items.
-// (x, y = bottom middle, as fractions; every pack's ground is its lower part, y > 0.6.)
-const SPOTS = [0.5, 0.3, 0.7, 0.15, 0.85, 0.4, 0.6, 0.22, 0.78].flatMap((x) => [0.8, 0.95, 0.68].map((y) => ({ x, y })));
+// (x, y = bottom middle, as fractions.) The ground starts at the pack's `ground` (default
+// 0.6, the meadow); the spot rows lie 0.20, 0.35 and 0.08 below that line (meadow: y 0.80,
+// 0.95, 0.68).
+const SPOT_X = [0.5, 0.3, 0.7, 0.15, 0.85, 0.4, 0.6, 0.22, 0.78];
+const SPOT_DY = [0.2, 0.35, 0.08];
+function spotsFor(ground) {
+  return SPOT_X.flatMap((x) => SPOT_DY.map((dy) => ({ x, y: Math.round((ground + dy) * 1000) / 1000 })));
+}
 // `aspect` = the scene's width / height (the meadow: 1.6, so 0.1 of its width is 1.6 × 0.1
 // of its height).
-function freeSpot(placed, aspect) {
+function freeSpot(placed, aspect, ground) {
   const room = (s) => Math.min(Infinity, ...placed.map((p) => Math.hypot((s.x - p.x) * aspect, s.y - p.y)));
-  return SPOTS.reduce((best, s) => (room(s) > room(best) ? s : best));
+  return spotsFor(ground).reduce((best, s) => (room(s) > room(best) ? s : best));
 }
 
 export function render(root, { profileId, world }, app) {
@@ -173,7 +179,7 @@ export function render(root, { profileId, world }, app) {
       card.addEventListener('pointerdown', (e) => { grab = { x: e.clientX, y: e.clientY }; });
       cleanups.push(draggable(card, {
         targets: () => [sceneEl],
-        onTap: () => { sayName(item.id); place(item.id, keepInside(freeSpot(scene.placed, aspect))); },
+        onTap: () => { sayName(item.id); place(item.id, keepInside(freeSpot(scene.placed, aspect, pack.ground ?? 0.6))); },
         onDrop: (target, point) => {
           if (!inside(sceneEl, point)) return; // let go beside the scene: nothing happens
           place(item.id, toScene(landed(card.getBoundingClientRect(), point)));

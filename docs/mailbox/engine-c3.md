@@ -43,3 +43,15 @@ resetSkill button / confirm / yes button:
 1. The square world uses 74 % of the free height at 360 × 640 (width-bound). Is that OK,
    or do you want the tray smaller on phones?
 2. The yes buttons now repeat the new words. Keep, or keep the old short "Oui, au début"?
+
+## c3b — ground line per pack + date wrap
+Contact sheet replaced: `engine-c3.png` (square world with 30 placed, square world empty, Save card).
+- New optional pack field `ground`: the fraction of the height where the ground starts.
+  Default 0.6 (the meadow). Documented in the `scenes/meadow/pack.js` header.
+- Tap spots: y = ground + 0.20, 0.35, 0.08, same x list. Meadow: 0.80, 0.95, 0.68 (as before).
+- New square packs use `ground: 0.45`. squarecheck draws its ground from y ≈ 72.
+- Unit test: `ground`, when present, is a number in 0.3–0.8.
+- Kept-save dates use no-break spaces. The line wraps only before the date.
+- Tools patch: `c3-tools.patch` (repo root, not committed). `scene-artist.md`: size
+  [160, 160], `ground: 0.45`, ground drawn from y ≈ 72.
+- Not checked by the gate: the real tap spots on a square world on the tablet.

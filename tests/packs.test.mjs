@@ -26,6 +26,7 @@ for (const pack of [...PACKS, SQUARE_PACK]) {
     assert.match(pack.id, /^[a-z][a-z0-9-]*$/);
     assert.ok(['free', 'slots'].includes(pack.kind), `kind ${pack.kind}`);
     assert.ok(Array.isArray(pack.size) && pack.size.length === 2 && pack.size.every((n) => n > 0), 'size [w, h]');
+    if ('ground' in pack) assert.ok(typeof pack.ground === 'number' && pack.ground >= 0.3 && pack.ground <= 0.8, 'ground: a number in 0.3-0.8');
     noIds(pack.kind === 'slots' ? pack.base : pack.background, `${pack.id} background`);
     assert.ok(pack.items.length >= 1, 'at least one item (the gift)');
     assert.equal(new Set(pack.items.map((i) => i.id)).size, pack.items.length, 'unique item ids');

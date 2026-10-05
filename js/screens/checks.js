@@ -17,10 +17,11 @@ export const SQUARE_PACK = {
   id: 'squarecheck',
   kind: 'free',
   size: [160, 160],
+  ground: 0.45,
   background: `
     <rect width="160" height="160" fill="#BFE6FF"/>
-    <path d="M0 99Q40 85 80 96T160 92V160H0Z" fill="#9BD07A"/>
-    <path d="M0 115Q50 104 100 115T160 112V160H0Z" fill="#7CB342"/>`,
+    <path d="M0 76Q40 62 80 73T160 69V160H0Z" fill="#9BD07A"/>
+    <path d="M0 100Q50 89 100 100T160 97V160H0Z" fill="#7CB342"/>`,
   items: SQUARE_ITEMS,
   strings: Object.fromEntries(Object.entries(MEADOW.strings).map(([lang, d]) => [lang,
     { title: `${d.title} ■`, ...Object.fromEntries(SQUARE_ITEMS.map((i) => [`item.${i.id}`, d[`item.${i.id}`]])) }])),

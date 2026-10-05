@@ -23,7 +23,8 @@ function formatWhen(time) {
   const locale = LOCALES[getLang()] ?? 'fr-FR';
   const day = new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short', year: 'numeric' }).format(d);
   const clock = new Intl.DateTimeFormat(locale, { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(d);
-  return `${day}, ${clock}`;
+  // No-break spaces: the line may wrap before the date, never inside it.
+  return `${day}, ${clock}`.replace(/\s/g, ' ');
 }
 
 // What a backup is, in words a parent understands (never a schema number). Version
