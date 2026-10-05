@@ -1,5 +1,5 @@
 // Rewards shared by every game: stars, and every few stars a reward — a sticker for the
-// album or an item for the child's meadow, in turn, further apart as they collect more
+// album or an item for one of the child's worlds, in turn, further apart as they collect more
 // (the schedule is js/scene.js; owner, 2026-10-05). No scores, no ratings: every success
 // gives one star, nothing is ever taken away.
 //
@@ -12,7 +12,7 @@ import { t } from './i18n.js';
 import { sfx } from './audio.js';
 import { getRewards, getWorlds, setRewardsAndWorlds } from './storage.js';
 import { STICKERS, stickerSvg } from './stickers.js';
-import { POOL_ITEMS, START_WORLD, itemById, itemSvg, packById } from './items.js';
+import { POOL_ITEMS, START_WORLD, itemById, itemSvg, packById, sceneSvg } from './items.js';
 import { addStar as nextState, gap, granted, missingItems } from './scene.js';
 import { say } from './ui.js';
 
@@ -82,15 +82,26 @@ export function flyStar(fromEl, profileId) {
   setTimeout(() => { star.remove(); update(); }, FLY_MS);
 }
 
-// Full-screen "new sticker!" / "new for your meadow!" moment. Resolves when it closes
-// (tap, or after 5 s), so the game can wait before moving on. (Named showSticker for the
-// games' ctx — it shows any reward.)
+// Full-screen "new sticker!" / "new treasure!" moment — or, for a world's gift (the
+// game's first star, `reward.unlocked`), the new world's scene with the gift in front.
+// Resolves when it closes (tap, or after 5 s), so the game can wait before moving on.
+// (Named showSticker for the games' ctx — it shows any reward.)
 export function showSticker(reward) {
   const item = reward.kind === 'item';
+  const world = item && reward.unlocked;
+  const title = world ? 'newWorldTitle' : item ? 'newItemTitle' : 'newStickerTitle';
+  const shown = world
+    ? h('div', { class: 'world-reveal sticker-reveal' },
+      h('span', { class: 'world-view', html: sceneSvg(world) }),
+      h('span', { class: 'world-gift', html: itemSvg(reward) }))
+    : h('div', { class: `sticker-reveal${item ? ' item-reveal' : ''}`, html: item ? itemSvg(reward) : stickerSvg(reward) });
+  const line = world ? t('newWorld', { world: t(`world.${world}`), name: t(`item.${reward.id}`) })
+    : item ? t('newItem', { name: t(`item.${reward.id}`) })
+      : t('newSticker', { name: t(`sticker.${reward.id}`) });
   return new Promise((resolve) => {
-    const overlay = h('div', { class: 'sticker-overlay', role: 'dialog', 'aria-label': t(item ? 'newItemTitle' : 'newStickerTitle') },
+    const overlay = h('div', { class: 'sticker-overlay', role: 'dialog', 'aria-label': t(title) },
       h('div', { class: 'sticker-rays', 'aria-hidden': 'true' }),
-      h('div', { class: `sticker-reveal${item ? ' item-reveal' : ''}`, html: item ? itemSvg(reward) : stickerSvg(reward) }),
+      shown,
     );
     const openedAt = Date.now();
     let closed = false;
@@ -105,7 +116,7 @@ export function showSticker(reward) {
     });
     document.body.append(overlay);
     sfx.fanfare();
-    say(item ? t('newItem', { name: t(`item.${reward.id}`) }) : t('newSticker', { name: t(`sticker.${reward.id}`) }));
+    say(line);
     setTimeout(close, REVEAL_MS);
   });
 }

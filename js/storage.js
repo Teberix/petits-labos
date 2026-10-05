@@ -72,7 +72,7 @@ function upgradeProfile(p) {
   if (!p.collection) {
     p.collection = Array.isArray(r.items)
       // engine step c1a (dev only) kept the collection inside `rewards`
-      ? { items: r.items, nextAt: r.nextAt, news: r.news ?? [] }
+      ? { items: r.items, nextAt: r.nextAt ?? sc.nextAt, news: r.news ?? [] }
       : { items: sc.items.map(inStart), nextAt: sc.nextAt, news: (sc.news ?? []).map(inStart) };
   }
   for (const k of COLLECTION_KEYS) delete r[k]; // `rewards` keeps its v1 shape
@@ -262,9 +262,9 @@ export function setRewards(profileId, rewards) {
 // ---- Backups (parent screen) ----
 // A migration keeps the raw old save as <key>.backup-v<N>. Restoring one puts it back
 // (it is migrated again on the next load); the save being replaced is kept first as
-// <key>.backup-before-restore-<time> (or before-copy-<time>), and those can be restored
-// too — so a restore can always be undone and nothing is ever lost.
-//   listBackups() → [{ label, kind: 'version' | 'restore' | 'copy', time? }]
+// <key>.backup-before-restore-<time> (or before-copy-<time>, before-reset-<time>), and
+// those can be restored too — so a restore can always be undone and nothing is ever lost.
+//   listBackups() → [{ label, kind: 'version' | 'restore' | 'copy' | 'reset', time? }]
 //   (versions first, then the kept saves, newest first)
 
 export function listBackups() {
@@ -273,7 +273,7 @@ export function listBackups() {
   try {
     for (let i = 0; i < localStorage.length; i++) {
       const label = localStorage.key(i)?.startsWith(prefix) ? localStorage.key(i).slice(prefix.length) : null;
-      const kept = label?.match(/^before-(restore|copy)-(\d+)$/);
+      const kept = label?.match(/^before-(restore|copy|reset)-(\d+)$/);
       if (label && /^v\d+$/.test(label)) out.push({ label, kind: 'version' });
       else if (kept) out.push({ label, kind: kept[1], time: Number(kept[2]) });
     }
@@ -341,22 +341,25 @@ export function setRewardsAndWorlds(profileId, rewards, worlds) {
   save();
 }
 
-// ---- Until the worlds screens (engine step c1b): the start world as the v3 screens
-// ("Mon pré", the hub's and album's wiggle) read it: { items, placed, nextAt, news }.
-// `items` and `news` are the player's (every world), `placed` the start world's.
+// ---- Resets (parent screen) ----
+// One profile (profileId) or every profile (null) starts again: stars, stickers, items,
+// worlds, skills and game progress. The name, avatar, language and parent switches stay.
+// The whole save is kept first as <key>.backup-before-reset-<time> (restorable like the
+// other kept saves). Returns false, and changes nothing, if that copy can't be written.
 
-export function getScene(profileId) {
-  if (!getProfile(profileId)) return null;
-  const { items, nextAt, news } = getRewards(profileId);
-  return { items, placed: getWorlds(profileId)[START_WORLD].placed, nextAt, news };
-}
-
-export function setScene(profileId, scene) {
-  const profile = getProfile(profileId);
-  if (!profile) return;
-  putRewards(profile, { ...getRewards(profileId), news: [...scene.news] });
-  profile.worlds = { ...getWorlds(profileId), [START_WORLD]: { placed: scene.placed } };
+export function resetProgress(profileId = null) {
+  const s = ensureLoaded();
+  if (!backup(JSON.stringify(s), `before-reset-${Date.now()}`)) return false;
+  for (const p of s.profiles) {
+    if (profileId && p.id !== profileId) continue;
+    p.games = {};
+    p.skills = {};
+    putRewards(p, startRewards());
+    p.worlds = startWorlds(START_WORLD);
+    delete p.scene; // (v3 progress: only read to make a missing collection)
+  }
   save();
+  return true;
 }
 
 // ---- New engine: per profile and game, the adaptive difficulty (js/progress.js) ----

@@ -127,6 +127,7 @@ const PRECACHE = [
   'js/screens/parent.js',
   'js/screens/profiles.js',
   'js/screens/scene.js',
+  'js/screens/worlds.js',
   'js/stickers.js',
   'js/storage.js',
   'js/ui.js',

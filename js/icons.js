@@ -10,6 +10,8 @@ export const ICONS = {
   star: `<svg viewBox="0 0 100 100" aria-hidden="true"><polygon points="50,8 61,36 91,38 68,58 76,90 50,74 24,90 32,58 9,38 39,36" fill="#FFC83D" stroke="#F29E00" stroke-width="5" stroke-linejoin="round"/></svg>`,
   // Sticker album: an open book with a round sticker on each page.
   album: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 5.5C5 4 8.5 4 12 6c3.5-2 7-2 10-.5V20c-3-1.5-6.5-1.5-10 .5-3.5-2-7-2-10-.5z" fill="currentColor"/><path d="M12 6v14.5" stroke="#fff" stroke-width="1.5"/><circle cx="7" cy="11" r="2.6" fill="#FFC83D"/><circle cx="17" cy="11" r="2.6" fill="#FF8FAB"/></svg>`,
+  // "Mes mondes" (the child's worlds): a little planet with a tree on it and a ring.
+  worlds: `<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8" fill="#6EC6FF"/><path d="M4.4 15.5c2.5-2.5 5.5-3 8-2s5 .8 7.2-.8A8 8 0 0 1 4.4 15.5z" fill="#7CB342"/><rect x="11.3" y="6.5" width="1.4" height="4" fill="#8B5E3C"/><circle cx="12" cy="5.6" r="2.6" fill="#3FA34D"/><ellipse cx="12" cy="13" rx="11" ry="3" fill="none" stroke="#FFC83D" stroke-width="1.4" transform="rotate(-15 12 13)"/></svg>`,
   // The child's meadow (rewards option B): a little tree on a green hill under the sun.
   meadow: `<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="18" cy="6" r="3" fill="#FFC83D"/><path d="M1 21c4-6 8-7 11-6s7 2 11 6z" fill="#7CB342"/><rect x="7.2" y="11" width="1.6" height="5" fill="#8B5E3C"/><circle cx="8" cy="9.5" r="3.5" fill="#3FA34D"/></svg>`,
   // The next reward (end of the album's progress bar).

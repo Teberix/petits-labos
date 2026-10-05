@@ -295,7 +295,11 @@ input[type="text"] {
   inset: 0;
   z-index: 1100;
   display: grid;
+  /* one screen-sized cell: the rays (wider than a phone) overflow it evenly instead of
+     widening it, so the reward stays centred */
+  grid-template: 100% / 100%;
   place-items: center;
+  overflow: hidden;
   background: rgba(43, 33, 65, 0.75);
 }
 .sticker-rays, .sticker-reveal { grid-area: 1 / 1; }
@@ -372,7 +376,7 @@ input[type="text"] {
 @keyframes sticker-pop { from { transform: scale(0) rotate(-30deg); } to { transform: scale(1) rotate(0); } }
 @keyframes spin { to { transform: rotate(360deg); } }
 @keyframes wiggle { 25% { transform: rotate(-8deg); } 75% { transform: rotate(8deg); } }
-/* "Look here!": a button that wiggles every 2 s (new meadow items to see). */
+/* "Look here!": a button that wiggles every 2 s (new items to see in a world). */
 .nudge { animation: nudge 2s ease-in-out infinite; }
 @keyframes nudge {
   0%, 30%, 100% { transform: rotate(0) scale(1); }
@@ -390,7 +394,25 @@ input[type="text"] {
   *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; }
 }
 
-/* ---------- Mon pré (rewards option B) ----------
+/* ---------- Mes mondes: one tile per world (a preview of its scene, or a grey "?") ---------- */
+.world-view {
+  display: block;
+  width: clamp(7rem, 30vmin, 13rem);
+  aspect-ratio: 16 / 10;
+  border-radius: calc(var(--radius) / 2);
+  overflow: hidden;
+}
+.world-view svg { display: block; width: 100%; height: 100%; }
+.world-tile.locked { border: 3px dashed #CFC6DD; background: #F4EFE6; box-shadow: none; }
+.world-locked { color: #B9AFC9; font-size: 3rem; font-weight: 800; }
+
+/* The reveal of a new world: its scene, with the gift item standing in front. */
+.world-reveal { position: relative; width: min(85vw, 75dvh * 1.6, 32rem); aspect-ratio: 16 / 10; }
+.world-reveal .world-view { width: 100%; height: 100%; border-radius: var(--radius); }
+.world-reveal .world-gift { position: absolute; left: 50%; bottom: 4%; width: 38%; transform: translateX(-50%); }
+.world-reveal .world-gift svg { display: block; width: 100%; height: auto; }
+
+/* ---------- A free world (rewards option B; "Mon pré" was the first) ----------
    Portrait: the meadow over the tray of treasures; landscape: meadow + tray as a column.
    The meadow is 16:10, as big as its stage allows; items are placed by the middle of
    their bottom edge (js/screens/scene.js) and stand on the grass. */

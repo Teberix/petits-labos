@@ -18,6 +18,8 @@ export const POOL_ITEMS = Object.fromEntries(PACKS.map((p) => [p.id, p.items.map
 
 export const packById = (id) => PACKS.find((p) => p.id === id) ?? null;
 export const itemById = (id) => ITEMS.find((i) => i.id === id) ?? null;
+// The worlds that have new items (`news`, js/scene.js) — for the wiggles and the voice.
+export const worldsWithNews = (news) => [...new Set(news.map((id) => itemById(id)?.world).filter(Boolean))];
 
 for (const p of PACKS) {
   const strings = {};

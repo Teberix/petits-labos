@@ -1,18 +1,19 @@
-// "Mon pré" — the child's own scene (rewards option B, js/scene.js). The items they
-// unlocked with stars are in the tray; a TAP puts a copy on a free spot of the grass (or
-// they drag it in), as many copies as they like (at most SCENE_MAX); they move them
-// around, or drag one out of the meadow to take it out (the item stays theirs). Tapping
-// a placed item says its name. No goal, no score.
+// A free world — the child's own scene (rewards option B, js/scene.js), for any pack of
+// kind 'free' (scenes/<id>/pack.js: background, size, items). Params: { profileId, world }.
+// The items of THIS world they unlocked with stars are in the tray; a TAP puts a copy on
+// a free spot of the ground (or they drag it in), as many copies as they like (at most
+// SCENE_MAX); they move them around, or drag one out of the scene to take it out (the
+// item stays theirs). Tapping a placed item says its name. No goal, no score.
 //
 // Position of a placed item = the middle of its BOTTOM edge, as fractions of the scene
-// (x, y: 0–1), so items stand on the grass and the lower ones are drawn in front.
+// (x, y: 0–1), so items stand on the ground and the lower ones are drawn in front.
 import { h } from '../dom.js';
 import { getLang, t } from '../i18n.js';
 import { sfx, speak } from '../audio.js';
 import { draggable } from '../dragdrop.js';
 import { ICONS } from '../icons.js';
-import { getProfile, getScene, setScene } from '../storage.js';
-import { ITEMS, itemSvg, sceneSvg } from '../items.js';
+import { getProfile, getRewards, getWorlds, setRewardsAndWorlds } from '../storage.js';
+import { ITEMS, itemSvg, packById, sceneSvg } from '../items.js';
 import { SCENE_MAX, moveItem, placeItem, removeItem } from '../scene.js';
 import { iconButton, repeatButton, say, topBar } from '../ui.js';
 
@@ -21,8 +22,8 @@ import { iconButton, repeatButton, say, topBar } from '../ui.js';
 const ITEM_W = 0.15;
 const MIN_PX = 64;
 
-// Where a tapped item goes: the spot on the grass farthest from the placed items.
-// (x, y = bottom middle, as fractions; the grass starts at y ≈ 0.6 in js/items.js.)
+// Where a tapped item goes: the spot on the ground farthest from the placed items.
+// (x, y = bottom middle, as fractions; every pack's ground is its lower part, y > 0.6.)
 const SPOTS = [0.5, 0.3, 0.7, 0.15, 0.85, 0.4, 0.6, 0.22, 0.78].flatMap((x) => [0.8, 0.95, 0.68].map((y) => ({ x, y })));
 const ASPECT = 1.6; // the scene is 16:10, so 0.1 of its width is 1.6 × 0.1 of its height
 
@@ -31,27 +32,39 @@ function freeSpot(placed) {
   return SPOTS.reduce((best, s) => (room(s) > room(best) ? s : best));
 }
 
-export function render(root, { profileId }, app) {
+export function render(root, { profileId, world }, app) {
   if (!getProfile(profileId)) return app.show('profiles');
-  let scene = getScene(profileId);
-  // The child came to see their new treasures: the buttons stop wiggling.
-  if (scene.news.length) {
-    scene = { ...scene, news: [] };
-    setScene(profileId, scene);
-  }
+  const pack = packById(world);
+  // (a locked or unknown world, or a 'slots' one — not built yet: back to the grid)
+  if (pack?.kind !== 'free' || !getWorlds(profileId).unlocked.includes(world)) return app.show('worlds', { profileId });
+  const mine = new Set(ITEMS.filter((i) => i.world === world).map((i) => i.id));
+
+  // `scene` = this world's view for js/scene.js: { items (this world's), placed }.
+  const rewards = getRewards(profileId);
+  let scene = { items: rewards.items.filter((id) => mine.has(id)), placed: getWorlds(profileId)[world]?.placed ?? [] };
+  // Saves this world's placed items; `news` (optional) replaces the player's news.
+  const store = (news) => {
+    const r = getRewards(profileId);
+    const w = getWorlds(profileId);
+    w[world] = { placed: scene.placed };
+    setRewardsAndWorlds(profileId, news ? { ...r, news } : r, w);
+  };
+  // The child came to see this world's new treasures: its wiggles stop.
+  if (rewards.news.some((id) => mine.has(id))) store(rewards.news.filter((id) => !mine.has(id)));
   const byId = Object.fromEntries(ITEMS.map((i) => [i.id, i]));
   let cleanups = [];
   let grab = null; // where the finger went down on what is being dragged
 
-  const sceneEl = h('div', { class: 'scene-view', html: sceneSvg('meadow') });
+  // (the CSS .scene-view box is 16:10; a pack's background is cropped to fill it: "slice")
+  const sceneEl = h('div', { class: 'scene-view', html: sceneSvg(world) });
   const placedEl = h('div', { class: 'scene-placed' });
   sceneEl.append(placedEl);
   const trayEl = h('div', { class: 'scene-tray', role: 'group', 'aria-label': t('sceneItems') });
 
   root.append(
     topBar({
-      left: [iconButton('back', t('back'), () => app.show('collection', { profileId }))],
-      title: t('sceneTitle'),
+      left: [iconButton('back', t('back'), () => app.show('worlds', { profileId }))],
+      title: t(`world.${world}`),
       right: [repeatButton()],
     }),
     h('section', { class: 'screen-body scene-body' }, h('div', { class: 'scene-stage' }, sceneEl), trayEl),
@@ -59,19 +72,19 @@ export function render(root, { profileId }, app) {
 
   const save = (next) => {
     scene = next;
-    setScene(profileId, scene);
+    store();
     draw();
   };
   const name = (id) => t(`item.${id}`);
   // Names are spoken without replacing the instruction the repeat button says.
   const sayName = (id) => speak(name(id), getLang());
 
-  // Puts a copy of an item at `at`; when the meadow is full, says so (and it shakes).
+  // Puts a copy of an item at `at`; when the world is full, says so (and it shakes).
   function place(id, at) {
     const next = placeItem(scene, id, at.x, at.y);
     if (!next) {
       sfx.boing();
-      say(t('sceneFull', { n: SCENE_MAX }));
+      say(t('sceneFull', { n: SCENE_MAX, world: t(`world.${world}`) }));
       sceneEl.classList.remove('shake');
       void sceneEl.offsetWidth; // (restart the animation)
       sceneEl.classList.add('shake');
@@ -95,7 +108,7 @@ export function render(root, { profileId }, app) {
     return { w: px / r.width, h: px / r.height };
   }
 
-  // A position (bottom middle, fractions) moved so the whole item is inside the meadow.
+  // A position (bottom middle, fractions) moved so the whole item is inside the scene.
   function keepInside({ x, y }) {
     const { w, h: ih } = itemSize();
     return { x: Math.min(1 - w / 2, Math.max(w / 2, x)), y: Math.min(1, Math.max(ih, y)) };
@@ -129,14 +142,14 @@ export function render(root, { profileId }, app) {
         targets: () => [trayEl, sceneEl],
         onTap: () => { sfx.pop(); sayName(p.id); },
         onDrop: (target, point) => {
-          // The finger is on the meadow → moved (even near the tray: the tray's
-          // enlarged hit area reaches over the edge of the grass).
+          // The finger is on the scene → moved (even near the tray: the tray's
+          // enlarged hit area reaches over the edge of the scene).
           if (inside(sceneEl, point)) {
             const at = toScene(landed(el.getBoundingClientRect(), point));
             save(moveItem(scene, p.i, at.x, at.y));
             return;
           }
-          // Back on the tray, or let go beside the meadow → taken out of the scene.
+          // Back on the tray, or let go beside the scene → taken out of it.
           sfx.plop();
           save(removeItem(scene, p.i));
         },
@@ -160,19 +173,20 @@ export function render(root, { profileId }, app) {
         targets: () => [sceneEl],
         onTap: () => { sayName(item.id); place(item.id, keepInside(freeSpot(scene.placed))); },
         onDrop: (target, point) => {
-          if (!inside(sceneEl, point)) return; // let go beside the meadow: nothing happens
+          if (!inside(sceneEl, point)) return; // let go beside the scene: nothing happens
           place(item.id, toScene(landed(card.getBoundingClientRect(), point)));
         },
       }));
       // draggable() blocks the browser's scrolling on the card; give back the tray's own
       // direction (CSS .scene-card touch-action) so a swipe along the tray scrolls it and
-      // a move toward the meadow drags.
+      // a move toward the scene drags.
       card.style.touchAction = '';
       return card;
     }));
   }
 
   draw();
-  say(scene.items.length ? t('sceneIntro') : t('sceneEmpty'));
+  const vars = { world: t(`world.${world}`) };
+  say(scene.items.length ? t('sceneIntro', vars) : t('sceneEmpty', vars));
   return () => cleanups.forEach((stop) => stop());
 }

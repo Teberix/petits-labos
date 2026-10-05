@@ -1,11 +1,13 @@
-// Parent area (behind the 3-second gate): version + updates, app language, profiles,
-// the save (restore a backup; on the preview: copy the live app's save in).
+// Parent area (behind the 3-second gate): version + updates, app language, profiles
+// (edit, delete, start one again from zero), the save (restore a backup; start every
+// profile again; on the preview: copy the live app's save in). A reset keeps the whole
+// save aside first (js/storage.js resetProgress), restorable from the Save card.
 import { h } from '../dom.js';
 import { LANGS, LANG_NAMES, getLang, setLang, t } from '../i18n.js';
 import { stopSpeaking } from '../audio.js';
 import {
-  addProfile, copyLiveSave, deleteProfile, getProfile, getProfiles, isPreview, listBackups, restoreBackup,
-  setSetting, updateProfile,
+  addProfile, copyLiveSave, deleteProfile, getProfile, getProfiles, isPreview, listBackups, resetProgress,
+  restoreBackup, setSetting, updateProfile,
 } from '../storage.js';
 import { checkNow } from '../updates.js';
 import { VERSION } from '../version.js';
@@ -32,7 +34,8 @@ export function render(root, params, app) {
     ? app.show('hub', { profileId: params.profileId })
     : app.show('profiles'));
 
-  // or { name: 'edit', id } / { name: 'confirmDelete', id } / { name: 'confirmSave', text, yes, run }
+  // or { name: 'edit', id } / { name: 'confirmDelete', id } / { name: 'confirmReset', id | null }
+  //    / { name: 'confirmSave', text, yes, run }
   let view = { name: 'main' };
   let updateStatus = '';
 
@@ -48,8 +51,9 @@ export function render(root, params, app) {
     body.replaceChildren(
       view.name === 'edit' ? editView(view.id)
         : view.name === 'confirmDelete' ? confirmView(view.id)
-          : view.name === 'confirmSave' ? confirmSaveView(view)
-            : mainView(),
+          : view.name === 'confirmReset' ? confirmResetView(view.id)
+            : view.name === 'confirmSave' ? confirmSaveView(view)
+              : mainView(),
     );
   }
 
@@ -150,18 +154,20 @@ export function render(root, params, app) {
       h('p', { class: 'field-label' }, t('unlockAll')), unlockSlot,
       h('p', { class: 'hint' }, t('unlockAllHint')),
       h('div', { class: 'actions' },
+        existing && h('button', {
+          class: 'btn btn-danger reset-btn', type: 'button', onclick: () => go({ name: 'confirmReset', id }),
+        }, t('resetProfile')),
         h('button', { class: 'btn', type: 'button', onclick: () => go({ name: 'main' }) }, t('cancel')),
         saveButton,
       ),
     );
   }
 
-  // The save: only shown when there is something to do (a backup, or on the preview).
+  // The save: the backups, "start everything again", and (preview) the copy.
   function saveCard() {
     const backups = listBackups();
-    if (!backups.length && !isPreview()) return null;
     // v1, v2…: the saves from before an update; the others: a save kept aside when a
-    // restore or a copy replaced it (named by its date).
+    // restore, a copy or a reset replaced it (named by its date).
     const buttons = backups.map(({ label, kind, time }) => {
       const when = time ? new Date(time).toLocaleString(getLang()) : '';
       const name = kind === 'version' ? t('restoreBackup', { label }) : t('restoreKept', { when });
@@ -177,7 +183,12 @@ export function render(root, params, app) {
         onclick: () => go({ name: 'confirmSave', text: t('confirmCopySave'), yes: t('yesCopySave'), run: copyLiveSave }),
       }, t('copySave')));
     }
-    return h('div', { class: 'card' }, h('h2', {}, t('saveTitle')), ...buttons);
+    if (getProfiles().length) {
+      buttons.push(h('button', {
+        class: 'btn btn-danger reset-all-btn', type: 'button', onclick: () => go({ name: 'confirmReset', id: null }),
+      }, t('resetAll')));
+    }
+    return buttons.length ? h('div', { class: 'card' }, h('h2', {}, t('saveTitle')), ...buttons) : null;
   }
 
   // Restore / copy: the whole app reloads afterwards (every screen reads the new save).
@@ -194,6 +205,26 @@ export function render(root, params, app) {
             else status.textContent = t('saveFailed');
           },
         }, yes),
+      ),
+      status,
+    );
+  }
+
+  // Start one profile (id) or every profile (null) again from zero.
+  function confirmResetView(id) {
+    const profile = id ? getProfile(id) : null;
+    const status = h('p', { class: 'status', 'aria-live': 'polite' });
+    return h('div', { class: 'card' },
+      h('p', { class: 'confirm-text' }, id ? t('confirmResetProfile', { name: profile?.name ?? '' }) : t('confirmResetAll')),
+      h('div', { class: 'actions' },
+        h('button', { class: 'btn', type: 'button', onclick: () => go({ name: 'main' }) }, t('cancel')),
+        h('button', {
+          class: 'btn btn-danger btn-solid confirm-reset-btn', type: 'button',
+          onclick: () => {
+            if (resetProgress(id)) go({ name: 'main' });
+            else status.textContent = t('saveFailed');
+          },
+        }, t('yesReset')),
       ),
       status,
     );

@@ -343,17 +343,63 @@ test('getWorlds / setRewardsAndWorlds return and keep copies', async () => {
   assert.deepEqual(again.getRewards(id), r);
 });
 
-// Until c1b's screens: "Mon pré" reads and writes the start world through getScene/setScene.
-test('getScene / setScene (the v3 screens): the meadow world + the player’s items and news', async () => {
-  fakeStorage({ [KEY]: JSON.stringify(v3Save()) });
+// Resets (parent screen): progress back to zero, profiles and their settings kept, the
+// whole save kept first as before-reset-<time> (restorable).
+function playedSave() {
+  const v4 = structuredClone(V1);
+  v4.schema = 4;
+  for (const p of v4.profiles) {
+    p.skills = { memory: { skill: 3, best: 3, rounds: 4, seen: [] } };
+    p.fixedMap = true;
+    p.unlockAll = true;
+    p.collection = { items: ['meadow.tree'], nextAt: 30, news: ['meadow.tree'] };
+    p.worlds = { unlocked: ['meadow', 'space'], meadow: { placed: [{ id: 'meadow.tree', x: 0.5, y: 0.9 }] }, space: { placed: [] } };
+  }
+  return v4;
+}
+
+test('reset one profile: its progress starts again; settings and the other profile kept', async () => {
+  const saved = playedSave();
+  const map = fakeStorage({ [KEY]: JSON.stringify(saved) });
   const s = await freshV2();
-  const id = V1.profiles[0].id;
-  const sc = s.getScene(id);
-  assert.deepEqual(sc.items, ['meadow.tree', 'meadow.fox']);
-  assert.deepEqual(sc.news, ['meadow.fox']);
-  s.setScene(id, { ...sc, placed: [...sc.placed, { id: 'meadow.tree', x: 0.1, y: 0.9 }], news: [] });
-  const again = await freshV2();
-  assert.deepEqual(again.getScene(id).placed.map((x) => x.id), ['meadow.fox', 'meadow.tree']);
-  assert.deepEqual(again.getRewards(id).news, []);
-  assert.deepEqual(again.getRewards(id).items, ['meadow.tree', 'meadow.fox'], 'items untouched');
+  const [a, b] = saved.profiles;
+  assert.equal(s.resetProgress(a.id), true);
+  const p = s.getProfile(a.id);
+  for (const field of ['id', 'name', 'avatar', 'readingLang', 'unlockAll', 'fixedMap']) assert.deepEqual(p[field], a[field], field);
+  assert.deepEqual(p.games, {});
+  assert.deepEqual(p.skills, {});
+  assert.deepEqual(s.getRewards(a.id), startRewards());
+  assert.deepEqual(s.getWorlds(a.id), startWorlds('meadow'));
+  assert.deepEqual(s.getProfile(b.id), { ...b }, 'the other profile is untouched');
+  // the save from before is kept, and listed as a restorable kept save
+  const kept = s.listBackups().find((x) => x.kind === 'reset');
+  assert.ok(kept, 'before-reset backup listed');
+  assert.deepEqual(JSON.parse(map.get(`${KEY}.backup-${kept.label}`)), saved);
+  assert.equal(s.restoreBackup(kept.label), true);
+  assert.deepEqual((await freshV2()).getProfile(a.id).games, a.games, 'restored');
+});
+
+test('reset everything: every profile starts again, the profiles stay', async () => {
+  const saved = playedSave();
+  fakeStorage({ [KEY]: JSON.stringify(saved) });
+  const s = await freshV2();
+  assert.equal(s.resetProgress(), true);
+  assert.equal(s.getProfiles().length, saved.profiles.length);
+  for (const old of saved.profiles) {
+    assert.equal(s.getProfile(old.id).name, old.name);
+    assert.deepEqual(s.getRewards(old.id), startRewards());
+    assert.deepEqual(s.getProfile(old.id).games, {});
+  }
+});
+
+test('a reset changes nothing if the save could not be kept first', async () => {
+  const saved = playedSave();
+  const map = fakeStorage({ [KEY]: JSON.stringify(saved) });
+  const s = await freshV2();
+  s.getProfiles();
+  const before = map.get(KEY);
+  globalThis.localStorage.setItem = () => { throw new Error('full'); };
+  assert.equal(s.resetProgress(), false);
+  assert.equal(map.get(KEY), before);
+  assert.deepEqual(s.getProfile(saved.profiles[0].id).games, saved.profiles[0].games);
 });

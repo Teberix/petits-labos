@@ -1,20 +1,20 @@
 // Sticker album — every sticker has its own spot; earned ones are in colour,
 // the others are a grey "?". Tapping a sticker says its name.
 // On top: the star total, and a bar filling up towards the next reward (a sticker or a
-// meadow item, in turn — js/scene.js). The meadow button opens the child's scene.
+// world item, in turn — js/scene.js). The worlds button opens "Mes mondes".
 import { h } from '../dom.js';
 import { ICONS } from '../icons.js';
 import { t } from '../i18n.js';
 import { sfx } from '../audio.js';
-import { getProfile, getRewards, getScene } from '../storage.js';
+import { getProfile, getRewards } from '../storage.js';
 import { STICKERS, stickerSvg } from '../stickers.js';
 import { nextRewardProgress } from '../rewards.js';
 import { iconButton, repeatButton, say, topBar } from '../ui.js';
 
 export function render(root, { profileId }, app) {
   if (!getProfile(profileId)) return app.show('profiles');
-  const { stars, stickers } = getRewards(profileId);
-  const news = getScene(profileId).news.length > 0; // items not seen in the meadow yet
+  const { stars, stickers, news: newItems } = getRewards(profileId);
+  const news = newItems.length > 0; // items not seen in their world yet
   // Progress towards the next reward: a bar with a little gift at the end (no numbers).
   const next = nextRewardProgress(profileId);
   const progress = next && h('div', { class: 'next-reward', 'aria-hidden': 'true' },
@@ -46,7 +46,7 @@ export function render(root, { profileId }, app) {
     topBar({
       left: [iconButton('back', t('back'), () => app.show('hub', { profileId }))],
       title: t('collection'),
-      right: [iconButton('meadow', t('openScene'), () => app.show('scene', { profileId }), `meadow-btn${news ? ' nudge' : ''}`), repeatButton()],
+      right: [iconButton('worlds', t('openWorlds'), () => app.show('worlds', { profileId }), `worlds-btn${news ? ' nudge' : ''}`), repeatButton()],
     }),
     h('section', { class: 'screen-body collection-body' },
       h('div', { class: 'collection-head' },
@@ -60,6 +60,6 @@ export function render(root, { profileId }, app) {
     ),
   );
 
-  // New treasures waiting in the meadow: point the child there.
-  say(news ? `${t('collectionIntro')} ${t('sceneNews')}` : t('collectionIntro'));
+  // New treasures waiting in a world: point the child there.
+  say(news ? `${t('collectionIntro')} ${t('worldsNews')}` : t('collectionIntro'));
 }

@@ -10,12 +10,13 @@ import * as game from './screens/game.js';
 import * as parent from './screens/parent.js';
 import * as collection from './screens/collection.js';
 import * as scene from './screens/scene.js';
+import * as worlds from './screens/worlds.js';
 
 // Each screen exports render(root, params, app) and may return a cleanup function.
-const SCREENS = { profiles, hub, game, parent, collection, scene };
+const SCREENS = { profiles, hub, game, parent, collection, worlds, scene };
 
 // Screens where no game is running, so swapping in a new version is safe.
-const SAFE_FOR_UPDATE = ['profiles', 'hub', 'collection', 'scene'];
+const SAFE_FOR_UPDATE = ['profiles', 'hub', 'collection', 'worlds', 'scene'];
 
 // After an update reload, come back to the same player's hub instead of "Who's playing?".
 const RESUME_KEY = 'petits-labos.resume';
