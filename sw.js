@@ -118,6 +118,7 @@ const PRECACHE = [
   'js/icons.js',
   'js/items.js',
   'js/parentgate.js',
+  'js/path.js',
   'js/progress.js',
   'js/rewards.js',
   'js/scene.js',
