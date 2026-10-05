@@ -5,6 +5,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { startScene } from '../js/scene.js';
 
 const KEY = 'petits-labos';
 const V1_RAW = readFileSync(new URL('./fixtures/storage-v1.json', import.meta.url), 'utf8');
@@ -30,7 +31,7 @@ let n = 0;
 const freshV2 = () => import(`../js/storage.js?fresh=${n++}`);
 const freshV1 = () => import(`./fixtures/storage-v0.9.0.mjs?fresh=${n++}`);
 
-test('v1 → v2: every profile keeps its stars, stickers and level progress', async () => {
+test('v1 → latest (v3): every profile keeps its stars, stickers and level progress', async () => {
   const map = fakeStorage({ [KEY]: V1_RAW });
   const s = await freshV2();
   const profiles = s.getProfiles();
@@ -43,11 +44,12 @@ test('v1 → v2: every profile keeps its stars, stickers and level progress', as
     assert.deepEqual(s.getRewards(old.id), { stars: old.rewards.stars, stickers: old.rewards.stickers }, `${old.name}: rewards changed`);
     assert.deepEqual(p.skills, {}, `${old.name}: skills`);
     assert.equal(p.fixedMap, false, `${old.name}: fixedMap`);
+    assert.deepEqual(p.scene, startScene(old.rewards), `${old.name}: scene (next reward one gap from now)`);
   }
   assert.equal(s.getSetting('lang'), V1.settings.lang);
   // saved at once, as v2, with the raw v1 save kept aside
   const saved = JSON.parse(map.get(KEY));
-  assert.equal(saved.schema, 2);
+  assert.equal(saved.schema, s.SCHEMA_VERSION);
   assert.equal(map.get(`${KEY}.backup-v1`), V1_RAW, 'the v1 backup is the untouched original');
 });
 
@@ -82,7 +84,7 @@ test('migrating twice changes nothing (a v2 save loads as is)', async () => {
 // The preview and the live app share localStorage on a phone (same origin): the live
 // app (v0.9.0, schema 1) must keep working on a save the preview migrated to v2 — and
 // what it adds must still work in v2.
-test('the v0.9.0 app still works on a migrated save, and v2 reads what it adds', async () => {
+test('the v0.9.0 app still works on a migrated save, and the new code reads what it adds', async () => {
   fakeStorage({ [KEY]: V1_RAW });
   (await freshV2()).getProfiles(); // the preview migrates
   const old = await freshV1(); // the live app opens next
@@ -94,7 +96,7 @@ test('the v0.9.0 app still works on a migrated save, and v2 reads what it adds',
   const a = V1.profiles[0];
   old.setRewards(a.id, { stars: a.rewards.stars + 1, stickers: a.rewards.stickers });
   const added = old.addProfile({ name: 'Joueur C', avatar: '🐸', readingLang: 'fr' });
-  assert.equal(JSON.parse(globalThis.localStorage.getItem(KEY)).schema, 2, 'the old app never downgrades');
+  assert.equal(JSON.parse(globalThis.localStorage.getItem(KEY)).schema, 3, 'the old app never downgrades');
   // back in the preview: the new star is there, the new profile works
   const s = await freshV2();
   assert.equal(s.getRewards(a.id).stars, a.rewards.stars + 1);
@@ -104,14 +106,15 @@ test('the v0.9.0 app still works on a migrated save, and v2 reads what it adds',
   assert.deepEqual((await freshV2()).getSkill(added.id, 'memory'), { skill: 3, best: 3, rounds: 2, seen: ['a'] });
 });
 
-test('a new install starts at v2; new profiles have every v2 field', async () => {
+test('a new install starts at the latest schema; new profiles have every field', async () => {
   fakeStorage();
   const s = await freshV2();
   const p = s.addProfile({ name: 'Joueur A', avatar: '🦊', readingLang: 'fr' });
   assert.deepEqual(p.rewards, { stars: 0, stickers: [] });
   assert.deepEqual(p.skills, {});
   assert.equal(p.fixedMap, false);
-  assert.equal(JSON.parse(globalThis.localStorage.getItem(KEY)).schema, 2);
+  assert.equal(JSON.parse(globalThis.localStorage.getItem(KEY)).schema, s.SCHEMA_VERSION);
+  assert.deepEqual(p.scene, { items: [], placed: [], nextAt: 5 });
 });
 
 test('MIGRATIONS cover every schema step', async () => {
@@ -172,7 +175,7 @@ test('the preview uses its own key and NEVER writes the live save', async () => 
   s.setRewards(a.id, { stars: 500, stickers: [] });
   s.addProfile({ name: 'Joueur C', avatar: '🐸', readingLang: 'fr' });
   assert.equal(map.get(KEY), V1_RAW, 'the live save is byte-for-byte unchanged');
-  assert.equal(JSON.parse(map.get('petits-labos-preview')).schema, 2);
+  assert.equal(JSON.parse(map.get('petits-labos-preview')).schema, s.SCHEMA_VERSION);
   assert.ok(map.has('petits-labos-preview.backup-v1'), 'the preview keeps its own backup');
   assert.ok(![...map.keys()].some((k) => k.startsWith(`${KEY}.`)), 'no live backup written either');
 });
@@ -183,4 +186,37 @@ test('copyLiveSave does nothing on the live app', async () => {
   assert.equal(s.isPreview(), false);
   assert.equal(s.copyLiveSave(), false);
   assert.equal(map.has('petits-labos-preview'), false);
+});
+
+// The preview already holds v2 saves (E1): v2 → v3 only adds each profile's scene.
+test('v2 → v3: a v2 save gets its scenes, nothing else changes', async () => {
+  fakeStorage({ [KEY]: V1_RAW });
+  const s2 = await freshV2();
+  s2.getProfiles();
+  const v3 = JSON.parse(globalThis.localStorage.getItem(KEY));
+  // rebuild what the v2 save was: v3 minus the scenes
+  const v2 = structuredClone(v3);
+  v2.schema = 2;
+  for (const p of v2.profiles) delete p.scene;
+  fakeStorage({ [KEY]: JSON.stringify(v2) });
+  const s = await freshV2();
+  for (const p of v2.profiles) {
+    const now = s.getProfile(p.id);
+    const { scene, ...rest } = now;
+    assert.deepEqual(rest, p, `${p.name}: changed`);
+    assert.deepEqual(scene, startScene(p.rewards));
+  }
+  assert.equal(globalThis.localStorage.getItem(`${KEY}.backup-v2`), JSON.stringify(v2), 'v2 backup kept');
+});
+
+test('getScene / setScene', async () => {
+  fakeStorage({ [KEY]: V1_RAW });
+  const s = await freshV2();
+  const id = V1.profiles[0].id;
+  const sc = s.getScene(id);
+  sc.items.push('tree');
+  sc.placed.push({ id: 'tree', x: 0.5, y: 0.5 });
+  assert.deepEqual(s.getScene(id).items, [], 'getScene returns a copy');
+  s.setScene(id, sc);
+  assert.deepEqual((await freshV2()).getScene(id), sc);
 });

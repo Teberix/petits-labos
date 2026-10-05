@@ -1,24 +1,27 @@
 // Storage — everything is one JSON document in localStorage, on this device only.
 //
-// Shape (SCHEMA_VERSION 2):
+// Shape (SCHEMA_VERSION 3):
 // {
-//   schema: 2,
+//   schema: 3,
 //   settings: { lang: 'fr' },
 //   profiles: [
 //     { id, name, avatar, readingLang, unlockAll, games: { <gameId>: { ...game-owned data } },
 //       rewards: { stars: 12, stickers: ['sun', 'rocket'] },
 //       skills: { <gameId>: { skill, best, rounds, seen } },  // new engine (js/progress.js)
-//       fixedMap: false }                                       // parent switch: fixed level map
+//       fixedMap: false,                                        // parent switch: fixed level map
+//       scene: { items: [id…], placed: [{ id, x, y }…], nextAt } } // rewards option B (js/scene.js)
 //   ]
 // }
-// v2 is ADDITIVE over v1 (owner, 2026-10-03): every v1 field stays where it was, so an
-// older app reading a v2 save keeps working — the preview and the live app share this
-// storage on a phone (same origin). tests/storage.test.mjs checks it with a real v1 save.
+// v2 and v3 are ADDITIVE over v1 (owner, 2026-10-03): every v1 field stays where it was, so an
+// older app reading a newer save keeps working (a restore, a phone still on the old
+// version). tests/storage.test.mjs checks it with a real v1 save and the v0.9.0 code.
 //
 // Progress must survive every update. If the shape ever changes:
 //   1. bump SCHEMA_VERSION
 //   2. add MIGRATIONS[oldVersion] = (data) => newData
 // Before migrating, the raw old data is copied to a backup key. Nothing is ever wiped.
+
+import { startScene } from './scene.js';
 
 // The live app's key. The preview (/petits-labos-preview/, same origin as the live app,
 // so the same localStorage on a phone) has its own key: it never writes the live save
@@ -29,7 +32,7 @@ export const storageKey = (path = globalThis.location?.pathname ?? '') =>
   (path.includes('/petits-labos-preview/') ? PREVIEW_KEY : LIVE_KEY);
 const KEY = storageKey();
 export const isPreview = () => KEY === PREVIEW_KEY;
-export const SCHEMA_VERSION = 2;
+export const SCHEMA_VERSION = 3;
 
 // MIGRATIONS[n] turns schema n into schema n + 1. Only ADD fields (see above).
 export const MIGRATIONS = {
@@ -41,6 +44,15 @@ export const MIGRATIONS = {
       p.rewards = { stars: p.rewards?.stars ?? 0, stickers: [...(p.rewards?.stickers ?? [])] };
       p.skills ??= {};
       p.fixedMap ??= false;
+    }
+    return data;
+  },
+  // v2 → v3: every profile gets its scene (rewards option B): no items yet, and the next
+  // reward one normal gap from its current stars. Stickers and stars are untouched.
+  2: (data) => {
+    for (const p of data.profiles ?? []) {
+      p.rewards ??= { stars: 0, stickers: [] };
+      p.scene ??= startScene(p.rewards);
     }
     return data;
   },
@@ -141,6 +153,7 @@ export function addProfile({ name, avatar, readingLang, unlockAll = false }) {
   const profile = {
     id: newId(), name, avatar, readingLang, unlockAll, games: {},
     rewards: { stars: 0, stickers: [] }, skills: {}, fixedMap: false,
+    scene: startScene({ stars: 0, stickers: [] }),
   };
   ensureLoaded().profiles.push(profile);
   save();
@@ -245,6 +258,22 @@ export function copyLiveSave() {
   if (!isPreview()) return false;
   const raw = localStorage.getItem(LIVE_KEY);
   return raw ? replaceSave(raw, 'before-copy') : false;
+}
+
+// ---- Rewards option B: the scene { items, placed, nextAt } (js/scene.js) ----
+
+export function getScene(profileId) {
+  const profile = getProfile(profileId);
+  if (!profile) return null;
+  const sc = profile.scene ?? startScene(getRewards(profileId)); // (defensive)
+  return { items: [...sc.items], placed: sc.placed.map((x) => ({ ...x })), nextAt: sc.nextAt };
+}
+
+export function setScene(profileId, scene) {
+  const profile = getProfile(profileId);
+  if (!profile) return;
+  profile.scene = scene;
+  save();
 }
 
 // ---- New engine: per profile and game, the adaptive difficulty (js/progress.js) ----

@@ -91,6 +91,8 @@ js/updates.js          SW registration, applyIfWaiting(), manual check
 js/storage.js          localStorage document, schema version + MIGRATIONS (v2: additive —
                        the preview and the live app share it on a phone)
 js/progress.js         new engine (games 9+): adaptive difficulty, pure (skill, pickLevel)
+js/scene.js            rewards option B, pure: alternate sticker/item, growing gap, the scene
+js/items.js            the scene items (SVG) + the scenes — names in js/i18n as item.<id>
 js/i18n.js, js/i18n/   t(), addStrings(); fr/es/en dictionaries
 js/audio.js            Web Audio sfx + speechSynthesis (prefers local voices)
 js/parentgate.js       3 s press-and-hold button
