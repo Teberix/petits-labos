@@ -6,7 +6,7 @@ import { h } from '../dom.js';
 import { ICONS } from '../icons.js';
 import { t } from '../i18n.js';
 import { sfx } from '../audio.js';
-import { getProfile, getRewards } from '../storage.js';
+import { getProfile, getRewards, getScene } from '../storage.js';
 import { STICKERS, stickerSvg } from '../stickers.js';
 import { nextRewardProgress } from '../rewards.js';
 import { iconButton, repeatButton, say, topBar } from '../ui.js';
@@ -14,6 +14,7 @@ import { iconButton, repeatButton, say, topBar } from '../ui.js';
 export function render(root, { profileId }, app) {
   if (!getProfile(profileId)) return app.show('profiles');
   const { stars, stickers } = getRewards(profileId);
+  const news = getScene(profileId).news.length > 0; // items not seen in the meadow yet
   // Progress towards the next reward: a bar with a little gift at the end (no numbers).
   const next = nextRewardProgress(profileId);
   const progress = next && h('div', { class: 'next-reward', 'aria-hidden': 'true' },
@@ -45,7 +46,7 @@ export function render(root, { profileId }, app) {
     topBar({
       left: [iconButton('back', t('back'), () => app.show('hub', { profileId }))],
       title: t('collection'),
-      right: [iconButton('meadow', t('openScene'), () => app.show('scene', { profileId }), 'meadow-btn'), repeatButton()],
+      right: [iconButton('meadow', t('openScene'), () => app.show('scene', { profileId }), `meadow-btn${news ? ' nudge' : ''}`), repeatButton()],
     }),
     h('section', { class: 'screen-body collection-body' },
       h('div', { class: 'collection-head' },
@@ -59,5 +60,6 @@ export function render(root, { profileId }, app) {
     ),
   );
 
-  say(t('collectionIntro'));
+  // New treasures waiting in the meadow: point the child there.
+  say(news ? `${t('collectionIntro')} ${t('sceneNews')}` : t('collectionIntro'));
 }

@@ -10,8 +10,10 @@
 //
 // State (per profile, js/storage.js):
 //   rewards = { stars, stickers: [id…] }                       (as before)
-//   scene   = { items: [id…], placed: [{ id, x, y }…], nextAt } (x, y: 0–1 in the scene)
+//   scene   = { items: [id…], placed: [{ id, x, y }…], nextAt, news? } (x, y: 0–1 in the scene)
 //   nextAt  = the star count at which the next reward comes.
+//   news    = items unlocked since the child last opened the scene (optional, default []):
+//             the album and meadow buttons wiggle until then (js/screens/hub, collection).
 
 export const GAP_START = 5;
 export const GAP_MAX = 20;
@@ -52,6 +54,7 @@ export function addStar(rewards, scene, all, rand = Math.random) {
   if (kind) {
     const id = missing[kind][Math.floor(rand() * missing[kind].length)];
     (kind === 'sticker' ? r.stickers : s.items).push(id);
+    if (kind === 'item') s.news = [...(scene.news ?? []), id];
     reward = { kind, id };
   }
   s.nextAt = r.stars + gap(granted(r, s) + 1);

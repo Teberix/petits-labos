@@ -2,7 +2,7 @@
 import { h } from '../dom.js';
 import { t } from '../i18n.js';
 import { sfx } from '../audio.js';
-import { getProfile } from '../storage.js';
+import { getProfile, getScene } from '../storage.js';
 import { parentGateButton } from '../parentgate.js';
 import { iconButton, repeatButton, say, topBar } from '../ui.js';
 import { GAMES } from '../../games/registry.js';
@@ -22,7 +22,9 @@ export function render(root, { profileId }, app) {
 
   root.append(
     topBar({
-      left: [playerButton, iconButton('album', t('openCollection'), () => app.show('collection', { profileId }), 'album-btn')],
+      // (the album button wiggles while new meadow items wait to be seen)
+      left: [playerButton, iconButton('album', t('openCollection'), () => app.show('collection', { profileId }),
+        `album-btn${getScene(profileId).news.length ? ' nudge' : ''}`)],
       title: t('chooseGame'),
       right: [repeatButton(), parentGateButton(() => app.show('parent', { from: 'hub', profileId }))],
     }),

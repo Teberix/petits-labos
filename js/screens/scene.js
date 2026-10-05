@@ -34,6 +34,11 @@ function freeSpot(placed) {
 export function render(root, { profileId }, app) {
   if (!getProfile(profileId)) return app.show('profiles');
   let scene = getScene(profileId);
+  // The child came to see their new treasures: the buttons stop wiggling.
+  if (scene.news.length) {
+    scene = { ...scene, news: [] };
+    setScene(profileId, scene);
+  }
   const byId = Object.fromEntries(ITEMS.map((i) => [i.id, i]));
   let cleanups = [];
   let grab = null; // where the finger went down on what is being dragged

@@ -67,6 +67,15 @@ test('everything is unlocked at 640 stars (~80 min of play); the album is full w
   assert.equal(end.got.filter((r) => r.kind === 'item').at(-1).at, 560, 'the last item (~70 min)');
 });
 
+test('a new item is "news" until the meadow is opened (the buttons wiggle); stickers are not', () => {
+  const { got, scene } = play(fresh(), 16, seeded(4));
+  const items = got.filter((r) => r.kind === 'item').map((r) => r.id);
+  assert.deepEqual(scene.news, items);
+  assert.equal(items.length, 1);
+  const old = { items: [], placed: [], nextAt: 1 }; // a v3 scene saved before "news" existed
+  assert.equal(addStar({ stars: 0, stickers: ALL.stickers }, old, ALL).scene.news.length, 1);
+});
+
 test('stars and rewards never go down; addStar does not change its inputs', () => {
   const state = fresh();
   const out = addStar(state.rewards, state.scene, ALL);

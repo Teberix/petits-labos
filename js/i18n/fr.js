@@ -62,6 +62,7 @@ export default {
   sceneItems: 'Mes trésors',
   sceneIntro: 'Voici ton pré ! Touche un trésor pour le mettre dedans, puis glisse-le où tu veux.',
   sceneEmpty: 'Gagne des étoiles : de nouveaux trésors viendront dans ton pré !',
+  sceneNews: 'Un nouveau trésor t’attend dans ton pré : touche le pré !',
   sceneFull: 'Ton pré est plein ! Enlève quelque chose pour en mettre un autre.',
   newSticker: 'Bravo ! Un nouvel autocollant : {name} !',
   starsCount: '{n} étoiles',

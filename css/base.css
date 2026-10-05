@@ -372,6 +372,14 @@ input[type="text"] {
 @keyframes sticker-pop { from { transform: scale(0) rotate(-30deg); } to { transform: scale(1) rotate(0); } }
 @keyframes spin { to { transform: rotate(360deg); } }
 @keyframes wiggle { 25% { transform: rotate(-8deg); } 75% { transform: rotate(8deg); } }
+/* "Look here!": a button that wiggles every 2 s (new meadow items to see). */
+.nudge { animation: nudge 2s ease-in-out infinite; }
+@keyframes nudge {
+  0%, 30%, 100% { transform: rotate(0) scale(1); }
+  8% { transform: rotate(-12deg) scale(1.12); }
+  16% { transform: rotate(12deg) scale(1.12); }
+  24% { transform: rotate(-6deg) scale(1.06); }
+}
 
 /* Phones: in a game the title is not needed (kids don't read it) — room for the stars. */
 @media (max-width: 30rem) {

@@ -62,6 +62,7 @@ export default {
   sceneItems: 'Mis tesoros',
   sceneIntro: '¡Este es tu prado! Toca un tesoro para ponerlo dentro, y luego arrástralo donde quieras.',
   sceneEmpty: 'Gana estrellas: ¡llegarán nuevos tesoros a tu prado!',
+  sceneNews: 'Un tesoro nuevo te espera en tu prado: ¡toca el prado!',
   sceneFull: '¡Tu prado está lleno! Quita algo para poner otra cosa.',
   newSticker: '¡Bravo! Una figurita nueva: ¡{name}!',
   starsCount: '{n} estrellas',

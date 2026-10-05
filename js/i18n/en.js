@@ -62,6 +62,7 @@ export default {
   sceneItems: 'My treasures',
   sceneIntro: 'Here is your meadow! Touch a treasure to put it in, then drag it where you like.',
   sceneEmpty: 'Earn stars: new treasures will come to your meadow!',
+  sceneNews: 'A new treasure is waiting in your meadow: touch the meadow!',
   sceneFull: 'Your meadow is full! Take something out to put another one in.',
   newSticker: 'Well done! A new sticker: {name}!',
   starsCount: '{n} stars',

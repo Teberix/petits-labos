@@ -9,7 +9,8 @@
 //       rewards: { stars: 12, stickers: ['sun', 'rocket'] },
 //       skills: { <gameId>: { skill, best, rounds, seen } },  // new engine (js/progress.js)
 //       fixedMap: false,                                        // parent switch: fixed level map
-//       scene: { items: [id…], placed: [{ id, x, y }…], nextAt } } // rewards option B (js/scene.js)
+//       scene: { items: [id…], placed: [{ id, x, y }…], nextAt, news? } } // rewards option B (js/scene.js)
+//       (news: optional, read as [] when missing — no migration needed)
 //   ]
 // }
 // v2 and v3 are ADDITIVE over v1 (owner, 2026-10-03): every v1 field stays where it was, so an
@@ -266,7 +267,7 @@ export function getScene(profileId) {
   const profile = getProfile(profileId);
   if (!profile) return null;
   const sc = profile.scene ?? startScene(getRewards(profileId)); // (defensive)
-  return { items: [...sc.items], placed: sc.placed.map((x) => ({ ...x })), nextAt: sc.nextAt };
+  return { items: [...sc.items], placed: sc.placed.map((x) => ({ ...x })), nextAt: sc.nextAt, news: [...(sc.news ?? [])] };
 }
 
 export function setScene(profileId, scene) {
