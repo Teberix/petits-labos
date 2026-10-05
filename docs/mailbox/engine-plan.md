@@ -173,3 +173,7 @@ Shapes ×3, release), scaled from c1a:
 - **Total ≈ 30 weekly points**, every session well inside one 5-hour window. The weekly
   limit resets on 2026-10-07: the ~36 points left this week cover c1b + c2 with margin;
   the rest fits in the following week.
+
+## Final touch (after game 9 work)
+- Before the first profile is created, show parents a short, simple, nice note: Petits
+  Labos is a STEM app for today's learning — learning by playing. (Backlog only, not built.)

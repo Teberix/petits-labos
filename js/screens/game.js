@@ -12,12 +12,16 @@
 //   ctx.rewards.star(fromEl)      +1 star (flies from fromEl to the counter); returns a
 //                                 newly earned reward (a sticker or a meadow item) or null
 //   ctx.rewards.showSticker(r)    full-screen reveal of that reward; a Promise, resolves when closed
+//   ctx.path               null (the game shows its fixed level map) or, for a game whose
+//                          meta says `path: true` while the parent switch "Carte des
+//                          niveaux" (profile.fixedMap) is off, the path screen: see js/path.js
 //   ctx.exit()             back to the hub
 import { h } from '../dom.js';
 import { getLang, t } from '../i18n.js';
 import { sfx, stopSpeaking } from '../audio.js';
 import { getGameData, getProfile, setGameData } from '../storage.js';
 import { iconButton, repeatButton, say, topBar } from '../ui.js';
+import { createPath } from '../path.js';
 import { addStar, flyStar, showSticker, starBadge } from '../rewards.js';
 import { GAMES } from '../../games/registry.js';
 
@@ -53,6 +57,7 @@ export function render(root, { profileId, gameId }, app) {
       },
       showSticker,
     },
+    path: entry.path && !profile.fixedMap ? createPath(profileId, gameId) : null,
     exit,
   };
 

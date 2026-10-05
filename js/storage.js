@@ -377,6 +377,13 @@ export function setSkill(profileId, gameId, value) {
   save();
 }
 
+// The parent's "reset difficulty" for one game: back to step 1. The stones (rounds) and
+// the best step reached stay — the child's path never shrinks.
+export function resetSkill(profileId, gameId) {
+  const state = getSkill(profileId, gameId);
+  if (state) setSkill(profileId, gameId, { ...state, skill: 1, seen: [] });
+}
+
 // ---- Ask the browser not to evict our data when the device is low on space ----
 // Chrome grants this more easily once the app is installed to the home screen, so we
 // ask again on each launch until it is granted (asking is silent: no prompt is shown).

@@ -478,3 +478,30 @@ input[type="text"] {
 .scene-empty .next-reward-gift { flex: none; }
 @keyframes shake { 25% { transform: translateX(-0.4rem); } 75% { transform: translateX(0.4rem); } }
 .scene-empty { display: flex; align-items: center; gap: 0.5rem; margin: 0; color: var(--ink-soft); text-align: center; align-self: center; }
+
+/* ---- Parent: the Save card's list of copies ---- */
+.backup-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.5rem; }
+.backup-btn { width: 100%; text-align: start; }
+.confirm-item { margin: 0; font-size: 1.1rem; font-weight: 700; }
+
+/* ---- Path screen (js/path.js): the rounds as stones, then ▶ and the free mode ---- */
+.path-screen {
+  height: 100%; display: grid; grid-template-rows: minmax(0, 1fr) auto; gap: 1rem;
+  padding: 1rem max(1rem, env(safe-area-inset-right)) max(1rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));
+}
+.path-stones {
+  display: flex; flex-wrap: wrap; align-content: center; justify-content: center; gap: 0.6rem;
+  overflow: hidden;
+}
+.path-stone { width: 2.6rem; height: 1.9rem; border-radius: 50% 45% 50% 40%; background: #B9B3A8; box-shadow: inset 0 -0.3rem 0 #9C958A; }
+.path-stone:nth-child(even) { transform: translateY(0.5rem) rotate(-8deg); }
+.path-stone.tone-1 { background: #C9C2B5; }
+.path-stone.tone-2 { background: #A9A296; }
+.path-stone:last-child { animation: pop-in 0.5s ease-out; }
+.path-actions { display: flex; justify-content: center; align-items: center; gap: 1.5rem; }
+.path-play, .path-free { border: 0; border-radius: 50%; display: grid; place-items: center; cursor: pointer; }
+.path-play { width: 7.5rem; height: 7.5rem; background: #3FA34D; color: #fff; box-shadow: 0 0.4rem 0 #2C7A37; }
+.path-play svg { width: 55%; height: 55%; margin-left: 10%; }
+.path-free { width: 5rem; height: 5rem; background: #fff; box-shadow: 0 0.3rem 0 #D6CFC2; }
+.path-free svg { width: 80%; height: 80%; }
+@keyframes pop-in { from { transform: scale(0); } }

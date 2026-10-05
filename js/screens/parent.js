@@ -7,11 +7,27 @@ import { LANGS, LANG_NAMES, getLang, setLang, t } from '../i18n.js';
 import { stopSpeaking } from '../audio.js';
 import {
   addProfile, copyLiveSave, deleteProfile, getProfile, getProfiles, isPreview, listBackups, resetProgress,
-  restoreBackup, setSetting, updateProfile,
+  resetSkill, restoreBackup, setSetting, updateProfile,
 } from '../storage.js';
+import { GAMES } from '../../games/registry.js';
 import { checkNow } from '../updates.js';
 import { VERSION } from '../version.js';
 import { iconButton, topBar } from '../ui.js';
+
+// A kept save's date, the same in every language: 05/10/2026, 14:10.
+const pad = (n) => String(n).padStart(2, '0');
+function formatWhen(time) {
+  const d = new Date(time);
+  return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()}, ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+// What a backup is, in words a parent understands (never a schema number). Version
+// backups (made by an update) have no date; with more than one, their version is shown.
+function backupName({ kind, label, time }, versionCount) {
+  if (kind === 'version') return versionCount > 1 ? t('keptUpdateN', { n: label.slice(1) }) : t('keptUpdate');
+  const key = { reset: 'keptReset', restore: 'keptRestore', copy: 'keptCopy' }[kind];
+  return t(key, { when: formatWhen(time) });
+}
 
 const AVATARS = ['🦊', '🐱', '🐼', '🦄', '🐸', '🐙', '🦋', '🐢', '🐰', '🐯', '🐧', '🦉', '🐞', '🐳', '🦁', '🐨'];
 
@@ -35,7 +51,7 @@ export function render(root, params, app) {
     : app.show('profiles'));
 
   // or { name: 'edit', id } / { name: 'confirmDelete', id } / { name: 'confirmReset', id | null }
-  //    / { name: 'confirmSave', text, yes, run }
+  //    / { name: 'confirmSave', text, yes, run } / { name: 'confirmSkill', id, gameId }
   let view = { name: 'main' };
   let updateStatus = '';
 
@@ -53,6 +69,7 @@ export function render(root, params, app) {
         : view.name === 'confirmDelete' ? confirmView(view.id)
           : view.name === 'confirmReset' ? confirmResetView(view.id)
             : view.name === 'confirmSave' ? confirmSaveView(view)
+              : view.name === 'confirmSkill' ? confirmSkillView(view)
               : mainView(),
     );
   }
@@ -116,6 +133,7 @@ export function render(root, params, app) {
       avatar: existing?.avatar ?? AVATARS[getProfiles().length % AVATARS.length],
       readingLang: existing?.readingLang ?? getLang(),
       unlockAll: existing?.unlockAll ?? false, // games open every level for this player
+      fixedMap: existing?.fixedMap ?? false, // path games show their fixed level map instead
     };
 
     const nameInput = h('input', {
@@ -136,6 +154,7 @@ export function render(root, params, app) {
     const avatarSlot = h('div');
     const langSlot = h('div');
     const unlockSlot = h('div');
+    const mapSlot = h('div');
     const drawChoices = () => {
       avatarSlot.replaceChildren(choiceRow(AVATARS.map((a) => ({ value: a, label: a })), draft.avatar,
         (a) => { draft.avatar = a; drawChoices(); }, 'avatar-choices'));
@@ -143,6 +162,8 @@ export function render(root, params, app) {
         (l) => { draft.readingLang = l; drawChoices(); }));
       unlockSlot.replaceChildren(choiceRow([{ value: false, label: t('no') }, { value: true, label: t('yes') }], draft.unlockAll,
         (v) => { draft.unlockAll = v; drawChoices(); }));
+      mapSlot.replaceChildren(choiceRow([{ value: false, label: t('no') }, { value: true, label: t('yes') }], draft.fixedMap,
+        (v) => { draft.fixedMap = v; drawChoices(); }));
     };
     drawChoices();
 
@@ -153,6 +174,12 @@ export function render(root, params, app) {
       h('p', { class: 'field-label' }, t('readingLang')), langSlot,
       h('p', { class: 'field-label' }, t('unlockAll')), unlockSlot,
       h('p', { class: 'hint' }, t('unlockAllHint')),
+      h('p', { class: 'field-label' }, t('fixedMap')), mapSlot,
+      h('p', { class: 'hint' }, t('fixedMapHint')),
+      // reset difficulty: one button per game on the path (new engine)
+      existing && GAMES.filter((g) => g.path).map((g) => h('button', {
+        class: 'btn reset-skill-btn', type: 'button', onclick: () => go({ name: 'confirmSkill', id, gameId: g.id }),
+      }, t('resetSkill', { game: t(g.titleKey) }))),
       h('div', { class: 'actions' },
         existing && h('button', {
           class: 'btn btn-danger reset-btn', type: 'button', onclick: () => go({ name: 'confirmReset', id }),
@@ -163,39 +190,44 @@ export function render(root, params, app) {
     );
   }
 
-  // The save: the backups, "start everything again", and (preview) the copy.
+  // The save: one list of the copies the app kept (newest first; the update backups,
+  // which have no date, last), then the copy (preview) and "start everything again".
   function saveCard() {
-    const backups = listBackups();
-    // v1, v2…: the saves from before an update; the others: a save kept aside when a
-    // restore, a copy or a reset replaced it (named by its date).
-    const buttons = backups.map(({ label, kind, time }) => {
-      const when = time ? new Date(time).toLocaleString(getLang()) : '';
-      const name = kind === 'version' ? t('restoreBackup', { label }) : t('restoreKept', { when });
-      const text = kind === 'version' ? t('confirmRestore', { label }) : t('confirmRestoreKept', { when });
-      return h('button', {
-        class: 'btn', type: 'button',
-        onclick: () => go({ name: 'confirmSave', text, yes: t('yesRestore'), run: () => restoreBackup(label) }),
-      }, name);
+    const all = listBackups();
+    const versions = all.filter((b) => b.kind === 'version').reverse();
+    const kept = all.filter((b) => b.kind !== 'version'); // already newest first
+    const copies = [...kept, ...versions].map((b) => {
+      const name = backupName(b, versions.length);
+      return h('li', {}, h('button', {
+        class: 'btn backup-btn', type: 'button',
+        onclick: () => go({ name: 'confirmSave', text: t('confirmRestoreCopy'), item: name, note: t('confirmRestoreNote'), yes: t('yesRestore'), run: () => restoreBackup(b.label) }),
+      }, name));
     });
+    const actions = [];
     if (isPreview()) {
-      buttons.unshift(h('button', {
+      actions.push(h('button', {
         class: 'btn', type: 'button',
         onclick: () => go({ name: 'confirmSave', text: t('confirmCopySave'), yes: t('yesCopySave'), run: copyLiveSave }),
       }, t('copySave')));
     }
     if (getProfiles().length) {
-      buttons.push(h('button', {
+      actions.push(h('button', {
         class: 'btn btn-danger reset-all-btn', type: 'button', onclick: () => go({ name: 'confirmReset', id: null }),
       }, t('resetAll')));
     }
-    return buttons.length ? h('div', { class: 'card' }, h('h2', {}, t('saveTitle')), ...buttons) : null;
+    if (!copies.length && !actions.length) return null;
+    return h('div', { class: 'card' }, h('h2', {}, t('saveTitle')),
+      copies.length ? [h('p', { class: 'hint' }, t('saveIntro')), h('ul', { class: 'backup-list' }, copies)] : null,
+      ...actions);
   }
 
   // Restore / copy: the whole app reloads afterwards (every screen reads the new save).
-  function confirmSaveView({ text, yes, run }) {
+  function confirmSaveView({ text, item, note, yes, run }) {
     const status = h('p', { class: 'status', 'aria-live': 'polite' });
     return h('div', { class: 'card' },
       h('p', { class: 'confirm-text' }, text),
+      item && h('p', { class: 'confirm-item' }, item),
+      note && h('p', { class: 'hint' }, note),
       h('div', { class: 'actions' },
         h('button', { class: 'btn', type: 'button', onclick: () => go({ name: 'main' }) }, t('cancel')),
         h('button', {
@@ -227,6 +259,22 @@ export function render(root, params, app) {
         }, t('yesReset')),
       ),
       status,
+    );
+  }
+
+  // Difficulty of one path game back to step 1 for one profile (the stones stay).
+  function confirmSkillView({ id, gameId }) {
+    const game = GAMES.find((g) => g.id === gameId);
+    const back = () => go({ name: 'edit', id });
+    return h('div', { class: 'card' },
+      h('p', { class: 'confirm-text' }, t('confirmResetSkill', { game: game ? t(game.titleKey) : '', name: getProfile(id)?.name ?? '' })),
+      h('div', { class: 'actions' },
+        h('button', { class: 'btn', type: 'button', onclick: back }, t('cancel')),
+        h('button', {
+          class: 'btn btn-danger btn-solid confirm-skill-btn', type: 'button',
+          onclick: () => { resetSkill(id, gameId); back(); },
+        }, t('yesResetSkill')),
+      ),
     );
   }
 

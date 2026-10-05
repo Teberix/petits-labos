@@ -77,10 +77,32 @@ async function resetConfirm(page, kit, which) {
   await page.waitForSelector('.confirm-reset-btn');
 }
 
+// A fake game on the path (no real game opts in yet, c2): added to the registry in the
+// page, with `rounds` stones already played. Leaves the app on the hub.
+async function fakePathGame(page, kit, rounds = 0) {
+  await kit.tap(page, page.locator('.profile-tile').first());
+  await page.waitForSelector('.game-tile');
+  await page.evaluate(async (rounds) => {
+    const { GAMES } = await import('./games/registry.js');
+    const s = await import('./js/storage.js');
+    if (rounds) s.setSkill(s.getProfiles()[0].id, 'pathcheck', { skill: 1, best: 1, rounds, seen: [] });
+    const levels = [{ id: 1, difficulty: 1 }];
+    const game = { mount(stage, ctx) { ctx.path.show(stage, { levels, onPlay() {}, onFree() {} }); }, unmount() {} };
+    GAMES.push({ id: 'pathcheck', titleKey: 'parentTitle', path: true, load: async () => ({ default: game }) });
+  }, rounds);
+}
+
+// The parent screen, through the 3 s gate (from the hub).
+async function openParent(page) {
+  await page.waitForSelector('.gate-btn');
+  await page.locator('.gate-btn').dispatchEvent('pointerdown', { pointerId: 1, isPrimary: true });
+  await page.waitForSelector('.parent-body', { timeout: 8000 });
+}
+
 export default {
   // (placed meadow items may overlap each other by design: not listed; their 64px
   // minimum is CSS, min-width on .scene-item)
-  touch: ['button.sticker-spot', '.scene-card', '.game-tile', 'button.world-tile', '.parent-body .btn'],
+  touch: ['.path-play', '.path-free', 'button.sticker-spot', '.scene-card', '.game-tile', 'button.world-tile', '.parent-body .btn'],
   worstCases: [
     // The hub and the album are lists: on a phone they scroll down (pageScroll).
     { name: 'hub, album button wiggling (new item)', pageScroll: true, async setup(page, kit) {
@@ -111,6 +133,54 @@ export default {
       await seed(page, { stars: 640, stickers: STICKERS.length, items: ITEMS.length, placed: 30 });
       await openStartWorld(page, kit);
       if (await page.locator('.scene-item').count() !== 30) throw new Error('expected 30 placed items');
+    } },
+    // 2c (owner, 2026-10-05): how much of the free height the empty world uses, printed
+    // at 360×640 only (information, never a failure).
+    { name: 'free world, empty: space used (printed at 360x640)', async setup(page, kit) {
+      await seed(page, {});
+      await openStartWorld(page, kit);
+      const vp = page.viewportSize();
+      if (vp.width !== 360 || vp.height !== 640) return;
+      const m = await page.evaluate(() => {
+        const r = (sel) => document.querySelector(sel).getBoundingClientRect();
+        return { scene: r('.scene-view').height, stage: r('.scene-stage').height, body: r('.scene-body').height, tray: r('.scene-tray').height };
+      });
+      console.log(`  2c free world 360x640: scene ${m.scene.toFixed(0)}px / free (stage) ${m.stage.toFixed(0)}px = ${(m.scene / m.stage * 100).toFixed(0)} %; body ${m.body.toFixed(0)}px, tray ${m.tray.toFixed(0)}px`);
+    } },
+    // The path screen (js/path.js) with a fake game: a new player, then a long path.
+    { name: 'path, new player: play + free mode', async setup(page, kit) {
+      await fakePathGame(page, kit, 0);
+      await kit.tap(page, page.locator('.album-btn'));
+      await kit.tap(page, page.locator('.top-bar button').first());
+      await kit.tap(page, page.locator('.game-tile').last());
+      await page.waitForSelector('.path-play');
+    } },
+    { name: 'path, 60 rounds played (stones)', async setup(page, kit) {
+      await fakePathGame(page, kit, 60);
+      await kit.tap(page, page.locator('.album-btn'));
+      await kit.tap(page, page.locator('.top-bar button').first());
+      await kit.tap(page, page.locator('.game-tile').last());
+      await page.waitForSelector('.path-stone');
+    } },
+    { name: 'parent, edit profile: level map switch + reset difficulty', pageScroll: true, async setup(page, kit) {
+      await fakePathGame(page, kit, 5);
+      await openParent(page);
+      await kit.tap(page, page.locator('.profile-row .btn').first());
+      await page.waitForSelector('.reset-skill-btn');
+    } },
+    { name: 'parent, Save card: kept saves + update backups', pageScroll: true, async setup(page, kit) {
+      await page.waitForSelector('.profile-tile');
+      await page.evaluate(() => {
+        const raw = localStorage.getItem('petits-labos');
+        const now = Date.now();
+        for (const label of ['v1', 'v2', `before-reset-${now - 3600e3}`, `before-restore-${now - 60e3}`]) {
+          localStorage.setItem(`petits-labos.backup-${label}`, raw);
+        }
+      });
+      await kit.tap(page, page.locator('.profile-tile').first());
+      await openParent(page);
+      await page.waitForSelector('.backup-btn');
+      if (await page.locator('.backup-btn').count() !== 4) throw new Error('expected 4 copies in the Save card');
     } },
     // (over the hub, which may scroll under it)
     { name: 'reveal, a sticker', pageScroll: true, async setup(page, kit) { await reveal(page, kit, 'sticker'); } },
