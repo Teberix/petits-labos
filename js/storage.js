@@ -203,8 +203,8 @@ export function getProfile(id) {
   return getProfiles().find((p) => p.id === id) ?? null;
 }
 
-export function addProfile({ name, avatar, readingLang, unlockAll = false }) {
-  const profile = { id: newId(), name, avatar, readingLang, unlockAll, games: {}, skills: {}, fixedMap: false };
+export function addProfile({ name, avatar, readingLang, unlockAll = false, fixedMap = false }) {
+  const profile = { id: newId(), name, avatar, readingLang, unlockAll, games: {}, skills: {}, fixedMap };
   putRewards(profile, startRewards());
   profile.worlds = startWorlds(START_WORLD);
   ensureLoaded().profiles.push(profile);
