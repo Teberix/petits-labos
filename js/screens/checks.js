@@ -5,13 +5,47 @@
 // game's checks.js (see tools/check-kit.mjs); run for the whole app, not with --game.
 // Starts on the profiles screen with the check's test profile.
 import { STICKERS } from '../stickers.js';
-import { ITEMS, START_WORLD } from '../items.js';
+import { ITEMS, PACKS, START_WORLD } from '../items.js';
+import { addStrings } from '../i18n.js';
+
+// A fake square pack (c3, owner 2026-10-05: new packs are 160 × 160): never shipped, not
+// in scenes/registry.js. The meadow's first 3 items on a plain square background, ground
+// from y ≈ 95. Also checked by tests/packs.test.mjs (any size must pass).
+const MEADOW = PACKS[0];
+const SQUARE_ITEMS = MEADOW.items.slice(0, 3);
+export const SQUARE_PACK = {
+  id: 'squarecheck',
+  kind: 'free',
+  size: [160, 160],
+  background: `
+    <rect width="160" height="160" fill="#BFE6FF"/>
+    <path d="M0 99Q40 85 80 96T160 92V160H0Z" fill="#9BD07A"/>
+    <path d="M0 115Q50 104 100 115T160 112V160H0Z" fill="#7CB342"/>`,
+  items: SQUARE_ITEMS,
+  strings: Object.fromEntries(Object.entries(MEADOW.strings).map(([lang, d]) => [lang,
+    { title: `${d.title} ■`, ...Object.fromEntries(SQUARE_ITEMS.map((i) => [`item.${i.id}`, d[`item.${i.id}`]])) }])),
+};
+
+// Adds the square pack to the running app (like js/items.js does for a real pack).
+export function installSquarePack() {
+  if (PACKS.includes(SQUARE_PACK)) return;
+  const p = SQUARE_PACK;
+  PACKS.push(p);
+  ITEMS.push(...p.items.map((i) => ({ ...i, id: `${p.id}.${i.id}`, world: p.id })));
+  const strings = {};
+  for (const [lang, d] of Object.entries(p.strings)) {
+    strings[lang] = { [`world.${p.id}`]: d.title };
+    for (const i of p.items) strings[lang][`item.${p.id}.${i.id}`] = d[`item.${i.id}`];
+  }
+  addStrings(strings);
+}
 
 // Rewrites the test profile's save (schema 4: rewards, collection, worlds — the start
 // world), then reloads (the app reads it at start).
-async function seed(page, { stars = 0, stickers = 0, items = 0, placed = 0, news = false }) {
+// `square`: also the fake square world, unlocked, with its 3 items and `placed` of them.
+async function seed(page, { stars = 0, stickers = 0, items = 0, placed = 0, news = false, square = false }) {
   await page.waitForSelector('.profile-tile');
-  await page.evaluate(({ stars, stickers, items, placed, news, world }) => {
+  await page.evaluate(({ stars, stickers, items, placed, news, world, square }) => {
     const data = JSON.parse(localStorage.getItem('petits-labos'));
     const p = data.profiles[0];
     p.rewards = { stars, stickers };
@@ -19,6 +53,11 @@ async function seed(page, { stars = 0, stickers = 0, items = 0, placed = 0, news
     // placed: spread over the ground, overlapping like a child's busy world
     const spots = Array.from({ length: placed }, (_, i) => ({ id: items[i % items.length], x: 0.08 + (i % 10) * 0.094, y: 0.62 + Math.floor(i / 10) * 0.17 }));
     p.worlds = { unlocked: [world], [world]: { placed: spots } };
+    if (square) {
+      p.collection.items.push(...square.items);
+      p.worlds.unlocked.push(square.id);
+      p.worlds[square.id] = { placed: spots.map((s, i) => ({ ...s, id: square.items[i % square.items.length] })) };
+    }
     localStorage.setItem('petits-labos', JSON.stringify(data));
   }, {
     world: START_WORLD,
@@ -27,9 +66,11 @@ async function seed(page, { stars = 0, stickers = 0, items = 0, placed = 0, news
     items: ITEMS.filter((i) => i.world === START_WORLD).slice(0, items).map((i) => i.id),
     placed,
     news,
+    square: square && { id: SQUARE_PACK.id, items: SQUARE_PACK.items.map((i) => `${SQUARE_PACK.id}.${i.id}`) },
   });
   await page.reload();
   await page.waitForSelector('.profile-tile');
+  if (square) await page.evaluate(async () => (await import('./js/screens/checks.js')).installSquarePack());
 }
 
 async function openAlbum(page, kit) {
@@ -44,9 +85,9 @@ async function openWorlds(page, kit) {
   await page.waitForSelector('.world-tile');
 }
 
-async function openStartWorld(page, kit) {
+async function openStartWorld(page, kit, world = START_WORLD) {
   await openWorlds(page, kit);
-  await kit.tap(page, page.locator(`.world-tile[data-world="${START_WORLD}"]`));
+  await kit.tap(page, page.locator(`.world-tile[data-world="${world}"]`));
   await page.waitForSelector('.scene-view');
 }
 
@@ -55,6 +96,7 @@ async function reveal(page, kit, kind, unlocked) {
   await kit.tap(page, page.locator('.profile-tile').first());
   await page.waitForSelector('.game-tile');
   await page.evaluate(async ({ kind, unlocked }) => {
+    if (unlocked === 'squarecheck') (await import('./js/screens/checks.js')).installSquarePack();
     const r = await import('./js/rewards.js');
     const list = kind === 'item' ? (await import('./js/items.js')).ITEMS : (await import('./js/stickers.js')).STICKERS;
     r.showSticker({ kind, ...list[0], ...(unlocked ? { unlocked } : {}) });
@@ -147,6 +189,23 @@ export default {
       });
       console.log(`  2c free world 360x640: scene ${m.scene.toFixed(0)}px / free (stage) ${m.stage.toFixed(0)}px = ${(m.scene / m.stage * 100).toFixed(0)} %; body ${m.body.toFixed(0)}px, tray ${m.tray.toFixed(0)}px`);
     } },
+    // c3 (owner, 2026-10-05): the same numbers for the fake square pack (160 × 160).
+    { name: 'free world, square pack (fake), nothing placed: space used (printed at 360x640)', async setup(page, kit) {
+      await seed(page, { square: true });
+      await openStartWorld(page, kit, SQUARE_PACK.id);
+      const vp = page.viewportSize();
+      if (vp.width !== 360 || vp.height !== 640) return;
+      const m = await page.evaluate(() => {
+        const r = (sel) => document.querySelector(sel).getBoundingClientRect();
+        return { w: r('.scene-view').width, scene: r('.scene-view').height, stage: r('.scene-stage').height, body: r('.scene-body').height, tray: r('.scene-tray').height };
+      });
+      console.log(`  c3 square world 360x640: scene ${m.w.toFixed(0)}x${m.scene.toFixed(0)}px / free (stage) ${m.stage.toFixed(0)}px = ${(m.scene / m.stage * 100).toFixed(0)} %; body ${m.body.toFixed(0)}px, tray ${m.tray.toFixed(0)}px`);
+    } },
+    { name: 'free world, square pack (fake): 30 placed, its 3 items in the tray', async setup(page, kit) {
+      await seed(page, { stars: 20, items: 1, placed: 30, square: true });
+      await openStartWorld(page, kit, SQUARE_PACK.id);
+      if (await page.locator('.scene-item').count() !== 30) throw new Error('expected 30 placed items');
+    } },
     // The path screen (js/path.js) with a fake game: a new player, then a long path.
     { name: 'path, new player: play + free mode', async setup(page, kit) {
       await fakePathGame(page, kit, 0);
@@ -186,6 +245,7 @@ export default {
     { name: 'reveal, a sticker', pageScroll: true, async setup(page, kit) { await reveal(page, kit, 'sticker'); } },
     { name: 'reveal, an item', pageScroll: true, async setup(page, kit) { await reveal(page, kit, 'item'); } },
     { name: 'reveal, a new world', pageScroll: true, async setup(page, kit) { await reveal(page, kit, 'item', START_WORLD); } },
+    { name: 'reveal, a new square world (fake pack)', pageScroll: true, async setup(page, kit) { await reveal(page, kit, 'item', SQUARE_PACK.id); } },
     // The parent screen is a list: it scrolls down on a phone.
     { name: 'parent, reset one profile: confirm', pageScroll: true, async setup(page, kit) { await resetConfirm(page, kit, 'profile'); } },
     { name: 'parent, reset everything: confirm', pageScroll: true, async setup(page, kit) { await resetConfirm(page, kit, 'all'); } },

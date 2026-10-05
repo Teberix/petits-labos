@@ -4,7 +4,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { PACKS } from '../scenes/registry.js';
-import { ITEMS, POOL_ITEMS, START_WORLD, itemSvg, sceneSvg } from '../js/items.js';
+import { ITEMS, POOL_ITEMS, START_WORLD, itemSvg, sceneAspect, sceneSvg } from '../js/items.js';
+import { SQUARE_PACK } from '../js/screens/checks.js';
 import { START_WORLD as STORAGE_START } from '../js/storage.js';
 import { t } from '../js/i18n.js';
 import { GAMES } from '../games/registry.js';
@@ -18,7 +19,9 @@ test('the registry: unique pack ids, the start world is the meadow (as storage.j
   assert.equal(STORAGE_START, START_WORLD);
 });
 
-for (const pack of PACKS) {
+// Every pack's own checks; also run on the gate's fake square pack (js/screens/checks.js):
+// any size is allowed, new packs are [160, 160].
+for (const pack of [...PACKS, SQUARE_PACK]) {
   test(`pack ${pack.id}: shape, unique item ids, art without ids, names in fr/es/en`, () => {
     assert.match(pack.id, /^[a-z][a-z0-9-]*$/);
     assert.ok(['free', 'slots'].includes(pack.kind), `kind ${pack.kind}`);
@@ -60,6 +63,17 @@ test('the engine view: global ids <pack>.<item>, the pool per world, names and s
   }
   for (const item of ITEMS) {
     for (const lang of LANGS) assert.notEqual(t(`item.${item.id}`, {}, lang), `item.${item.id}`, `${lang}: item.${item.id}`);
+  }
+});
+
+test('a square pack (160 × 160): its own viewBox and shape, the meadow stays 16:10', () => {
+  assert.equal(sceneAspect('meadow'), 1.6);
+  PACKS.push(SQUARE_PACK); // (for packById, only during this test)
+  try {
+    assert.equal(sceneAspect(SQUARE_PACK.id), 1);
+    assert.match(sceneSvg(SQUARE_PACK.id), /viewBox="0 0 160 160"/);
+  } finally {
+    PACKS.pop();
   }
 });
 

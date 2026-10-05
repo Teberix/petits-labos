@@ -14,11 +14,16 @@ import { checkNow } from '../updates.js';
 import { VERSION } from '../version.js';
 import { iconButton, topBar } from '../ui.js';
 
-// A kept save's date, the same in every language: 05/10/2026, 14:10.
-const pad = (n) => String(n).padStart(2, '0');
+// A kept save's date with the month as a word (no day/month mix-up), in the app's
+// language: fr "5 oct. 2026, 14:10", es "5 oct 2026, 14:10", en "5 Oct 2026, 14:10".
+// Date and time are formatted apart and joined with ", " (some browsers put "à"/"at").
+const LOCALES = { fr: 'fr-FR', es: 'es-ES', en: 'en-GB' };
 function formatWhen(time) {
   const d = new Date(time);
-  return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()}, ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  const locale = LOCALES[getLang()] ?? 'fr-FR';
+  const day = new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short', year: 'numeric' }).format(d);
+  const clock = new Intl.DateTimeFormat(locale, { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(d);
+  return `${day}, ${clock}`;
 }
 
 // What a backup is, in words a parent understands (never a schema number). Version

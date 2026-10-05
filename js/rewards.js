@@ -12,7 +12,7 @@ import { t } from './i18n.js';
 import { sfx } from './audio.js';
 import { getRewards, getWorlds, setRewardsAndWorlds } from './storage.js';
 import { STICKERS, stickerSvg } from './stickers.js';
-import { POOL_ITEMS, START_WORLD, itemById, itemSvg, packById, sceneSvg } from './items.js';
+import { POOL_ITEMS, START_WORLD, itemById, itemSvg, packById, sceneAspect, sceneSvg } from './items.js';
 import { addStar as nextState, gap, granted, missingItems } from './scene.js';
 import { say } from './ui.js';
 
@@ -91,7 +91,7 @@ export function showSticker(reward) {
   const world = item && reward.unlocked;
   const title = world ? 'newWorldTitle' : item ? 'newItemTitle' : 'newStickerTitle';
   const shown = world
-    ? h('div', { class: 'world-reveal sticker-reveal' },
+    ? h('div', { class: 'world-reveal sticker-reveal', style: `--scene-ar: ${sceneAspect(world)}` },
       h('span', { class: 'world-view', html: sceneSvg(world) }),
       h('span', { class: 'world-gift', html: itemSvg(reward) }))
     : h('div', { class: `sticker-reveal${item ? ' item-reveal' : ''}`, html: item ? itemSvg(reward) : stickerSvg(reward) });

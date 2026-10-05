@@ -32,7 +32,13 @@ for (const p of PACKS) {
   addStrings(strings);
 }
 
-export const itemSvg = (item) => `<svg viewBox="0 0 100 100" aria-hidden="true">${item.art}</svg>`;
+// A pack's shape: width / height of its `size` (the meadow 160 × 100 → 1.6, new packs 1).
+export function sceneAspect(id) {
+  const p = packById(id) ?? PACKS[0];
+  return p.size[0] / p.size[1];
+}
+
+export const itemSvg =(item) => `<svg viewBox="0 0 100 100" aria-hidden="true">${item.art}</svg>`;
 export function sceneSvg(id) {
   const p = packById(id) ?? PACKS[0];
   return `<svg viewBox="0 0 ${p.size[0]} ${p.size[1]}" preserveAspectRatio="xMidYMid slice" aria-hidden="true">${p.background}</svg>`;

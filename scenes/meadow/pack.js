@@ -3,7 +3,9 @@
 // never changes when a pack is added. Format, for every pack:
 //   id          the world's id; item ids are global as `<pack>.<item>` (meadow.tree)
 //   kind        'free' (place copies anywhere) or 'slots' (one part per slot, later)
-//   size        the scene's box [w, h] (16:10), cropped to fill the screen ("slice")
+//   size        the scene's box [w, h]: any size; the world screen and the reveal keep
+//               its shape. New packs use [160, 160] (the meadow is the older 160 × 100).
+//               The "Mes mondes" tiles are 16:10 for every pack: cropped ("slice").
 //   background  inline SVG drawn in that box
 //   items       [{ id, art }] — art in a 100 × 100 box, standing on y ≈ 95 (so items
 //               line up on the ground). items[0] is the gift when the world unlocks.

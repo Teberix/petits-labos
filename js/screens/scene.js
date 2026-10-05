@@ -13,7 +13,7 @@ import { sfx, speak } from '../audio.js';
 import { draggable } from '../dragdrop.js';
 import { ICONS } from '../icons.js';
 import { getProfile, getRewards, getWorlds, setRewardsAndWorlds } from '../storage.js';
-import { ITEMS, itemSvg, packById, sceneSvg } from '../items.js';
+import { ITEMS, itemSvg, packById, sceneAspect, sceneSvg } from '../items.js';
 import { SCENE_MAX, moveItem, placeItem, removeItem } from '../scene.js';
 import { iconButton, repeatButton, say, topBar } from '../ui.js';
 
@@ -25,10 +25,10 @@ const MIN_PX = 64;
 // Where a tapped item goes: the spot on the ground farthest from the placed items.
 // (x, y = bottom middle, as fractions; every pack's ground is its lower part, y > 0.6.)
 const SPOTS = [0.5, 0.3, 0.7, 0.15, 0.85, 0.4, 0.6, 0.22, 0.78].flatMap((x) => [0.8, 0.95, 0.68].map((y) => ({ x, y })));
-const ASPECT = 1.6; // the scene is 16:10, so 0.1 of its width is 1.6 × 0.1 of its height
-
-function freeSpot(placed) {
-  const room = (s) => Math.min(Infinity, ...placed.map((p) => Math.hypot((s.x - p.x) * ASPECT, s.y - p.y)));
+// `aspect` = the scene's width / height (the meadow: 1.6, so 0.1 of its width is 1.6 × 0.1
+// of its height).
+function freeSpot(placed, aspect) {
+  const room = (s) => Math.min(Infinity, ...placed.map((p) => Math.hypot((s.x - p.x) * aspect, s.y - p.y)));
   return SPOTS.reduce((best, s) => (room(s) > room(best) ? s : best));
 }
 
@@ -55,8 +55,10 @@ export function render(root, { profileId, world }, app) {
   let cleanups = [];
   let grab = null; // where the finger went down on what is being dragged
 
-  // (the CSS .scene-view box is 16:10; a pack's background is cropped to fill it: "slice")
-  const sceneEl = h('div', { class: 'scene-view', html: sceneSvg(world) });
+  // The .scene-view box has the pack's own shape (CSS --scene-ar, from its `size`), so the
+  // placed items' fractions always mean the same spot of the background.
+  const aspect = sceneAspect(world);
+  const sceneEl = h('div', { class: 'scene-view', style: `--scene-ar: ${aspect}`, html: sceneSvg(world) });
   const placedEl = h('div', { class: 'scene-placed' });
   sceneEl.append(placedEl);
   const trayEl = h('div', { class: 'scene-tray', role: 'group', 'aria-label': t('sceneItems') });
@@ -171,7 +173,7 @@ export function render(root, { profileId, world }, app) {
       card.addEventListener('pointerdown', (e) => { grab = { x: e.clientX, y: e.clientY }; });
       cleanups.push(draggable(card, {
         targets: () => [sceneEl],
-        onTap: () => { sayName(item.id); place(item.id, keepInside(freeSpot(scene.placed))); },
+        onTap: () => { sayName(item.id); place(item.id, keepInside(freeSpot(scene.placed, aspect))); },
         onDrop: (target, point) => {
           if (!inside(sceneEl, point)) return; // let go beside the scene: nothing happens
           place(item.id, toScene(landed(card.getBoundingClientRect(), point)));
