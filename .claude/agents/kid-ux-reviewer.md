@@ -2,6 +2,7 @@
 name: kid-ux-reviewer
 description: Read-only reviewer of one Petits Labos game against the kids' UX rules (no reading needed, voice, no punishment/timers, progressive hints, 64px touch-first, positive rewards, bonus-star rule). Use after a build step that changed a game. Reports only — never edits.
 tools: Read, Grep, Glob
+model: haiku
 ---
 
 You review ONE game of Petits Labos (an offline PWA for two 6-year-old early readers)

@@ -8,16 +8,22 @@
 //      describes ONE level). Invalid → FAIL.
 //   3. If games/<id>/solver.mjs exists: solve(level) → { solvable, minMoves? } for every
 //      level. Any unsolvable level (or a solver crash) → FAIL.
+//      Games that build their rounds at play time (Train, Balance) also export
+//      sampleRound(level, rng) → { answers }: it is run for seeds 1…SAMPLE_SEEDS per level
+//      (seeded rng, mulberry32) and every round must have exactly one answer → FAIL
+//      otherwise, naming the level and the seed. Optional: games whose rounds are
+//      committed in levels.json (Robot, Shapes) don't export it.
 //   4. A difficulty table (id, difficulty, minMoves) is printed — information only.
 // solver.mjs and levels.schema.json are dev-only: never precached (tools/precache.mjs).
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { ROOT } from './precache.mjs';
-import { isMain } from './check-kit.mjs';
+import { isMain, mulberry32 } from './check-kit.mjs';
 import { validate } from './json-schema.mjs';
 
 const GAMES_DIR = join(ROOT, 'games');
+export const SAMPLE_SEEDS = 200; // runtime rounds checked per level (owner, 2026-10-05: ≥ 200)
 
 // The shared part of every levels.json (the game's own schema adds its params).
 const envelope = (id) => ({
@@ -103,8 +109,9 @@ async function checkGame(id, failures, info) {
   const solverFile = join(dir, 'solver.mjs');
   if (existsSync(solverFile)) {
     let solve;
+    let sampleRound;
     try {
-      ({ solve } = await import(`${pathToFileURL(solverFile).href}?t=${Date.now()}`));
+      ({ solve, sampleRound } = await import(`${pathToFileURL(solverFile).href}?t=${Date.now()}`));
       if (typeof solve !== 'function') throw new Error('does not export solve(level)');
     } catch (err) {
       failures.push(`${where}/solver.mjs: ${err.message.split('\n')[0]}`);
@@ -118,6 +125,25 @@ async function checkGame(id, failures, info) {
       } catch (err) {
         failures.push(`${where}: level ${level.id}: solver crashed — ${err.message.split('\n')[0]}`);
       }
+    }
+    // Runtime rounds: every sampled round has exactly one answer (first failure per level).
+    if (typeof sampleRound === 'function') {
+      for (const level of levels.filter((l) => !invalid.has(l))) {
+        for (let seed = 1; seed <= SAMPLE_SEEDS; seed++) {
+          let answers;
+          try {
+            ({ answers } = await sampleRound(level, mulberry32(seed)));
+          } catch (err) {
+            failures.push(`${where}: level ${level.id}, seed ${seed}: sampleRound crashed — ${err.message.split('\n')[0]}`);
+            break;
+          }
+          if (answers !== 1) {
+            failures.push(`${where}: level ${level.id}, seed ${seed}: the round has ${answers} answers (must be exactly 1)`);
+            break;
+          }
+        }
+      }
+      info.push(`${id}: sampleRound — ${SAMPLE_SEEDS} seeded rounds per level checked`);
     }
   }
 

@@ -9,7 +9,7 @@ export const ROOT = fileURLToPath(new URL('..', import.meta.url));
 
 // Top-level files + folders that make up the app. tools/, docs and git stuff are excluded.
 const FILES = ['index.html', 'manifest.webmanifest'];
-const FOLDERS = ['css', 'js', 'games', 'icons'];
+const FOLDERS = ['css', 'js', 'games', 'scenes', 'icons']; // scenes/: the scene packs (worlds)
 
 // Dev-only files that live next to the app code but must never reach a device:
 // each game's layout/offline checks (games/<id>/checks.js), notes (*.md), and for

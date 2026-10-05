@@ -221,6 +221,19 @@ export const kit = {
   wait: (page, ms) => page.waitForTimeout(ms),
 };
 
+// A seeded random generator (mulberry32): the same seed always gives the same numbers in
+// [0, 1). Used by check-levels.mjs to replay a game's runtime rounds.
+export function mulberry32(seed) {
+  let a = seed >>> 0;
+  return () => {
+    a = (a + 0x6D2B79F5) >>> 0;
+    let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
 // True when the module is the script node was started with (not imported by gate.mjs).
 export function isMain(moduleUrl) {
   return process.argv[1] && moduleUrl === pathToFileURL(process.argv[1]).href;

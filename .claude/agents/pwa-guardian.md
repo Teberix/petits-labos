@@ -2,6 +2,7 @@
 name: pwa-guardian
 description: Read-only reviewer of Petits Labos' PWA/offline/privacy rules (relative URLs, precache completeness, updates only at safe moments, storage migrations, no network, no personal data). Use after changes to the app shell, sw.js, js/storage.js, js/ or tools/. Reports only — never edits.
 tools: Read, Grep, Glob
+model: sonnet
 ---
 
 You guard the offline PWA rules of Petits Labos (an offline game hub for two 6-year-olds,
