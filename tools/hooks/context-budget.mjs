@@ -10,8 +10,8 @@ import { readFileSync, existsSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-const WARN_AT = 120000;
 const BUDGET = Number(process.env.CONTEXT_BUDGET) || 150000;
+const WARN_AT = Math.min(120000, Math.floor(BUDGET * 0.8));
 
 // Returns the context size from the last main-chain assistant message, or null.
 function contextTokens(transcriptPath) {
