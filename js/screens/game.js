@@ -47,7 +47,7 @@ export function render(root, { profileId, gameId }, app) {
     save: (data) => setGameData(profileId, gameId, data),
     rewards: {
       star(fromEl) {
-        const sticker = addStar(profileId);
+        const sticker = addStar(profileId, entry.scene);
         flyStar(fromEl, profileId);
         return sticker;
       },

@@ -10,36 +10,40 @@ import { h } from './dom.js';
 import { ICONS } from './icons.js';
 import { t } from './i18n.js';
 import { sfx } from './audio.js';
-import { getRewards, getScene, setRewardsAndScene } from './storage.js';
+import { getRewards, getWorlds, setRewardsAndWorlds } from './storage.js';
 import { STICKERS, stickerSvg } from './stickers.js';
-import { ITEMS, itemSvg } from './items.js';
-import { addStar as nextState, gap, granted } from './scene.js';
+import { POOL_ITEMS, START_WORLD, itemById, itemSvg, packById } from './items.js';
+import { addStar as nextState, gap, granted, missingItems } from './scene.js';
 import { say } from './ui.js';
 
 const FLY_MS = 800;
 const REVEAL_MS = 5000;     // the reveal closes by itself after this
 const REVEAL_GUARD_MS = 800; // ignore taps right after it opens (a finger may still be down)
 
-const ALL = { stickers: STICKERS.map((s) => s.id), items: ITEMS.map((i) => i.id) };
+const POOL = { stickers: STICKERS.map((s) => s.id), items: POOL_ITEMS };
 
-// +1 star. When it's time, it also unlocks a sticker or an item the player doesn't have
-// yet (picked at random: a surprise). Returns { kind: 'sticker' | 'item', …it } or null.
-export function addStar(profileId) {
-  const out = nextState(getRewards(profileId), getScene(profileId), ALL);
-  setRewardsAndScene(profileId, out.rewards, out.scene);
+// +1 star, earned in a game whose world is `world` (its meta.js `scene`; none or unknown
+// = the start world). When it's time, it also unlocks a sticker or an item the player
+// doesn't have yet (picked at random: a surprise); the game's first star opens its world
+// with a gift. Returns { kind: 'sticker' | 'item', …it, unlocked? } or null.
+export function addStar(profileId, world) {
+  const w = packById(world) ? world : START_WORLD;
+  const out = nextState(getRewards(profileId), getWorlds(profileId), POOL, w);
+  setRewardsAndWorlds(profileId, out.rewards, out.worlds);
   if (!out.reward) return null;
-  const list = out.reward.kind === 'sticker' ? STICKERS : ITEMS;
-  return { kind: out.reward.kind, ...list.find((x) => x.id === out.reward.id) };
+  const { kind, id, unlocked } = out.reward;
+  const it = kind === 'sticker' ? STICKERS.find((x) => x.id === id) : itemById(id);
+  return { kind, ...it, ...(unlocked ? { unlocked } : {}) };
 }
 
 // How close the next reward is (for the album's progress bar): { have, need } stars,
-// or null when everything is collected.
+// or null when everything that can still come is collected.
 export function nextRewardProgress(profileId) {
-  const { stars, stickers } = getRewards(profileId);
-  const scene = getScene(profileId);
-  if (stickers.length >= STICKERS.length && scene.items.length >= ITEMS.length) return null;
-  const need = gap(granted({ stars, stickers }, scene) + 1);
-  return { have: Math.max(0, need - (scene.nextAt - stars)), need };
+  const rewards = getRewards(profileId);
+  const worlds = getWorlds(profileId);
+  if (rewards.stickers.length >= STICKERS.length && !missingItems(rewards, worlds, POOL).length) return null;
+  const need = gap(granted(rewards, worlds) + 1);
+  return { have: Math.max(0, need - (rewards.nextAt - rewards.stars)), need };
 }
 
 // The star counter shown in a game's top bar (not a button: just to watch it grow).

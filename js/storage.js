@@ -1,28 +1,36 @@
 // Storage — everything is one JSON document in localStorage, on this device only.
 //
-// Shape (SCHEMA_VERSION 3):
+// Shape (SCHEMA_VERSION 4):
 // {
-//   schema: 3,
+//   schema: 4,
 //   settings: { lang: 'fr' },
 //   profiles: [
 //     { id, name, avatar, readingLang, unlockAll, games: { <gameId>: { ...game-owned data } },
-//       rewards: { stars: 12, stickers: ['sun', 'rocket'] },
+//       rewards: { stars: 12, stickers: ['sun', 'rocket'],                  // (v1)
+//                  items: ['meadow.tree'], nextAt: 22, news: [] },          // (v4, js/scene.js)
 //       skills: { <gameId>: { skill, best, rounds, seen } },  // new engine (js/progress.js)
 //       fixedMap: false,                                        // parent switch: fixed level map
-//       scene: { items: [id…], placed: [{ id, x, y }…], nextAt, news? } } // rewards option B (js/scene.js)
-//       (news: optional, read as [] when missing — no migration needed)
+//       worlds: { unlocked: ['meadow'], meadow: { placed: [{ id, x, y }…] } },   // (v4, scene packs)
+//       scene: { items: [id…], placed: […], nextAt, news? } }  // v3 only: left untouched by v4
 //   ]
 // }
-// v2 and v3 are ADDITIVE over v1 (owner, 2026-10-03): every v1 field stays where it was, so an
-// older app reading a newer save keeps working (a restore, a phone still on the old
-// version). tests/storage.test.mjs checks it with a real v1 save and the v0.9.0 code.
+// v2, v3 and v4 are ADDITIVE over v1 (owner, 2026-10-03): every older field stays where it
+// was, so an older app reading a newer save keeps working (a restore, a phone still on the
+// old version). tests/storage.test.mjs checks it with a real v1 save and the v0.9.0 code.
+// An older app may still rewrite `rewards` without the v4 fields, or add a profile without
+// `worlds`: every load repairs that from the v3 `scene` (upgradeProfile), like the migration.
 //
 // Progress must survive every update. If the shape ever changes:
 //   1. bump SCHEMA_VERSION
 //   2. add MIGRATIONS[oldVersion] = (data) => newData
 // Before migrating, the raw old data is copied to a backup key. Nothing is ever wiped.
 
-import { startScene } from './scene.js';
+import { startRewards, startScene, startWorlds } from './scene.js';
+
+// The start world (the first scene pack, scenes/registry.js). Written here, not imported
+// from js/items.js, so the storage never loads the packs' art; tests/packs.test.mjs checks
+// they agree.
+export const START_WORLD = 'meadow';
 
 // The live app's key. The preview (/petits-labos-preview/, same origin as the live app,
 // so the same localStorage on a phone) has its own key: it never writes the live save
@@ -33,7 +41,27 @@ export const storageKey = (path = globalThis.location?.pathname ?? '') =>
   (path.includes('/petits-labos-preview/') ? PREVIEW_KEY : LIVE_KEY);
 const KEY = storageKey();
 export const isPreview = () => KEY === PREVIEW_KEY;
-export const SCHEMA_VERSION = 3;
+export const SCHEMA_VERSION = 4;
+
+// v3 → v4 for one profile (also run on every load, to repair what an older app wrote):
+// the v3 scene's items become the start world's (global ids `meadow.<id>`), with their
+// placed copies, `nextAt` and `news`. The v3 `scene` itself is never changed.
+const inStart = (id) => (id.includes('.') ? id : `${START_WORLD}.${id}`);
+function upgradeProfile(p) {
+  const oldRewards = !Array.isArray(p.rewards?.items);
+  const noWorlds = !p.worlds;
+  if (!oldRewards && !noWorlds) return;
+  const sc = p.scene ?? startScene({ stars: p.rewards?.stars ?? 0, stickers: p.rewards?.stickers ?? [] });
+  if (oldRewards) {
+    p.rewards = {
+      ...startRewards(), ...p.rewards,
+      items: sc.items.map(inStart), nextAt: sc.nextAt, news: (sc.news ?? []).map(inStart),
+    };
+  }
+  // (rewards rewritten by an older app: its v3 scene is also the start world's latest)
+  p.worlds ??= startWorlds(START_WORLD);
+  p.worlds[START_WORLD] = { placed: sc.placed.map((x) => ({ ...x, id: inStart(x.id) })) };
+}
 
 // MIGRATIONS[n] turns schema n into schema n + 1. Only ADD fields (see above).
 export const MIGRATIONS = {
@@ -55,6 +83,11 @@ export const MIGRATIONS = {
       p.rewards ??= { stars: 0, stickers: [] };
       p.scene ??= startScene(p.rewards);
     }
+    return data;
+  },
+  // v3 → v4: scene packs — rewards get items/nextAt/news, profiles get their worlds.
+  3: (data) => {
+    for (const p of data.profiles ?? []) upgradeProfile(p);
     return data;
   },
 };
@@ -106,6 +139,7 @@ function load() {
     // Data written by a newer app version (shouldn't happen). Use it as-is, never downgrade.
     console.warn(`Storage schema ${from} is newer than this app (${SCHEMA_VERSION})`);
   }
+  for (const p of data.profiles ?? []) upgradeProfile(p); // (repairs only: see the top)
   return data;
 }
 
@@ -153,8 +187,7 @@ export function getProfile(id) {
 export function addProfile({ name, avatar, readingLang, unlockAll = false }) {
   const profile = {
     id: newId(), name, avatar, readingLang, unlockAll, games: {},
-    rewards: { stars: 0, stickers: [] }, skills: {}, fixedMap: false,
-    scene: startScene({ stars: 0, stickers: [] }),
+    rewards: startRewards(), skills: {}, fixedMap: false, worlds: startWorlds(START_WORLD),
   };
   ensureLoaded().profiles.push(profile);
   save();
@@ -187,12 +220,11 @@ export function setGameData(profileId, gameId, data) {
   save();
 }
 
-// ---- Rewards (shared by all games): { stars: number, stickers: [stickerId, …] } ----
-// (Read defensively: a profile added by an older app on the same phone has none.)
+// ---- Rewards (shared by all games): { stars, stickers, items, nextAt, news } (a copy) ----
 
 export function getRewards(profileId) {
-  const saved = getProfile(profileId)?.rewards ?? {};
-  return { stars: saved.stars ?? 0, stickers: [...(saved.stickers ?? [])] };
+  const r = { ...startRewards(), ...getProfile(profileId)?.rewards };
+  return { ...r, stickers: [...r.stickers], items: [...r.items], news: [...r.news] };
 }
 
 export function setRewards(profileId, rewards) {
@@ -261,29 +293,44 @@ export function copyLiveSave() {
   return raw ? replaceSave(raw, 'before-copy') : false;
 }
 
-// ---- Rewards option B: the scene { items, placed, nextAt } (js/scene.js) ----
+// ---- Worlds (scene packs): { unlocked: [id…], <id>: { placed } | { filled } } (a copy) ----
+
+export function getWorlds(profileId) {
+  const w = getProfile(profileId)?.worlds ?? startWorlds(START_WORLD);
+  return structuredClone(w);
+}
+
+export function setWorlds(profileId, worlds) {
+  const profile = getProfile(profileId);
+  if (!profile) return;
+  profile.worlds = worlds;
+  save();
+}
+
+// A star may change both (a world's gift): one save, so they can never get out of step.
+export function setRewardsAndWorlds(profileId, rewards, worlds) {
+  const profile = getProfile(profileId);
+  if (!profile) return;
+  profile.rewards = rewards;
+  profile.worlds = worlds;
+  save();
+}
+
+// ---- Until the worlds screens (engine step c1b): the start world as the v3 screens
+// ("Mon pré", the hub's and album's wiggle) read it: { items, placed, nextAt, news }.
+// `items` and `news` are the player's (every world), `placed` the start world's.
 
 export function getScene(profileId) {
-  const profile = getProfile(profileId);
-  if (!profile) return null;
-  const sc = profile.scene ?? startScene(getRewards(profileId)); // (defensive)
-  return { items: [...sc.items], placed: sc.placed.map((x) => ({ ...x })), nextAt: sc.nextAt, news: [...(sc.news ?? [])] };
+  if (!getProfile(profileId)) return null;
+  const { items, nextAt, news } = getRewards(profileId);
+  return { items, placed: getWorlds(profileId)[START_WORLD].placed, nextAt, news };
 }
 
 export function setScene(profileId, scene) {
   const profile = getProfile(profileId);
   if (!profile) return;
-  profile.scene = scene;
-  save();
-}
-
-// A star changes both (the reward schedule lives in the scene): one save, so they can
-// never get out of step.
-export function setRewardsAndScene(profileId, rewards, scene) {
-  const profile = getProfile(profileId);
-  if (!profile) return;
-  profile.rewards = rewards;
-  profile.scene = scene;
+  profile.rewards = { ...getRewards(profileId), news: [...scene.news] };
+  profile.worlds = { ...getWorlds(profileId), [START_WORLD]: { placed: scene.placed } };
   save();
 }
 

@@ -1,15 +1,14 @@
-// Unit tests for js/scene.js + js/items.js — rewards option B (new engine, E2).
+// Unit tests for js/scene.js — rewards option B (new engine, E2) + worlds (scene packs, c1a).
+// The packs themselves: tests/packs.test.mjs.
 // Run: node --test tests/*.test.mjs
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  GAP_START, GAP_MAX, SCENE_MAX, gap, kindOf, addStar, startScene, placeItem, moveItem, removeItem,
+  GAP_START, GAP_MAX, SCENE_MAX, gap, kindOf, addStar, startScene, startRewards, startWorlds,
+  placeItem, moveItem, removeItem,
 } from '../js/scene.js';
-import { ITEMS, SCENES, itemSvg, sceneSvg } from '../js/items.js';
+import { POOL_ITEMS, START_WORLD } from '../js/items.js';
 import { STICKERS } from '../js/stickers.js';
-import FR from '../js/i18n/fr.js';
-import ES from '../js/i18n/es.js';
-import EN from '../js/i18n/en.js';
 
 function seeded(seed) {
   return () => {
@@ -18,19 +17,20 @@ function seeded(seed) {
   };
 }
 
-const ALL = { stickers: STICKERS.map((s) => s.id), items: ITEMS.map((i) => i.id) };
-const fresh = () => ({ rewards: { stars: 0, stickers: [] }, scene: startScene({ stars: 0, stickers: [] }) });
+const ALL = { stickers: STICKERS.map((s) => s.id), items: POOL_ITEMS };
+const MEADOW = POOL_ITEMS[START_WORLD];
+const fresh = () => ({ rewards: startRewards(), worlds: startWorlds(START_WORLD) });
 
-// Plays `n` stars from `state`, collecting the rewards in order.
-function play(state, n, rand) {
-  let { rewards, scene } = state;
+// Plays `n` stars in a game of world `world` from `state`, collecting the rewards in order.
+function play(state, n, rand, world = START_WORLD, pool = ALL) {
+  let { rewards, worlds } = state;
   const got = [];
   for (let i = 0; i < n; i++) {
-    const out = addStar(rewards, scene, ALL, rand);
-    ({ rewards, scene } = out);
+    const out = addStar(rewards, worlds, pool, world, rand);
+    ({ rewards, worlds } = out);
     if (out.reward) got.push({ ...out.reward, at: rewards.stars });
   }
-  return { rewards, scene, got };
+  return { rewards, worlds, got };
 }
 
 test('the gap: 5 stars for the first 2 rewards, +1 every 2, at most 20 (owner, 2026-10-05)', () => {
@@ -48,11 +48,11 @@ test('rewards alternate sticker / item; when one kind is done, only the other', 
 });
 
 test('a new player: rewards at 5, 10, 16, 22, 29… alternating, each a new one', () => {
-  const { got, rewards, scene } = play(fresh(), 70, seeded(3));
+  const { got, rewards } = play(fresh(), 70, seeded(3));
   assert.deepEqual(got.map((r) => r.at), [5, 10, 16, 22, 29, 36, 44, 52, 61, 70]);
   assert.deepEqual(got.map((r) => r.kind), ['sticker', 'item', 'sticker', 'item', 'sticker', 'item', 'sticker', 'item', 'sticker', 'item']);
   assert.equal(new Set(rewards.stickers).size, rewards.stickers.length, 'no sticker twice');
-  assert.equal(new Set(scene.items).size, scene.items.length, 'no item twice');
+  assert.equal(new Set(rewards.items).size, rewards.items.length, 'no item twice');
 });
 
 // ~40 stars per 5-minute session (owner's estimate, to re-tune with game 9's playtest):
@@ -60,32 +60,30 @@ test('a new player: rewards at 5, 10, 16, 22, 29… alternating, each a new one'
 test('everything is unlocked at 640 stars (~80 min of play); the album is full with the last reward', () => {
   const end = play(fresh(), 2000, seeded(5));
   assert.equal(end.rewards.stickers.length, STICKERS.length);
-  assert.equal(end.scene.items.length, ITEMS.length);
-  assert.equal(end.got.length, STICKERS.length + ITEMS.length);
+  assert.equal(end.rewards.items.length, MEADOW.length);
+  assert.equal(end.got.length, STICKERS.length + MEADOW.length);
   assert.equal(end.got.at(-1).at, 640, 'the last reward');
   assert.equal(end.got.filter((r) => r.kind === 'sticker').at(-1).at, 640, 'album full = everything');
   assert.equal(end.got.filter((r) => r.kind === 'item').at(-1).at, 560, 'the last item (~70 min)');
 });
 
 test('a new item is "news" until the meadow is opened (the buttons wiggle); stickers are not', () => {
-  const { got, scene } = play(fresh(), 16, seeded(4));
+  const { got, rewards } = play(fresh(), 16, seeded(4));
   const items = got.filter((r) => r.kind === 'item').map((r) => r.id);
-  assert.deepEqual(scene.news, items);
+  assert.deepEqual(rewards.news, items);
   assert.equal(items.length, 1);
-  const old = { items: [], placed: [], nextAt: 1 }; // a v3 scene saved before "news" existed
-  assert.equal(addStar({ stars: 0, stickers: ALL.stickers }, old, ALL).scene.news.length, 1);
 });
 
 test('stars and rewards never go down; addStar does not change its inputs', () => {
   const state = fresh();
-  const out = addStar(state.rewards, state.scene, ALL);
+  const out = addStar(state.rewards, state.worlds, ALL, START_WORLD);
   assert.equal(state.rewards.stars, 0);
   assert.equal(out.rewards.stars, 1);
   let s = fresh();
   for (let i = 0; i < 300; i++) {
-    const next = addStar(s.rewards, s.scene, ALL, seeded(i + 1));
+    const next = addStar(s.rewards, s.worlds, ALL, START_WORLD, seeded(i + 1));
     assert.ok(next.rewards.stars === s.rewards.stars + 1);
-    assert.ok(next.rewards.stickers.length >= s.rewards.stickers.length && next.scene.items.length >= s.scene.items.length);
+    assert.ok(next.rewards.stickers.length >= s.rewards.stickers.length && next.rewards.items.length >= s.rewards.items.length);
     s = next;
   }
 });
@@ -96,7 +94,8 @@ test('startScene for a player who already has stickers', () => {
   const sc = startScene({ stars: 130, stickers: ALL.stickers.slice(0, 24) });
   assert.deepEqual(sc.items, []);
   assert.equal(sc.nextAt, 130 + gap(25));
-  const { got } = play({ rewards: { stars: 130, stickers: ALL.stickers.slice(0, 24) }, scene: sc }, gap(25), seeded(2));
+  const rewards = { ...startRewards(), stars: 130, stickers: ALL.stickers.slice(0, 24), nextAt: sc.nextAt };
+  const { got } = play({ rewards, worlds: startWorlds(START_WORLD) }, gap(25), seeded(2));
   assert.deepEqual(got, [{ kind: 'item', id: got[0].id, at: 130 + gap(25) }], 'all 24 stickers owned → the next reward is an item');
 });
 
@@ -115,14 +114,48 @@ test('the scene: place copies (unlocked only, at most SCENE_MAX), move, remove',
   assert.equal(sc.placed.length, SCENE_MAX);
 });
 
-test('items: ~20, unique ids, a family, a name in fr/es/en, art without ids', () => {
-  assert.ok(ITEMS.length >= 18 && ITEMS.length <= 24, `${ITEMS.length} items`);
-  assert.equal(new Set(ITEMS.map((i) => i.id)).size, ITEMS.length);
-  for (const item of ITEMS) {
-    assert.ok(SCENES[item.family], `${item.id}: no scene for family ${item.family}`);
-    for (const dict of [FR, ES, EN]) assert.ok(dict[`item.${item.id}`], `item.${item.id} missing`);
-    const svg = itemSvg(item);
-    assert.ok(!/\sid=|Gradient|url\(#/.test(svg), `${item.id}: ids/gradients would clash`);
+// ---------- worlds (scene packs; owner's decisions of 2026-10-05) ----------
+// A pool with a second world, as when a migrated game brings its pack.
+const TWO = { stickers: ALL.stickers, items: { ...POOL_ITEMS, space: ['space.rocket', 'space.moon', 'space.alien'] } };
+
+test("a game's first star opens its world with its first item as a gift; the schedule doesn't move", () => {
+  const before = play(fresh(), 4, seeded(1)); // 4 stars in the meadow: next reward at 5
+  const out = addStar(before.rewards, before.worlds, TWO, 'space', seeded(1));
+  assert.deepEqual(out.reward, { kind: 'item', id: 'space.rocket', unlocked: 'space' });
+  assert.deepEqual(out.worlds.unlocked, [START_WORLD, 'space']);
+  assert.deepEqual(out.worlds.space, { placed: [] });
+  assert.deepEqual(out.rewards.news, ['space.rocket']);
+  assert.equal(out.rewards.nextAt, 5, 'nextAt unchanged');
+  // star 5 was due at the unlock: the scheduled sticker comes with the next star
+  const next = addStar(out.rewards, out.worlds, TWO, 'space', seeded(1));
+  assert.equal(next.reward.kind, 'sticker');
+  // the gift is not counted: the rewards that follow alternate and space out exactly like
+  // a meadow-only player's (one star later, the one taken by the unlock)
+  const a = play(fresh(), 200, seeded(9)).got;
+  const b = play({ rewards: out.rewards, worlds: out.worlds }, 196, seeded(9), 'space', TWO).got;
+  assert.deepEqual(b.map((r) => r.kind), a.map((r) => r.kind).slice(0, b.length));
+  assert.deepEqual(b.map((r) => r.at - 1), a.map((r) => r.at).slice(0, b.length));
+  // a second star in the same game unlocks nothing more
+  assert.equal(addStar(next.rewards, next.worlds, TWO, 'space').worlds.unlocked.length, 2);
+});
+
+test("a scheduled item comes from the game's world while it has items left, else from any unlocked world", () => {
+  let { rewards, worlds } = addStar(startRewards(), startWorlds(START_WORLD), TWO, 'space');
+  const items = [];
+  for (let i = 0; i < 200; i++) {
+    const out = addStar(rewards, worlds, TWO, 'space', seeded(i + 7));
+    ({ rewards, worlds } = out);
+    if (out.reward?.kind === 'item') items.push(out.reward.id);
   }
-  assert.match(sceneSvg('meadow'), /<svg/);
+  assert.deepEqual(items.slice(0, 2).sort(), ['space.alien', 'space.moon'], 'space first');
+  assert.ok(items.slice(2).length > 0 && items.slice(2).every((id) => id.startsWith(`${START_WORLD}.`)), 'then the meadow');
+  // a game of a locked world never gets that world's items from the meadow games
+  const m = play(fresh(), 300, seeded(3), START_WORLD, TWO);
+  assert.ok(!m.rewards.items.some((id) => id.startsWith('space.')), 'space stays locked');
+});
+
+test('a world with no pack (unknown) unlocks nothing', () => {
+  const out = addStar(startRewards(), startWorlds(START_WORLD), TWO, 'nowhere');
+  assert.deepEqual(out.worlds.unlocked, [START_WORLD]);
+  assert.equal(out.reward, null);
 });

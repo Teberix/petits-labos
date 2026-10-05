@@ -5,11 +5,13 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { startScene } from '../js/scene.js';
+import { startRewards, startScene, startWorlds } from '../js/scene.js';
 
 const KEY = 'petits-labos';
 const V1_RAW = readFileSync(new URL('./fixtures/storage-v1.json', import.meta.url), 'utf8');
 const V1 = JSON.parse(V1_RAW);
+// the v1 part of the rewards (v4 adds items, nextAt, news)
+const v1Rewards = (r) => ({ stars: r.stars, stickers: r.stickers });
 
 // A fake localStorage (a Map), installed before each module load; `path` = where the
 // app is served from (the preview uses its own key).
@@ -31,7 +33,7 @@ let n = 0;
 const freshV2 = () => import(`../js/storage.js?fresh=${n++}`);
 const freshV1 = () => import(`./fixtures/storage-v0.9.0.mjs?fresh=${n++}`);
 
-test('v1 → latest (v3): every profile keeps its stars, stickers and level progress', async () => {
+test('v1 → latest (v4): every profile keeps its stars, stickers and level progress', async () => {
   const map = fakeStorage({ [KEY]: V1_RAW });
   const s = await freshV2();
   const profiles = s.getProfiles();
@@ -41,10 +43,12 @@ test('v1 → latest (v3): every profile keeps its stars, stickers and level prog
     assert.ok(p, `profile ${old.name} lost`);
     for (const field of ['name', 'avatar', 'readingLang', 'unlockAll']) assert.equal(p[field], old[field], `${old.name}.${field}`);
     assert.deepEqual(p.games, old.games, `${old.name}: level progress changed`);
-    assert.deepEqual(s.getRewards(old.id), { stars: old.rewards.stars, stickers: old.rewards.stickers }, `${old.name}: rewards changed`);
+    assert.deepEqual(v1Rewards(s.getRewards(old.id)), v1Rewards(old.rewards), `${old.name}: rewards changed`);
     assert.deepEqual(p.skills, {}, `${old.name}: skills`);
     assert.equal(p.fixedMap, false, `${old.name}: fixedMap`);
-    assert.deepEqual(p.scene, startScene(old.rewards), `${old.name}: scene (next reward one gap from now)`);
+    assert.deepEqual(p.scene, startScene(old.rewards), `${old.name}: v3 scene (next reward one gap from now)`);
+    assert.deepEqual(p.rewards, { ...old.rewards, items: [], nextAt: p.scene.nextAt, news: [] }, `${old.name}: v4 rewards`);
+    assert.deepEqual(p.worlds, startWorlds('meadow'), `${old.name}: worlds`);
   }
   assert.equal(s.getSetting('lang'), V1.settings.lang);
   // saved at once, as v2, with the raw v1 save kept aside
@@ -96,11 +100,12 @@ test('the v0.9.0 app still works on a migrated save, and the new code reads what
   const a = V1.profiles[0];
   old.setRewards(a.id, { stars: a.rewards.stars + 1, stickers: a.rewards.stickers });
   const added = old.addProfile({ name: 'Joueur C', avatar: '🐸', readingLang: 'fr' });
-  assert.equal(JSON.parse(globalThis.localStorage.getItem(KEY)).schema, 3, 'the old app never downgrades');
+  assert.equal(JSON.parse(globalThis.localStorage.getItem(KEY)).schema, 4, 'the old app never downgrades');
   // back in the preview: the new star is there, the new profile works
   const s = await freshV2();
   assert.equal(s.getRewards(a.id).stars, a.rewards.stars + 1);
-  assert.deepEqual(s.getRewards(added.id), { stars: 0, stickers: [] });
+  assert.deepEqual(s.getRewards(added.id), startRewards());
+  assert.deepEqual(s.getWorlds(added.id), startWorlds('meadow'), 'repaired on load');
   assert.equal(s.getSkill(added.id, 'memory'), null);
   s.setSkill(added.id, 'memory', { skill: 3, best: 3, rounds: 2, seen: ['a'] });
   assert.deepEqual((await freshV2()).getSkill(added.id, 'memory'), { skill: 3, best: 3, rounds: 2, seen: ['a'] });
@@ -110,11 +115,12 @@ test('a new install starts at the latest schema; new profiles have every field',
   fakeStorage();
   const s = await freshV2();
   const p = s.addProfile({ name: 'Joueur A', avatar: '🦊', readingLang: 'fr' });
-  assert.deepEqual(p.rewards, { stars: 0, stickers: [] });
+  assert.deepEqual(p.rewards, startRewards());
   assert.deepEqual(p.skills, {});
   assert.equal(p.fixedMap, false);
   assert.equal(JSON.parse(globalThis.localStorage.getItem(KEY)).schema, s.SCHEMA_VERSION);
-  assert.deepEqual(p.scene, { items: [], placed: [], nextAt: 5 });
+  assert.deepEqual(p.worlds, { unlocked: ['meadow'], meadow: { placed: [] } });
+  assert.equal(p.rewards.nextAt, 5);
 });
 
 test('MIGRATIONS cover every schema step', async () => {
@@ -132,7 +138,7 @@ test('restore a backup: the v1 save comes back (and is migrated again); the repl
   s.setRewards(a.id, { stars: 99, stickers: [] }); // played after the update
   assert.deepEqual(s.listBackups().map((b) => b.label), ['v1']);
   assert.equal(s.restoreBackup('v1'), true);
-  assert.deepEqual(s.getRewards(a.id), { stars: a.rewards.stars, stickers: a.rewards.stickers }, 'back to the v1 values');
+  assert.deepEqual(v1Rewards(s.getRewards(a.id)), v1Rewards(a.rewards), 'back to the v1 values');
   assert.equal(s.getProfile(a.id).skills !== undefined, true, 'migrated again');
   const kept = [...map.keys()].filter((k) => k.startsWith(`${KEY}.backup-before-restore-`));
   assert.equal(kept.length, 1, 'the replaced save is kept aside');
@@ -170,7 +176,7 @@ test('the preview uses its own key and NEVER writes the live save', async () => 
   // copy the real save in → migrated in the preview's key only
   assert.equal(s.copyLiveSave(), true);
   const a = V1.profiles[0];
-  assert.deepEqual(s.getRewards(a.id), { stars: a.rewards.stars, stickers: a.rewards.stickers });
+  assert.deepEqual(v1Rewards(s.getRewards(a.id)), v1Rewards(a.rewards));
   assert.deepEqual(s.getProfile(a.id).games, a.games);
   s.setRewards(a.id, { stars: 500, stickers: [] });
   s.addProfile({ name: 'Joueur C', avatar: '🐸', readingLang: 'fr' });
@@ -193,30 +199,100 @@ test('v2 → v3: a v2 save gets its scenes, nothing else changes', async () => {
   fakeStorage({ [KEY]: V1_RAW });
   const s2 = await freshV2();
   s2.getProfiles();
-  const v3 = JSON.parse(globalThis.localStorage.getItem(KEY));
-  // rebuild what the v2 save was: v3 minus the scenes
-  const v2 = structuredClone(v3);
+  const v4 = JSON.parse(globalThis.localStorage.getItem(KEY));
+  // rebuild what the v2 save was: v4 minus the scenes, worlds and v4 rewards
+  const v2 = structuredClone(v4);
   v2.schema = 2;
-  for (const p of v2.profiles) delete p.scene;
+  for (const p of v2.profiles) {
+    delete p.scene;
+    delete p.worlds;
+    p.rewards = v1Rewards(p.rewards);
+  }
   fakeStorage({ [KEY]: JSON.stringify(v2) });
   const s = await freshV2();
   for (const p of v2.profiles) {
     const now = s.getProfile(p.id);
-    const { scene, ...rest } = now;
-    assert.deepEqual(rest, p, `${p.name}: changed`);
+    const { scene, worlds, rewards, ...rest } = now;
+    assert.deepEqual({ ...rest, rewards: v1Rewards(rewards) }, p, `${p.name}: changed`);
     assert.deepEqual(scene, startScene(p.rewards));
   }
   assert.equal(globalThis.localStorage.getItem(`${KEY}.backup-v2`), JSON.stringify(v2), 'v2 backup kept');
 });
 
-test('getScene / setScene', async () => {
+// The preview holds v3 saves (E3a): v3 → v4 moves the scene into the start world, with
+// global ids, and leaves the v3 scene untouched (an older app still reads it).
+function v3Save() {
+  const v3 = structuredClone(V1);
+  v3.schema = 3;
+  for (const p of v3.profiles) {
+    p.skills = {};
+    p.fixedMap = false;
+    p.scene = { items: ['tree', 'fox'], placed: [{ id: 'fox', x: 0.3, y: 0.8 }], nextAt: p.rewards.stars + 4, news: ['fox'] };
+  }
+  return v3;
+}
+
+test('v3 → v4: the scene becomes the meadow world (global ids), the v3 scene is untouched', async () => {
+  const v3 = v3Save();
+  const map = fakeStorage({ [KEY]: JSON.stringify(v3) });
+  const s = await freshV2();
+  for (const old of v3.profiles) {
+    const p = s.getProfile(old.id);
+    assert.deepEqual(p.scene, old.scene, 'v3 scene untouched');
+    assert.deepEqual(p.rewards, {
+      ...old.rewards, items: ['meadow.tree', 'meadow.fox'], nextAt: old.scene.nextAt, news: ['meadow.fox'],
+    });
+    assert.deepEqual(p.worlds, { unlocked: ['meadow'], meadow: { placed: [{ id: 'meadow.fox', x: 0.3, y: 0.8 }] } });
+    const { scene, worlds, rewards, ...rest } = p;
+    const { scene: s3, rewards: r3, ...rest3 } = old;
+    assert.deepEqual(rest, rest3, 'nothing else changed');
+  }
+  assert.equal(map.get(`${KEY}.backup-v3`), JSON.stringify(v3), 'v3 backup kept');
+});
+
+test('an older app rewriting the rewards (no v4 fields): repaired from its v3 scene on load', async () => {
+  fakeStorage({ [KEY]: JSON.stringify(v3Save()) });
+  (await freshV2()).getProfiles();
+  const data = JSON.parse(globalThis.localStorage.getItem(KEY));
+  const p = data.profiles[0];
+  p.rewards = { stars: p.rewards.stars + 6, stickers: p.rewards.stickers }; // as a v3 app saves a star…
+  p.scene.items.push('duck'); // …that gave an item
+  p.scene.placed.push({ id: 'duck', x: 0.5, y: 0.9 });
+  globalThis.localStorage.setItem(KEY, JSON.stringify(data));
+  const s = await freshV2();
+  const r = s.getRewards(p.id);
+  assert.equal(r.stars, p.rewards.stars);
+  assert.deepEqual(r.items, ['meadow.tree', 'meadow.fox', 'meadow.duck']);
+  assert.deepEqual(s.getWorlds(p.id).meadow.placed.map((x) => x.id), ['meadow.fox', 'meadow.duck']);
+});
+
+test('getWorlds / setRewardsAndWorlds return and keep copies', async () => {
   fakeStorage({ [KEY]: V1_RAW });
   const s = await freshV2();
   const id = V1.profiles[0].id;
+  const w = s.getWorlds(id);
+  w.meadow.placed.push({ id: 'meadow.tree', x: 0.5, y: 0.5 });
+  assert.deepEqual(s.getWorlds(id).meadow.placed, [], 'getWorlds returns a copy');
+  const r = s.getRewards(id);
+  r.items.push('meadow.tree');
+  assert.deepEqual(s.getRewards(id).items, [], 'getRewards returns a copy');
+  s.setRewardsAndWorlds(id, r, w);
+  const again = await freshV2();
+  assert.deepEqual(again.getWorlds(id), w);
+  assert.deepEqual(again.getRewards(id), r);
+});
+
+// Until c1b's screens: "Mon pré" reads and writes the start world through getScene/setScene.
+test('getScene / setScene (the v3 screens): the meadow world + the player’s items and news', async () => {
+  fakeStorage({ [KEY]: JSON.stringify(v3Save()) });
+  const s = await freshV2();
+  const id = V1.profiles[0].id;
   const sc = s.getScene(id);
-  sc.items.push('tree');
-  sc.placed.push({ id: 'tree', x: 0.5, y: 0.5 });
-  assert.deepEqual(s.getScene(id).items, [], 'getScene returns a copy');
-  s.setScene(id, sc);
-  assert.deepEqual((await freshV2()).getScene(id), sc);
+  assert.deepEqual(sc.items, ['meadow.tree', 'meadow.fox']);
+  assert.deepEqual(sc.news, ['meadow.fox']);
+  s.setScene(id, { ...sc, placed: [...sc.placed, { id: 'meadow.tree', x: 0.1, y: 0.9 }], news: [] });
+  const again = await freshV2();
+  assert.deepEqual(again.getScene(id).placed.map((x) => x.id), ['meadow.fox', 'meadow.tree']);
+  assert.deepEqual(again.getRewards(id).news, []);
+  assert.deepEqual(again.getRewards(id).items, ['meadow.tree', 'meadow.fox'], 'items untouched');
 });
