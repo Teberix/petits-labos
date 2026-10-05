@@ -6,19 +6,35 @@
 //   settings: { lang: 'fr' },
 //   profiles: [
 //     { id, name, avatar, readingLang, unlockAll, games: { <gameId>: { ...game-owned data } },
-//       rewards: { stars: 12, stickers: ['sun', 'rocket'],                  // (v1)
-//                  items: ['meadow.tree'], nextAt: 22, news: [] },          // (v4, js/scene.js)
-//       skills: { <gameId>: { skill, best, rounds, seen } },  // new engine (js/progress.js)
-//       fixedMap: false,                                        // parent switch: fixed level map
-//       worlds: { unlocked: ['meadow'], meadow: { placed: [{ id, x, y }…] } },   // (v4, scene packs)
-//       scene: { items: [id…], placed: […], nextAt, news? } }  // v3 only: left untouched by v4
+//       rewards: { stars: 12, stickers: ['sun', 'rocket'] },
+//       collection: { items: ['meadow.tree'], nextAt: 22, news: [] },
+//       skills: { <gameId>: { skill, best, rounds, seen } },
+//       fixedMap: false,
+//       worlds: { unlocked: ['meadow'], meadow: { placed: [{ id, x, y }…] } },
+//       scene: { items: [id…], placed: […], nextAt, news? } }
 //   ]
 // }
+//
+// Profile fields (app versions: v0.9.0 = the released app, schema 1; 0.9.0-preview.N =
+// the preview, schema 2–4):
+// | field      | written by                     | read by                 | migration            |
+// |------------|--------------------------------|-------------------------|----------------------|
+// | rewards    | v0.9.0 + every later version   | every version           | 1→2: written out     |
+// |            | (always { stars, stickers })   |                         |                      |
+// | skills     | schema 2+                      | js/progress.js          | 1→2: {}              |
+// | fixedMap   | schema 2+ (parent screen)      | parent screen           | 1→2: false           |
+// | scene      | schema 3 only (preview.2)      | the v4 repair only      | 2→3: startScene      |
+// | collection | schema 4+ (js/rewards.js)      | rewards, worlds screens | 3→4 + repair on load |
+// | worlds     | schema 4+ (rewards, scene)     | rewards, worlds screens | 3→4 + repair on load |
+//
 // v2, v3 and v4 are ADDITIVE over v1 (owner, 2026-10-03): every older field stays where it
 // was, so an older app reading a newer save keeps working (a restore, a phone still on the
 // old version). tests/storage.test.mjs checks it with a real v1 save and the v0.9.0 code.
-// An older app may still rewrite `rewards` without the v4 fields, or add a profile without
-// `worlds`: every load repairs that from the v3 `scene` (upgradeProfile), like the migration.
+// The v0.9.0 app rewrites `rewards` as { stars, stickers } on every star, and adds profiles
+// with neither `collection` nor `worlds`. So the v4 data never goes inside `rewards`, and
+// every load creates `collection` / `worlds` ONLY when missing — it never overwrites them.
+// In memory, getRewards() merges `rewards` + `collection` (the object js/scene.js uses);
+// setRewards() splits it again.
 //
 // Progress must survive every update. If the shape ever changes:
 //   1. bump SCHEMA_VERSION
@@ -43,24 +59,27 @@ const KEY = storageKey();
 export const isPreview = () => KEY === PREVIEW_KEY;
 export const SCHEMA_VERSION = 4;
 
-// v3 → v4 for one profile (also run on every load, to repair what an older app wrote):
-// the v3 scene's items become the start world's (global ids `meadow.<id>`), with their
-// placed copies, `nextAt` and `news`. The v3 `scene` itself is never changed.
+// v3 → v4 for one profile, also run on every load (repairs only, see the top):
+// a missing `collection` is made from the v3 scene's items (global ids `meadow.<id>`),
+// `nextAt` and `news`; missing `worlds` from its placed copies. The v3 `scene` itself is
+// never changed. A field that exists is never overwritten.
+const COLLECTION_KEYS = ['items', 'nextAt', 'news'];
 const inStart = (id) => (id.includes('.') ? id : `${START_WORLD}.${id}`);
 function upgradeProfile(p) {
-  const oldRewards = !Array.isArray(p.rewards?.items);
-  const noWorlds = !p.worlds;
-  if (!oldRewards && !noWorlds) return;
-  const sc = p.scene ?? startScene({ stars: p.rewards?.stars ?? 0, stickers: p.rewards?.stickers ?? [] });
-  if (oldRewards) {
-    p.rewards = {
-      ...startRewards(), ...p.rewards,
-      items: sc.items.map(inStart), nextAt: sc.nextAt, news: (sc.news ?? []).map(inStart),
-    };
+  p.rewards ??= { stars: 0, stickers: [] };
+  const r = p.rewards;
+  const sc = p.scene ?? startScene({ stars: r.stars ?? 0, stickers: r.stickers ?? [] });
+  if (!p.collection) {
+    p.collection = Array.isArray(r.items)
+      // engine step c1a (dev only) kept the collection inside `rewards`
+      ? { items: r.items, nextAt: r.nextAt, news: r.news ?? [] }
+      : { items: sc.items.map(inStart), nextAt: sc.nextAt, news: (sc.news ?? []).map(inStart) };
   }
-  // (rewards rewritten by an older app: its v3 scene is also the start world's latest)
-  p.worlds ??= startWorlds(START_WORLD);
-  p.worlds[START_WORLD] = { placed: sc.placed.map((x) => ({ ...x, id: inStart(x.id) })) };
+  for (const k of COLLECTION_KEYS) delete r[k]; // `rewards` keeps its v1 shape
+  if (!p.worlds) {
+    p.worlds = startWorlds(START_WORLD);
+    p.worlds[START_WORLD].placed = sc.placed.map((x) => ({ ...x, id: inStart(x.id) }));
+  }
 }
 
 // MIGRATIONS[n] turns schema n into schema n + 1. Only ADD fields (see above).
@@ -85,7 +104,7 @@ export const MIGRATIONS = {
     }
     return data;
   },
-  // v3 → v4: scene packs — rewards get items/nextAt/news, profiles get their worlds.
+  // v3 → v4: scene packs — profiles get their collection and their worlds.
   3: (data) => {
     for (const p of data.profiles ?? []) upgradeProfile(p);
     return data;
@@ -185,10 +204,9 @@ export function getProfile(id) {
 }
 
 export function addProfile({ name, avatar, readingLang, unlockAll = false }) {
-  const profile = {
-    id: newId(), name, avatar, readingLang, unlockAll, games: {},
-    rewards: startRewards(), skills: {}, fixedMap: false, worlds: startWorlds(START_WORLD),
-  };
+  const profile = { id: newId(), name, avatar, readingLang, unlockAll, games: {}, skills: {}, fixedMap: false };
+  putRewards(profile, startRewards());
+  profile.worlds = startWorlds(START_WORLD);
   ensureLoaded().profiles.push(profile);
   save();
   return profile;
@@ -221,16 +239,23 @@ export function setGameData(profileId, gameId, data) {
 }
 
 // ---- Rewards (shared by all games): { stars, stickers, items, nextAt, news } (a copy) ----
+// Stored split: `rewards` { stars, stickers } + `collection` { items, nextAt, news }.
 
 export function getRewards(profileId) {
-  const r = { ...startRewards(), ...getProfile(profileId)?.rewards };
+  const p = getProfile(profileId);
+  const r = { ...startRewards(), ...p?.rewards, ...p?.collection };
   return { ...r, stickers: [...r.stickers], items: [...r.items], news: [...r.news] };
+}
+
+function putRewards(profile, { stars, stickers, items, nextAt, news }) {
+  profile.rewards = { stars, stickers };
+  profile.collection = { items, nextAt, news };
 }
 
 export function setRewards(profileId, rewards) {
   const profile = getProfile(profileId);
   if (!profile) return;
-  profile.rewards = rewards;
+  putRewards(profile, rewards);
   save();
 }
 
@@ -311,7 +336,7 @@ export function setWorlds(profileId, worlds) {
 export function setRewardsAndWorlds(profileId, rewards, worlds) {
   const profile = getProfile(profileId);
   if (!profile) return;
-  profile.rewards = rewards;
+  putRewards(profile, rewards);
   profile.worlds = worlds;
   save();
 }
@@ -329,7 +354,7 @@ export function getScene(profileId) {
 export function setScene(profileId, scene) {
   const profile = getProfile(profileId);
   if (!profile) return;
-  profile.rewards = { ...getRewards(profileId), news: [...scene.news] };
+  putRewards(profile, { ...getRewards(profileId), news: [...scene.news] });
   profile.worlds = { ...getWorlds(profileId), [START_WORLD]: { placed: scene.placed } };
   save();
 }

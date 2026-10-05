@@ -1,4 +1,4 @@
-// Unit tests for js/storage.js — schema v2 and the v1 → v2 migration (new engine, E1).
+// Unit tests for js/storage.js — schema v4 and the migrations from v1.
 // The fixture tests/fixtures/storage-v1.json is a REAL v1 save: produced by playing the
 // v0.9.0 app in a browser (two profiles, stars, stickers, finished levels).
 // Run: node --test tests/*.test.mjs
@@ -47,7 +47,8 @@ test('v1 → latest (v4): every profile keeps its stars, stickers and level prog
     assert.deepEqual(p.skills, {}, `${old.name}: skills`);
     assert.equal(p.fixedMap, false, `${old.name}: fixedMap`);
     assert.deepEqual(p.scene, startScene(old.rewards), `${old.name}: v3 scene (next reward one gap from now)`);
-    assert.deepEqual(p.rewards, { ...old.rewards, items: [], nextAt: p.scene.nextAt, news: [] }, `${old.name}: v4 rewards`);
+    assert.deepEqual(p.rewards, v1Rewards(old.rewards), `${old.name}: rewards keep the v1 shape`);
+    assert.deepEqual(p.collection, { items: [], nextAt: p.scene.nextAt, news: [] }, `${old.name}: v4 collection`);
     assert.deepEqual(p.worlds, startWorlds('meadow'), `${old.name}: worlds`);
   }
   assert.equal(s.getSetting('lang'), V1.settings.lang);
@@ -115,12 +116,13 @@ test('a new install starts at the latest schema; new profiles have every field',
   fakeStorage();
   const s = await freshV2();
   const p = s.addProfile({ name: 'Joueur A', avatar: '🦊', readingLang: 'fr' });
-  assert.deepEqual(p.rewards, startRewards());
+  assert.deepEqual(p.rewards, { stars: 0, stickers: [] });
+  assert.deepEqual(p.collection, { items: [], nextAt: 5, news: [] });
+  assert.deepEqual(s.getRewards(p.id), startRewards());
   assert.deepEqual(p.skills, {});
   assert.equal(p.fixedMap, false);
   assert.equal(JSON.parse(globalThis.localStorage.getItem(KEY)).schema, s.SCHEMA_VERSION);
   assert.deepEqual(p.worlds, { unlocked: ['meadow'], meadow: { placed: [] } });
-  assert.equal(p.rewards.nextAt, 5);
 });
 
 test('MIGRATIONS cover every schema step', async () => {
@@ -206,14 +208,14 @@ test('v2 → v3: a v2 save gets its scenes, nothing else changes', async () => {
   for (const p of v2.profiles) {
     delete p.scene;
     delete p.worlds;
-    p.rewards = v1Rewards(p.rewards);
+    delete p.collection;
   }
   fakeStorage({ [KEY]: JSON.stringify(v2) });
   const s = await freshV2();
   for (const p of v2.profiles) {
     const now = s.getProfile(p.id);
-    const { scene, worlds, rewards, ...rest } = now;
-    assert.deepEqual({ ...rest, rewards: v1Rewards(rewards) }, p, `${p.name}: changed`);
+    const { scene, worlds, collection, ...rest } = now;
+    assert.deepEqual(rest, p, `${p.name}: changed`);
     assert.deepEqual(scene, startScene(p.rewards));
   }
   assert.equal(globalThis.localStorage.getItem(`${KEY}.backup-v2`), JSON.stringify(v2), 'v2 backup kept');
@@ -239,31 +241,90 @@ test('v3 → v4: the scene becomes the meadow world (global ids), the v3 scene i
   for (const old of v3.profiles) {
     const p = s.getProfile(old.id);
     assert.deepEqual(p.scene, old.scene, 'v3 scene untouched');
-    assert.deepEqual(p.rewards, {
-      ...old.rewards, items: ['meadow.tree', 'meadow.fox'], nextAt: old.scene.nextAt, news: ['meadow.fox'],
-    });
+    assert.deepEqual(p.rewards, old.rewards, 'rewards untouched');
+    assert.deepEqual(p.collection, { items: ['meadow.tree', 'meadow.fox'], nextAt: old.scene.nextAt, news: ['meadow.fox'] });
     assert.deepEqual(p.worlds, { unlocked: ['meadow'], meadow: { placed: [{ id: 'meadow.fox', x: 0.3, y: 0.8 }] } });
-    const { scene, worlds, rewards, ...rest } = p;
-    const { scene: s3, rewards: r3, ...rest3 } = old;
+    const { scene, worlds, collection, ...rest } = p;
+    const { scene: s3, ...rest3 } = old;
     assert.deepEqual(rest, rest3, 'nothing else changed');
   }
   assert.equal(map.get(`${KEY}.backup-v3`), JSON.stringify(v3), 'v3 backup kept');
 });
 
-test('an older app rewriting the rewards (no v4 fields): repaired from its v3 scene on load', async () => {
+// The released v0.9.0 app rewrites `rewards` as { stars, stickers } on every star (and
+// gives stickers itself). The v4 collection, worlds and placements must survive that.
+test('v4 save → the v0.9.0 app adds stars and a sticker → v4 load: nothing of v4 is lost', async () => {
+  fakeStorage({ [KEY]: JSON.stringify(v3Save()) });
+  const s = await freshV2();
+  const id = V1.profiles[0].id;
+  const other = V1.profiles[1].id;
+  // the v4 app: items of two worlds, placements, news
+  const r = s.getRewards(id);
+  r.items.push('space.rocket');
+  const w = s.getWorlds(id);
+  w.unlocked.push('space');
+  w.space = { placed: [{ id: 'space.rocket', x: 0.2, y: 0.4 }] };
+  w.meadow.placed.push({ id: 'meadow.tree', x: 0.6, y: 0.9 });
+  s.setRewardsAndWorlds(id, r, w);
+  const before = JSON.parse(globalThis.localStorage.getItem(KEY));
+  // the v0.9.0 app opens the same save: two plain stars, then a sticker star
+  const old = await freshV1();
+  for (const sticker of [null, null, 'zz-new']) {
+    const o = old.getRewards(id);
+    old.setRewards(id, { stars: o.stars + 1, stickers: sticker ? [...o.stickers, sticker] : o.stickers });
+  }
+  old.setRewards(other, { stars: old.getRewards(other).stars + 1, stickers: old.getRewards(other).stickers });
+  // back in v4
+  const again = await freshV2();
+  const after = JSON.parse(globalThis.localStorage.getItem(KEY));
+  for (const p of before.profiles) {
+    const q = after.profiles.find((x) => x.id === p.id);
+    assert.deepEqual(q.collection, p.collection, `${p.name}: collection unchanged`);
+    assert.deepEqual(q.worlds, p.worlds, `${p.name}: worlds and placements unchanged`);
+    assert.deepEqual(q.scene, p.scene, `${p.name}: v3 scene untouched`);
+  }
+  const now = again.getRewards(id);
+  assert.equal(now.stars, r.stars + 3, 'the old app’s stars kept');
+  assert.deepEqual(now.stickers, [...r.stickers, 'zz-new'], 'the old app’s sticker kept');
+  assert.deepEqual(now.items, r.items);
+  assert.deepEqual(again.getWorlds(id), w);
+  assert.deepEqual(Object.keys(after.profiles[0].rewards).sort(), ['stars', 'stickers'], 'rewards keep the v1 shape');
+});
+
+// A v3 app (preview.2) on a v4 save: its stars count; its scene changes are not merged
+// (the v4 fields exist, and an existing field is never overwritten).
+test('a v3 app rewriting rewards and its scene: stars kept, collection and worlds untouched', async () => {
   fakeStorage({ [KEY]: JSON.stringify(v3Save()) });
   (await freshV2()).getProfiles();
   const data = JSON.parse(globalThis.localStorage.getItem(KEY));
   const p = data.profiles[0];
-  p.rewards = { stars: p.rewards.stars + 6, stickers: p.rewards.stickers }; // as a v3 app saves a star…
-  p.scene.items.push('duck'); // …that gave an item
+  const { collection, worlds } = p;
+  p.rewards = { stars: p.rewards.stars + 6, stickers: p.rewards.stickers };
+  p.scene.items.push('duck');
   p.scene.placed.push({ id: 'duck', x: 0.5, y: 0.9 });
   globalThis.localStorage.setItem(KEY, JSON.stringify(data));
   const s = await freshV2();
-  const r = s.getRewards(p.id);
-  assert.equal(r.stars, p.rewards.stars);
-  assert.deepEqual(r.items, ['meadow.tree', 'meadow.fox', 'meadow.duck']);
-  assert.deepEqual(s.getWorlds(p.id).meadow.placed.map((x) => x.id), ['meadow.fox', 'meadow.duck']);
+  assert.equal(s.getRewards(p.id).stars, p.rewards.stars);
+  assert.deepEqual(s.getProfile(p.id).collection, collection);
+  assert.deepEqual(s.getWorlds(p.id), worlds);
+});
+
+// Engine step c1a (dev only) kept the collection inside `rewards`: moved out on load.
+test('a c1a save (collection inside rewards) is repaired: collection made, rewards back to v1', async () => {
+  const v4 = v3Save();
+  v4.schema = 4;
+  for (const p of v4.profiles) {
+    p.rewards = { ...p.rewards, items: ['meadow.tree'], nextAt: 40, news: ['meadow.tree'] };
+    p.worlds = { unlocked: ['meadow'], meadow: { placed: [{ id: 'meadow.tree', x: 0.1, y: 0.1 }] } };
+  }
+  fakeStorage({ [KEY]: JSON.stringify(v4) });
+  const s = await freshV2();
+  for (const old of v4.profiles) {
+    const p = s.getProfile(old.id);
+    assert.deepEqual(p.rewards, { stars: old.rewards.stars, stickers: old.rewards.stickers });
+    assert.deepEqual(p.collection, { items: ['meadow.tree'], nextAt: 40, news: ['meadow.tree'] });
+    assert.deepEqual(p.worlds, old.worlds, 'existing worlds kept');
+  }
 });
 
 test('getWorlds / setRewardsAndWorlds return and keep copies', async () => {

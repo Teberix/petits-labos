@@ -81,6 +81,17 @@ playtest).
 - Windows: commit with a message file (`git commit -F <file>`); never pipe the message
   through PowerShell (a here-string piped to `git commit -F -` is taken as a pathspec).
 
+## Report style (mailbox files and final reports)
+- Write in ASD-STE-100 style, about 80 %: one idea per sentence; max 20 words per
+  instruction, 25 per description; active voice; imperative for owner actions.
+- Use one term for one thing. No synonyms.
+- Exempt: code identifiers, file paths, commands, test output, quotes.
+- Report results, risks and questions only. No process narration.
+- Read narrowly: grep or line ranges before whole files; state the read list first.
+- Proposals that change stored data or shared flows include: a field table (field |
+  written by, with app versions | read by | migration) and a Mermaid state diagram for
+  any multi-step flow. Keep each one under 15 rows or nodes.
+
 ## Code map
 
 ```

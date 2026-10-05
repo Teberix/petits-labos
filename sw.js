@@ -132,6 +132,8 @@ const PRECACHE = [
   'js/ui.js',
   'js/updates.js',
   'js/version.js',
+  'scenes/meadow/pack.js',
+  'scenes/registry.js',
 ];
 // PRECACHE:END
 
