@@ -54,5 +54,18 @@
       "PowerShell(npm ci *)",
       "PowerShell(npx playwright install *)"
     ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/tools/hooks/context-budget.mjs\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
   }
 }
