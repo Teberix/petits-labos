@@ -1,37 +1,45 @@
-// Rewards shared by every game: stars, and a sticker every STARS_PER_STICKER stars.
-// No scores, no ratings: every success gives one star, nothing is ever taken away.
+// Rewards shared by every game: stars, and every few stars a reward — a sticker for the
+// album or an item for the child's meadow, in turn, further apart as they collect more
+// (the schedule is js/scene.js; owner, 2026-10-05). No scores, no ratings: every success
+// gives one star, nothing is ever taken away.
 //
-// Games use it through ctx.rewards (see js/screens/game.js):
-//   const sticker = ctx.rewards.star(fromElement); // +1 star, flies to the counter
-//   if (sticker) await ctx.rewards.showSticker(sticker); // full-screen reveal
+// Games use it through ctx.rewards (see js/screens/game.js) — unchanged for them:
+//   const reward = ctx.rewards.star(fromElement); // +1 star, flies to the counter
+//   if (reward) await ctx.rewards.showSticker(reward); // full-screen reveal (sticker OR item)
 import { h } from './dom.js';
 import { ICONS } from './icons.js';
 import { t } from './i18n.js';
 import { sfx } from './audio.js';
-import { getRewards, setRewards } from './storage.js';
+import { getRewards, getScene, setRewardsAndScene } from './storage.js';
 import { STICKERS, stickerSvg } from './stickers.js';
+import { ITEMS, itemSvg } from './items.js';
+import { addStar as nextState, gap, granted } from './scene.js';
 import { say } from './ui.js';
 
-export const STARS_PER_STICKER = 5;
 const FLY_MS = 800;
-const REVEAL_MS = 5000;     // the sticker reveal closes by itself after this
+const REVEAL_MS = 5000;     // the reveal closes by itself after this
 const REVEAL_GUARD_MS = 800; // ignore taps right after it opens (a finger may still be down)
 
-// +1 star. Every 5th star also unlocks a sticker the player doesn't have yet
-// (picked at random, so it's a surprise). Returns that sticker, or null.
+const ALL = { stickers: STICKERS.map((s) => s.id), items: ITEMS.map((i) => i.id) };
+
+// +1 star. When it's time, it also unlocks a sticker or an item the player doesn't have
+// yet (picked at random: a surprise). Returns { kind: 'sticker' | 'item', …it } or null.
 export function addStar(profileId) {
-  const rewards = getRewards(profileId);
-  rewards.stars += 1;
-  let sticker = null;
-  if (rewards.stars % STARS_PER_STICKER === 0) {
-    const missing = STICKERS.filter((s) => !rewards.stickers.includes(s.id));
-    if (missing.length) {
-      sticker = missing[Math.floor(Math.random() * missing.length)];
-      rewards.stickers.push(sticker.id);
-    }
-  }
-  setRewards(profileId, rewards);
-  return sticker;
+  const out = nextState(getRewards(profileId), getScene(profileId), ALL);
+  setRewardsAndScene(profileId, out.rewards, out.scene);
+  if (!out.reward) return null;
+  const list = out.reward.kind === 'sticker' ? STICKERS : ITEMS;
+  return { kind: out.reward.kind, ...list.find((x) => x.id === out.reward.id) };
+}
+
+// How close the next reward is (for the album's progress bar): { have, need } stars,
+// or null when everything is collected.
+export function nextRewardProgress(profileId) {
+  const { stars, stickers } = getRewards(profileId);
+  const scene = getScene(profileId);
+  if (stickers.length >= STICKERS.length && scene.items.length >= ITEMS.length) return null;
+  const need = gap(granted({ stars, stickers }, scene) + 1);
+  return { have: Math.max(0, need - (scene.nextAt - stars)), need };
 }
 
 // The star counter shown in a game's top bar (not a button: just to watch it grow).
@@ -70,13 +78,15 @@ export function flyStar(fromEl, profileId) {
   setTimeout(() => { star.remove(); update(); }, FLY_MS);
 }
 
-// Full-screen "new sticker!" moment. Resolves when it closes (tap, or after 5 s),
-// so the game can wait before moving on.
-export function showSticker(sticker) {
+// Full-screen "new sticker!" / "new for your meadow!" moment. Resolves when it closes
+// (tap, or after 5 s), so the game can wait before moving on. (Named showSticker for the
+// games' ctx — it shows any reward.)
+export function showSticker(reward) {
+  const item = reward.kind === 'item';
   return new Promise((resolve) => {
-    const overlay = h('div', { class: 'sticker-overlay', role: 'dialog', 'aria-label': t('newStickerTitle') },
+    const overlay = h('div', { class: 'sticker-overlay', role: 'dialog', 'aria-label': t(item ? 'newItemTitle' : 'newStickerTitle') },
       h('div', { class: 'sticker-rays', 'aria-hidden': 'true' }),
-      h('div', { class: 'sticker-reveal', html: stickerSvg(sticker) }),
+      h('div', { class: `sticker-reveal${item ? ' item-reveal' : ''}`, html: item ? itemSvg(reward) : stickerSvg(reward) }),
     );
     const openedAt = Date.now();
     let closed = false;
@@ -91,7 +101,7 @@ export function showSticker(sticker) {
     });
     document.body.append(overlay);
     sfx.fanfare();
-    say(t('newSticker', { name: t(`sticker.${sticker.id}`) }));
+    say(item ? t('newItem', { name: t(`item.${reward.id}`) }) : t('newSticker', { name: t(`sticker.${reward.id}`) }));
     setTimeout(close, REVEAL_MS);
   });
 }

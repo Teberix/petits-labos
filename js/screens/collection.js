@@ -1,25 +1,25 @@
 // Sticker album — every sticker has its own spot; earned ones are in colour,
 // the others are a grey "?". Tapping a sticker says its name.
-// On top: the star total, and 5 little stars showing how close the next sticker is.
+// On top: the star total, and a bar filling up towards the next reward (a sticker or a
+// meadow item, in turn — js/scene.js). The meadow button opens the child's scene.
 import { h } from '../dom.js';
 import { ICONS } from '../icons.js';
 import { t } from '../i18n.js';
 import { sfx } from '../audio.js';
 import { getProfile, getRewards } from '../storage.js';
 import { STICKERS, stickerSvg } from '../stickers.js';
-import { STARS_PER_STICKER } from '../rewards.js';
+import { nextRewardProgress } from '../rewards.js';
 import { iconButton, repeatButton, say, topBar } from '../ui.js';
 
 export function render(root, { profileId }, app) {
   if (!getProfile(profileId)) return app.show('profiles');
   const { stars, stickers } = getRewards(profileId);
-  const complete = stickers.length >= STICKERS.length;
-
-  // Progress towards the next sticker: filled stars out of 5.
-  const towardNext = stars % STARS_PER_STICKER;
-  const progress = complete ? null : h('div', { class: 'next-sticker', 'aria-hidden': 'true' },
-    Array.from({ length: STARS_PER_STICKER }, (_, i) =>
-      h('span', { class: `mini-star${i < towardNext ? ' filled' : ''}`, html: ICONS.star })));
+  // Progress towards the next reward: a bar with a little gift at the end (no numbers).
+  const next = nextRewardProgress(profileId);
+  const progress = next && h('div', { class: 'next-reward', 'aria-hidden': 'true' },
+    h('div', { class: 'next-reward-bar' },
+      h('div', { class: 'next-reward-fill', style: `width: ${Math.round((100 * next.have) / next.need)}%` })),
+    h('span', { class: 'next-reward-gift', html: ICONS.gift }));
 
   const spots = STICKERS.map((sticker) => {
     if (!stickers.includes(sticker.id)) {
@@ -45,7 +45,7 @@ export function render(root, { profileId }, app) {
     topBar({
       left: [iconButton('back', t('back'), () => app.show('hub', { profileId }))],
       title: t('collection'),
-      right: [repeatButton()],
+      right: [iconButton('meadow', t('openScene'), () => app.show('scene', { profileId }), 'meadow-btn'), repeatButton()],
     }),
     h('section', { class: 'screen-body collection-body' },
       h('div', { class: 'collection-head' },

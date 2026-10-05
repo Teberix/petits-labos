@@ -10,8 +10,8 @@
 //   ctx.sfx                { pop, chime, boing, plop, bubbles, fanfare }
 //   ctx.load() / ctx.save(data)   this game's saved data for this player
 //   ctx.rewards.star(fromEl)      +1 star (flies from fromEl to the counter); returns a
-//                                 newly earned sticker or null
-//   ctx.rewards.showSticker(s)    full-screen sticker reveal; a Promise, resolves when closed
+//                                 newly earned reward (a sticker or a meadow item) or null
+//   ctx.rewards.showSticker(r)    full-screen reveal of that reward; a Promise, resolves when closed
 //   ctx.exit()             back to the hub
 import { h } from '../dom.js';
 import { getLang, t } from '../i18n.js';

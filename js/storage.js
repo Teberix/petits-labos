@@ -276,6 +276,16 @@ export function setScene(profileId, scene) {
   save();
 }
 
+// A star changes both (the reward schedule lives in the scene): one save, so they can
+// never get out of step.
+export function setRewardsAndScene(profileId, rewards, scene) {
+  const profile = getProfile(profileId);
+  if (!profile) return;
+  profile.rewards = rewards;
+  profile.scene = scene;
+  save();
+}
+
 // ---- New engine: per profile and game, the adaptive difficulty (js/progress.js) ----
 // { skill, best, rounds, seen } — missing = a fresh start (progress.js START).
 

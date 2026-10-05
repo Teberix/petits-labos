@@ -119,7 +119,8 @@ button:disabled { opacity: 0.5; cursor: default; }
 }
 
 /* In a game (all games) the top bar stays on one row even on phones (only 2 buttons). */
-#app[data-screen="game"] .top-bar {
+#app[data-screen="game"] .top-bar,
+#app[data-screen="scene"] .top-bar {
   grid-template-columns: auto 1fr auto;
   grid-template-areas: "left title right";
   padding-block: 0.5rem;
@@ -168,7 +169,7 @@ button:disabled { opacity: 0.5; cursor: default; }
 /* ---------- Game screen ---------- */
 
 /* A game fills exactly one screen (no page scrolling); games lay out inside it. */
-#app[data-screen="game"] { height: 100dvh; overflow: hidden; }
+#app[data-screen="game"], #app[data-screen="scene"] { height: 100dvh; overflow: hidden; }
 
 .game-stage {
   flex: 1;
@@ -326,10 +327,19 @@ input[type="text"] {
 }
 .star-total { font-size: 2rem; }
 .star-total .star-icon { width: 3rem; height: 3rem; }
-.next-sticker { display: flex; gap: 0.25rem; }
-.mini-star { width: 2rem; height: 2rem; filter: grayscale(1) opacity(0.35); }
-.mini-star.filled { filter: none; }
-.mini-star svg { width: 100%; height: 100%; }
+/* The bar filling up towards the next reward (a sticker or a meadow item), a gift at its
+   end. No numbers: a child sees it fill. */
+.next-reward { display: flex; align-items: center; gap: 0.5rem; }
+.next-reward-bar {
+  width: min(40vw, 12rem);
+  height: 1.1rem;
+  border-radius: 999px;
+  background: rgba(43, 33, 65, 0.12);
+  overflow: hidden;
+}
+.next-reward-fill { height: 100%; border-radius: 999px; background: #FFC83D; }
+.next-reward-gift { width: 2.5rem; height: 2.5rem; }
+.next-reward-gift svg { width: 100%; height: 100%; }
 
 .sticker-grid {
   display: grid;
@@ -371,3 +381,70 @@ input[type="text"] {
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; }
 }
+
+/* ---------- Mon pré (rewards option B) ----------
+   Portrait: the meadow over the tray of treasures; landscape: meadow + tray as a column.
+   The meadow is 16:10, as big as its stage allows; items are placed by the middle of
+   their bottom edge (js/screens/scene.js) and stand on the grass. */
+.scene-body {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: var(--gap);
+  min-height: 0;
+}
+@media (orientation: landscape) {
+  .scene-body { grid-template-rows: minmax(0, 1fr); grid-template-columns: minmax(0, 1fr) auto; }
+}
+.scene-stage { min-height: 0; min-width: 0; container-type: size; display: grid; place-items: center; }
+.scene-view {
+  position: relative;
+  width: min(100cqw, 160cqh);
+  aspect-ratio: 16 / 10;
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+.scene-view > svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.scene-view.drop-hover { outline: 0.25rem solid #2E86DE; outline-offset: 0.15rem; }
+.scene-placed { position: absolute; inset: 0; }
+.scene-item {
+  position: absolute;
+  aspect-ratio: 1;
+  padding: 0;
+  border: none;
+  background: none;
+  transform: translate(-50%, -100%); /* (left, top) = the middle of the bottom edge */
+  min-width: 64px; /* touch targets ≥ 64px, even on a small phone */
+  touch-action: none;
+}
+.scene-item svg, .scene-card svg { display: block; width: 100%; height: 100%; pointer-events: none; }
+/* The tray scrolls by itself when there are many treasures (never the page). */
+.scene-tray {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  padding-bottom: 0.25rem;
+  min-width: 0;
+  min-height: 0;
+}
+@media (orientation: landscape) {
+  .scene-tray { display: grid; grid-template-columns: repeat(2, auto); align-content: start; overflow-x: hidden; overflow-y: auto; }
+}
+.scene-card {
+  flex: none;
+  width: var(--tap);
+  height: var(--tap);
+  padding: 0.35rem;
+  border: none;
+  border-radius: 1rem;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  touch-action: pan-x; /* a swipe along the tray scrolls it; toward the meadow = a drag */
+}
+@media (orientation: landscape) {
+  .scene-card { touch-action: pan-y; }
+}
+.scene-view.shake { animation: shake 0.4s ease-in-out; }
+.scene-empty .next-reward-gift { flex: none; }
+@keyframes shake { 25% { transform: translateX(-0.4rem); } 75% { transform: translateX(0.4rem); } }
+.scene-empty { display: flex; align-items: center; gap: 0.5rem; margin: 0; color: var(--ink-soft); text-align: center; align-self: center; }

@@ -100,7 +100,8 @@ js/dragdrop.js         draggable(el, { targets, onDrop(target, point), onTap, ca
 js/rewards.js          stars + stickers (shared by all games): addStar, flyStar, showSticker, starBadge
 js/stickers.js         the 24 album stickers (SVG) — names in js/i18n as sticker.<id>
 js/ui.js, dom.js, icons.js   top bar, repeat button, h() DOM helper, shell SVG icons
-js/screens/            profiles, hub, game (mounts a game + builds ctx), parent, collection (album)
+js/screens/            profiles, hub, game (mounts a game + builds ctx), parent, collection (album),
+                       scene ("Mon pré": the child places the items they unlocked)
 games/registry.js      one line per game
 games/<id>/meta.js     id, titleKey, strings, tile icon (loaded eagerly by the hub)
 games/<id>/<id>.js     default export { mount(container, ctx), unmount() } (lazy-loaded)
@@ -128,9 +129,12 @@ Conventions:
 - Storage format change → bump `SCHEMA_VERSION` + add a migration in `js/storage.js`.
 - Don't use `requestAnimationFrame` for game logic/timers (it stops in some webviews and
   background tabs) — use `setTimeout` + CSS animations.
-- Rewards: 1 star per success (games call `ctx.rewards.star(el)`), a random new sticker
-  every 5 stars (`ctx.rewards.showSticker` — await it before moving on). No scores,
-  never take stars away. Free-play modes give no stars.
+- Rewards: 1 star per success (games call `ctx.rewards.star(el)`). Every few stars a
+  reward, alternating a sticker (album) and an item (the child's meadow, "Mon pré"); the
+  gap starts at 5 stars and grows by 1 every 2 rewards, at most 20 (`js/scene.js`;
+  owner, 2026-10-05). `ctx.rewards.star` returns the reward (or null): await
+  `ctx.rewards.showSticker(reward)` before moving on — it reveals stickers and items.
+  No scores, never take stars away. Free-play modes give no stars.
   Exception (owner's decision, 2026-09-28): a game may give **+1 bonus star** for an
   especially efficient solution (Robot Codeur: fewest cards), and mark a level done that
   way with a crown. Always positive: a normal success still gets its star, nothing is
