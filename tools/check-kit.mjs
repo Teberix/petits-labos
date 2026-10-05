@@ -8,6 +8,7 @@
 //                                    // are always added)
 //     cells: '.selector', minCell: 48,  // optional: grid cells and their minimum size (px)
 //     worstCases: [{ name, async setup(page, kit) { … } }],  // screens to check at every size
+//                 // + pageScroll: true = a list screen that may scroll DOWN (hub, album)
 //     async offline(page, kit) { … },   // one scripted interaction that must succeed
 //                                       // (throw if it doesn't), run with the network off
 //   }
@@ -67,6 +68,17 @@ const TEST_PROFILE = {
 export async function loadGameChecks(id) {
   try {
     return (await import(`../games/${id}/checks.js`)).default;
+  } catch (err) {
+    if (err.code === 'ERR_MODULE_NOT_FOUND') return null;
+    throw err;
+  }
+}
+
+// The shared screens' checks (album, "Mon pré", the reward reveal…): same format as a
+// game's checks.js, run by check-layout.mjs for the whole app (not with --game).
+export async function loadShellChecks() {
+  try {
+    return (await import('../js/screens/checks.js')).default;
   } catch (err) {
     if (err.code === 'ERR_MODULE_NOT_FOUND') return null;
     throw err;
