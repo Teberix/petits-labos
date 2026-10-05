@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "game": "train",
+  "levels": [
+    { "id": 1, "difficulty": 1, "tokens": ["red", "blue", "yellow", "green", "purple"], "patterns": ["AB"], "wagons": [5, 7], "gap": "end", "choices": 2, "rounds": 5 },
+    { "id": 2, "difficulty": 2, "tokens": ["apple", "banana", "grapes", "pear", "watermelon"], "patterns": ["AB", "ABC"], "wagons": [7, 9], "gap": "end", "choices": 3, "rounds": 5, "intro": "train.intro.fruits" },
+    { "id": 3, "difficulty": 3, "tokens": ["red", "blue", "yellow", "green", "purple"], "patterns": ["AAB", "ABB", "AABB"], "wagons": [7, 9], "gap": "end", "choices": 3, "rounds": 5, "intro": "train.intro.double" },
+    { "id": 4, "difficulty": 4, "tokens": ["apple", "banana", "grapes", "pear", "watermelon"], "patterns": ["AB", "ABC", "AAB", "ABB"], "wagons": [6, 9], "gap": "middle", "choices": 4, "rounds": 5, "intro": "train.intro.middle" },
+    { "id": 6, "difficulty": 5, "grow": true, "tokens": ["dots1", "dots2", "dots3", "dots4", "dots5"], "before": [3, 4], "steps": [1, -1], "choices": 3, "rounds": 5, "intro": "train.intro.grow" },
+    { "id": 5, "difficulty": 6, "tokens": ["red", "blue", "yellow", "green", "purple"], "patterns": ["AB", "ABC", "AAB", "ABB"], "gap": "period", "choices": 4, "rounds": 5, "intro": "train.intro.period" },
+    { "id": 8, "difficulty": 7, "tokens": ["red", "blue", "yellow", "green", "purple"], "patterns": ["AB", "ABC", "AAB", "ABB"], "wagons": [9, 9], "gap": "two", "choices": 4, "rounds": 5, "intro": "train.intro.two" },
+    { "id": 9, "difficulty": 8, "tokens": ["red", "blue", "yellow", "apple", "banana", "pear"], "patterns": ["AB", "ABC", "AAB", "ABB"], "wagons": [8, 9], "gap": "two", "choices": 5, "rounds": 5, "intro": "train.intro.mixed" }
+  ]
+}

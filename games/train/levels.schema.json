@@ -1,0 +1,23 @@
+{
+  "$comment": "ONE level of train (a parameter set; its trains are made at play time by pattern.js makePuzzle). Dev-only (never precached). Either a pattern level (patterns + gap + wagons) or a growing level (grow + before + steps). Free mode is not a level: it lives in levels.js (FREE).",
+  "type": "object",
+  "required": ["id", "difficulty", "tokens", "choices", "rounds"],
+  "additionalProperties": false,
+  "properties": {
+    "id": { "type": "integer", "minimum": 1 },
+    "difficulty": { "type": "integer", "minimum": 1, "maximum": 10 },
+    "tokens": {
+      "type": "array", "minItems": 2,
+      "items": { "enum": ["red", "blue", "yellow", "green", "purple", "apple", "banana", "grapes", "pear", "watermelon", "dots1", "dots2", "dots3", "dots4", "dots5"] }
+    },
+    "patterns": { "type": "array", "minItems": 1, "items": { "type": "string", "pattern": "^[A-D]{2,4}$" } },
+    "wagons": { "type": "array", "minItems": 2, "maxItems": 2, "items": { "type": "integer", "minimum": 3, "maximum": 9 } },
+    "gap": { "enum": ["end", "middle", "period", "two"] },
+    "grow": { "const": true },
+    "before": { "type": "array", "minItems": 2, "maxItems": 2, "items": { "type": "integer", "minimum": 3, "maximum": 4 } },
+    "steps": { "type": "array", "minItems": 1, "items": { "enum": [1, -1] } },
+    "choices": { "type": "integer", "minimum": 2, "maximum": 6 },
+    "rounds": { "type": "integer", "minimum": 1 },
+    "intro": { "type": "string", "pattern": "^train\\.intro\\.[a-z]+$" }
+  }
+}

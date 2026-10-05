@@ -131,10 +131,17 @@ export function firstFullPeriod(cars, p) {
 //   'end'    the last wagon
 //   'middle' one wagon somewhere inside the train (not the first, not the last)
 //   'period' the whole last period (p wagons)
+//   'two'    two wagons anywhere after the first (sorted, left to right)
 export function gapIndices(gap, length, p, rng = Math.random) {
   if (gap === 'end') return [length - 1];
   if (gap === 'middle') return [randomInt(1, length - 2, rng)];
   if (gap === 'period') return Array.from({ length: p }, (_, i) => length - p + i);
+  if (gap === 'two') {
+    const a = randomInt(1, length - 1, rng);
+    let b = randomInt(1, length - 2, rng);
+    if (b >= a) b++; // a different wagon
+    return [a, b].sort((x, y) => x - y);
+  }
   throw new Error(`unknown gap "${gap}"`);
 }
 

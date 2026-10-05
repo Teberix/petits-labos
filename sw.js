@@ -97,6 +97,7 @@ const PRECACHE = [
   'games/shapes/tangram.js',
   'games/train/art.js',
   'games/train/levels.js',
+  'games/train/levels.json',
   'games/train/meta.js',
   'games/train/music.js',
   'games/train/pattern.js',
@@ -134,6 +135,7 @@ const PRECACHE = [
   'js/ui.js',
   'js/updates.js',
   'js/version.js',
+  'scenes/dinosaurs/pack.js',
   'scenes/meadow/pack.js',
   'scenes/registry.js',
 ];

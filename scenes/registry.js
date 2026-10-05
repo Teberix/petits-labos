@@ -5,7 +5,9 @@
 // add ONE line below, and give the game that unlocks it `scene: '<id>'` in its meta.js.
 // Nothing else changes (js/items.js, js/scene.js and js/rewards.js read this list).
 import meadow from './meadow/pack.js';
+import dinosaurs from './dinosaurs/pack.js';
 
 export const PACKS = [
   meadow,
+  dinosaurs,
 ];

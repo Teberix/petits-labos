@@ -3,6 +3,9 @@ export default {
   id: 'train',
   // Non-linguistic game → played in the app language (French by default).
   titleKey: 'train.title',
+  // New engine: the path screen (js/path.js) and its own world for the rewards.
+  path: true,
+  scene: 'dinosaurs',
   strings: {
     fr: { 'train.title': 'Le Train des Suites' },
     es: { 'train.title': 'El Tren de las Series' },

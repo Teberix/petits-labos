@@ -1,7 +1,11 @@
 // "Le Train des Suites" — a train whose wagons follow a pattern (red, blue, red, blue…)
 // has empty wagons; the child finds what goes in them.
 //
-// Flow:   level map → level (5 trains) → level done → map
+// Flow:   path (new engine, meta `path: true`): ▶ → one train at the level js/progress.js
+//         picks for the child's hidden skill → the path again, one stone more; the
+//         free-mode button sits next to ▶.
+//         Fixed level map (ctx.path null: parent switch "Carte des niveaux"): level
+//         map → level (5 trains) → level done → map
 // Train:  the locomotive pulls the wagons (left to right = reading order, wrapping onto
 //         more rows on a narrow screen). Empty wagons show a "?". Under the train, a
 //         tray of tokens: drag one into an empty wagon, or tap it (it goes into the
@@ -35,7 +39,7 @@ import {
   makePuzzle, firstEmpty, firstFullPeriod, fitTrain, addToStart, removeFromStart, repeatStart,
 } from './pattern.js';
 import { playNote, knock, whistle } from './music.js';
-import { LEVELS } from './levels.js';
+import { LEVELS, PATH_LEVELS, FREE } from './levels.js';
 import STRINGS from './strings.js';
 import * as art from './art.js';
 
@@ -89,10 +93,52 @@ function createGame(container, ctx) {
   }
 
   // ---------- Progress (saved per player) ----------
-  // { completed: [level ids] }
+  // { completed: [level ids] (fixed map), heard: [level ids whose intro was said] }
+  // (`heard` is new with the path; older saves simply don't have it.)
 
   function progress() {
-    return { completed: [], ...ctx.load() };
+    return { completed: [], heard: [], ...ctx.load() };
+  }
+
+  // The game's home: the path, or the fixed level map.
+  function home() {
+    if (ctx.path) showPath();
+    else showLevels();
+  }
+
+  // ---------- Path (new engine) ----------
+
+  function showPath() {
+    stopInputs();
+    ctx.path.show(container, {
+      levels: PATH_LEVELS,
+      onPlay: (level) => { sfx.pop(); playLevel(level); },
+      onFree: () => { sfx.pop(); playLevel(FREE); },
+    });
+    ctx.speak(t('train.path'));
+  }
+
+  // The strongest hint this train needed, in js/progress.js names: no miss → null,
+  // the singing train (spoken) → 'clue', the outlined period → 'glow', the wiggling
+  // token → 'dance', more misses after that → 'again'.
+  const HINTS = [null, 'clue', 'glow', 'dance'];
+  const strongestHint = (misses) => HINTS[misses] ?? 'again';
+
+  // The level's intro (and the "how to" of the first level) is said once per level:
+  // on the fixed map at its first train, on the path the first time it is picked.
+  function introLine(level) {
+    if (!ctx.path) {
+      if (play.index > 0) return '';
+    } else {
+      const p = progress();
+      if (p.heard.includes(level.id)) return '';
+      p.heard.push(level.id);
+      ctx.save(p);
+    }
+    let line = '';
+    if (level.id === LEVELS[0].id) line += ' ' + t('train.howTo');
+    if (level.intro) line += ' ' + t(level.intro);
+    return line;
   }
 
   function isUnlocked(index) {
@@ -162,12 +208,7 @@ function createGame(container, ctx) {
     renderTray();
 
     // (Several empty wagons, level 5: say so on every train, not only in the intro.)
-    let line = t(puzzle.gaps.length > 1 ? 'train.askMany' : 'train.ask');
-    if (play.index === 0) {
-      if (play.level.id === LEVELS[0].id) line += ' ' + t('train.howTo');
-      if (play.level.intro) line += ' ' + t(play.level.intro);
-    }
-    ctx.speak(line);
+    ctx.speak(t(puzzle.gaps.length > 1 ? 'train.askMany' : 'train.ask') + introLine(play.level));
   }
 
   // ---------- The train ----------
@@ -332,6 +373,8 @@ function createGame(container, ctx) {
     remark(t(`train.right.${pickOne(3)}`));
     // 1 star per train (it flies from the locomotive). Every 5th star also brings a sticker.
     const sticker = ctx.rewards.star(play.els.train.querySelector('.tr-loco'));
+    // On the path: the hidden skill moves and the path gets one stone more.
+    ctx.path?.record(play.level, strongestHint(puzzle.misses), PATH_LEVELS);
     const tuneMs = 300 + puzzle.cars.length * PARTY_MS;
     puzzle.cars.forEach((token, i) => later(() => {
       restartAnimation(carAt(i), 'tr-sing');
@@ -345,7 +388,8 @@ function createGame(container, ctx) {
       if (sticker) await ctx.rewards.showSticker(sticker);
       if (destroyed) return;
       play.index++;
-      if (play.index < play.level.rounds) startTrain();
+      if (ctx.path) showPath(); // one train per ▶
+      else if (play.index < play.level.rounds) startTrain();
       else levelDone();
     }, tuneMs + 200 + LEAVE_MS);
   }
@@ -497,7 +541,7 @@ function createGame(container, ctx) {
   }
 
   return {
-    start: showLevels,
+    start: home,
     destroy() {
       destroyed = true;
       timers.forEach(clearTimeout);

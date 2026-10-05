@@ -14,7 +14,34 @@ const AAB_LEVEL = {
 
 // `longest` pins Math.random near 1 in the page: the level then makes its longest train
 // (the top of its `wagons` range) — the worst case for the layout.
+// The level cases use the fixed level map (parent switch "Carte des niveaux"): the
+// test profile gets fixedMap, then the page reloads (the app reads the save at start).
+async function useFixedMap(page) {
+  await page.waitForSelector('.profile-tile');
+  await page.evaluate(() => {
+    const data = JSON.parse(localStorage.getItem('petits-labos'));
+    data.profiles[0].fixedMap = true;
+    localStorage.setItem('petits-labos', JSON.stringify(data));
+  });
+  await page.reload();
+}
+
+// The path (new engine): the game opens on it; ▶ plays one train.
+async function openPath(page, kit) {
+  await kit.openGame(page, 'train');
+  await page.locator('.path-play').waitFor();
+  await kit.settle(page);
+}
+
+async function playFromPath(page, kit) {
+  await openPath(page, kit);
+  await kit.tap(page, page.locator('.path-play'));
+  await page.locator('.tr-tray .tr-token').first().waitFor();
+  await kit.settle(page);
+}
+
 async function openLevel(page, kit, n, { longest = false, extraLevel = null } = {}) {
+  await useFixedMap(page); // (first: the reload would drop extraLevel)
   if (extraLevel) {
     await page.evaluate(async (level) => {
       const { LEVELS } = await import('./games/train/levels.js');
@@ -96,11 +123,19 @@ export default {
   // Empty wagons are drop targets (and where a tapped token goes): ≥ 64px like any
   // touch target. Full wagons only play a note when tapped (optional): cells ≥ 56px.
   // Free mode: start wagons are buttons (tap = take out) and the green "go" button.
-  touch: ['.tr-token', '.tr-level-btn', '.tr-continue', '.tr-car.tr-gap', '.tr-start', '.tr-go'],
-  cells: '.tr-car',
+  touch: ['.tr-token', '.tr-level-btn', '.tr-continue', '.tr-car.tr-gap', '.tr-start', '.tr-go', '.path-play', '.path-free'],
+  cells: '.tr-car, .path-play', // (the path screen has no wagons: its ▶ stands in)
   minCell: 56,
 
   worstCases: [
+    {
+      name: 'path screen (▶ + free button)',
+      async setup(page, kit) { await openPath(page, kit); },
+    },
+    {
+      name: 'path: one train at step 1',
+      async setup(page, kit) { await playFromPath(page, kit); },
+    },
     {
       name: 'level 1, longest train (7 wagons)',
       async setup(page, kit) {
@@ -258,8 +293,10 @@ export default {
 
   // Level 1: a wrong token gives nothing and leaves the gap empty; the right one
   // (dragged, like a child would) fills it and gives one star; the next train comes.
+  // On the path: ▶ → a wrong token (no star), the right one (+1 star) → back to the
+  // path with one stone.
   async offline(page, kit) {
-    await openLevel(page, kit, 1);
+    await playFromPath(page, kit);
     const before = await savedStars(page);
     const { cars, right, wrong } = await tokensFor(page);
     await kit.tap(page, token(wrong));
@@ -270,9 +307,8 @@ export default {
     await page.waitForFunction(() => !document.querySelector('.tr-car.tr-gap'), null, { timeout: 3000 });
     if (await savedStars(page) !== before + 1) throw new Error('right token: expected one more star');
 
-    // The next train rolls in (a new one, with an empty wagon again).
-    await page.waitForFunction(() => document.querySelector('.tr-car.tr-gap'), null, { timeout: 8000 });
-    const next = await readTrain(page);
-    if (next.cars.join() === cars.join()) throw new Error('the same train came back');
+    // (The first star unlocks the dinosaurs world: its reveal closes by itself.)
+    await page.locator('.path-play').waitFor({ timeout: 30000 });
+    if (await page.locator('.path-stone').count() !== 1) throw new Error('expected one stone on the path');
   },
 };

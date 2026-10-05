@@ -4,6 +4,9 @@
 export default {
   fr: {
     'train.chooseLevel': 'Choisis un niveau !',
+    'train.path': 'Appuie sur le bouton pour faire venir un train !',
+    'train.intro.two': 'Cette fois, il manque deux wagons !',
+    'train.intro.mixed': 'Des couleurs et des fruits dans le même train !',
     'train.level': 'Niveau {n}',
     'train.howTo': 'Regarde bien le train : les wagons se suivent toujours pareil. Glisse le bon wagon dans le trou !',
     'train.ask': 'Il manque un wagon ! Lequel va dans le trou ?',
@@ -43,6 +46,9 @@ export default {
   },
   es: {
     'train.chooseLevel': '¡Elige un nivel!',
+    'train.path': '¡Pulsa el botón para que venga un tren!',
+    'train.intro.two': '¡Esta vez faltan dos vagones!',
+    'train.intro.mixed': '¡Colores y frutas en el mismo tren!',
     'train.level': 'Nivel {n}',
     'train.howTo': 'Mira bien el tren: los vagones siempre se siguen igual. ¡Arrastra el vagón correcto al hueco!',
     'train.ask': '¡Falta un vagón! ¿Cuál va en el hueco?',
@@ -81,6 +87,9 @@ export default {
   },
   en: {
     'train.chooseLevel': 'Choose a level!',
+    'train.path': 'Press the button to call a train!',
+    'train.intro.two': 'This time, two wagons are missing!',
+    'train.intro.mixed': 'Colours and fruit in the same train!',
     'train.level': 'Level {n}',
     'train.howTo': 'Look at the train: the wagons always follow the same way. Drag the right wagon into the gap!',
     'train.ask': 'A wagon is missing! Which one goes in the gap?',

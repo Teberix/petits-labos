@@ -1,49 +1,43 @@
-// "Le Train des Suites" levels — edit this file to add or change levels; no game logic here.
+// "Le Train des Suites" levels. The level content lives in levels.json (the new engine,
+// owner 2026-10-03); this file only gives it to the game in the two shapes it needs.
 //
-// Level fields:
-//   id        number shown on the level map (levels unlock in this order; progress is
-//             saved by id, so never renumber an existing level)
-//   tokens    what the wagons can carry (ids from art.js TOKENS)
-//   patterns  the motifs, in letters: 'AB', 'AAB', 'ABC'… (one is picked per train;
-//             each letter gets a different token)
-//   wagons    [min, max] wagons in the train (max 9; not used when gap is 'period')
-//   gap       where the empty wagons are: 'end' (last wagon), 'middle' (one inside),
-//             'period' (the whole last period; the train is then exactly 3 periods)
-//   choices   how many different tokens in the tray (at least the pattern's letters)
-//   rounds    trains to finish the level
-//   intro     (optional) extra line said at the first train (key in strings.js)
-//   grow      true → a growing train instead of a pattern: 1 to 5 dots, one more (or
-//             one less) each wagon; uses `before` = [min, max] wagons before the gap
-//             (at least 3) and `steps` ([1] up, [-1] down, [1, -1] both) instead of
-//             patterns/wagons/gap. Two trains in a row never have the same answer.
-//   free      true → free mode: the child builds a start of `start` = [min, max]
-//             wagons from `tokens`, the locomotive repeats it (no stars; done after
-//             the first train leaves)
+// Level fields (levels.json; checked by levels.schema.json and the gate):
+//   id         progress is saved by id: never renumber, never reuse (7 = free mode)
+//   difficulty the step on the path (1 … 8): js/progress.js picks a level at the
+//              child's hidden skill
+//   tokens     what the wagons can carry (ids from art.js TOKENS)
+//   patterns   the motifs, in letters: 'AB', 'AAB', 'ABC'… (one is picked per train;
+//              each letter gets a different token)
+//   wagons     [min, max] wagons in the train (max 9; not used when gap is 'period')
+//   gap        where the empty wagons are: 'end' (last wagon), 'middle' (one inside),
+//              'period' (the whole last period; the train is then exactly 3 periods),
+//              'two' (two wagons anywhere after the first)
+//   choices    how many different tokens in the tray (at least the pattern's letters)
+//   rounds     trains per level on the fixed level map (the path plays one train per ▶)
+//   intro      (optional) extra line said the first time the child gets this level
+//   grow       true → a growing train instead of a pattern: 1 to 5 dots, one more (or
+//              one less) each wagon; uses `before` = [min, max] wagons before the gap
+//              (at least 3) and `steps` ([1] up, [-1] down, [1, -1] both) instead of
+//              patterns/wagons/gap. Two trains in a row never have the same answer.
 //
 // pattern.js checks every train before it's shown: exactly one way to fill it, and at
-// least 2 full periods visible. tests/train.test.mjs generates many trains per level
-// and checks that too.
+// least 2 full periods visible. The gate samples 200 trains per level (solver.mjs), and
+// tests/train.test.mjs generates many more.
+import data from './levels.json' with { type: 'json' };
 
 // Colour tokens also differ in shape (never colour alone).
 export const COLORS = ['red', 'blue', 'yellow', 'green', 'purple'];
 export const FRUITS = ['apple', 'banana', 'grapes', 'pear', 'watermelon'];
 export const DOTS = ['dots1', 'dots2', 'dots3', 'dots4', 'dots5'];
 
-export const LEVELS = [
-  // Two colours taking turns; the last wagon is missing.
-  { id: 1, tokens: COLORS, patterns: ['AB'], wagons: [5, 7], gap: 'end', choices: 2, rounds: 5 },
-  // Fruits; two or three taking turns; one fruit in the tray is not in the train.
-  { id: 2, tokens: FRUITS, patterns: ['AB', 'ABC'], wagons: [7, 9], gap: 'end', choices: 3, rounds: 5, intro: 'train.intro.fruits' },
-  // The same one twice in a row (AAB, ABB, AABB — AABB needs all 9 wagons).
-  { id: 3, tokens: COLORS, patterns: ['AAB', 'ABB', 'AABB'], wagons: [7, 9], gap: 'end', choices: 3, rounds: 5, intro: 'train.intro.double' },
-  // Any of those, but the empty wagon is somewhere in the middle; 4 in the tray.
-  { id: 4, tokens: FRUITS, patterns: ['AB', 'ABC', 'AAB', 'ABB'], wagons: [6, 9], gap: 'middle', choices: 4, rounds: 5, intro: 'train.intro.middle' },
-  // A whole period is missing (the train is 3 periods; no AABB: that would be 12
-  // wagons). The empty wagons can be filled in any order.
-  { id: 5, tokens: COLORS, patterns: ['AB', 'ABC', 'AAB', 'ABB'], gap: 'period', choices: 4, rounds: 5, intro: 'train.intro.period' },
-  // Growing: one more dot each wagon, or one less (1 to 5 dots), 3 or 4 wagons before
-  // the gap: 1-2-3-?, 2-3-4-?, 1-2-3-4-?, 5-4-3-?, 4-3-2-?, 5-4-3-2-?.
-  { id: 6, grow: true, tokens: DOTS, before: [3, 4], steps: [1, -1], choices: 3, rounds: 5, intro: 'train.intro.grow' },
-  // Free mode: invent a start of 2 to 4 colour wagons; the locomotive repeats it.
-  { id: 7, free: true, tokens: COLORS, start: [2, 4] },
-];
+// The path's levels (parameter sets), from levels.json.
+export const PATH_LEVELS = data.levels;
+
+// Free mode (the path's "free" button; level 7 on the fixed map): the child builds a
+// start of `start` = [min, max] wagons from `tokens`, the locomotive repeats it (no
+// stars; done after the first train leaves). Not a difficulty step, so not in levels.json.
+export const FREE = { id: 7, free: true, tokens: COLORS, start: [2, 4] };
+
+// The fixed level map (parent switch "Carte des niveaux"): every level by id, free mode
+// at its old place (id 7). Levels unlock in this order.
+export const LEVELS = [...PATH_LEVELS, FREE].sort((a, b) => a.id - b.id);
