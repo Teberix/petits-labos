@@ -18,11 +18,11 @@ Read `scenes/meadow/pack.js` first: it is the model and documents the format at 
 Write nothing else: not the registry, not a game, not a test, no image file, no notes.
 
 Rules:
-- `export default { id, kind: 'free', size: [160, 100], background, items, strings }`.
+- `export default { id, kind: 'free', size: [160, 160], ground: 0.45, background, items, strings }`.
 - Original art, **inline SVG only**: no `id=` attributes, no gradients, no `url(#…)`,
   no external references, no `<image>`, no text in the drawings.
-- `background`: 160 × 100, fills the box; the ground starts around y ≈ 60 so items can
-  stand on it. Calm colours: the items must stand out.
+- `background`: 160 × 160, fills the box; the ground starts at y ≈ 72 (`ground: 0.45`) so items
+  can stand on it. Calm colours: the items must stand out.
 - Each item: `{ id, art }`, id lowercase `[a-z][a-z0-9-]*` (no dots), art in a
   100 × 100 box, standing on y ≈ 95. Bold, simple shapes a 6-year-old recognises at
   64 px; friendly, never scary (a dinosaur smiles). Small helpers like the meadow's
