@@ -2,9 +2,9 @@
 // tests/scene.test.mjs. Owner's decisions, 2026-10-05:
 //   - stars stay; rewards ALTERNATE: sticker, item, sticker, item… (when one kind runs
 //     out, every reward is the other kind);
-//   - the GAP between rewards grows: 5 stars for the first 4 rewards, then 6, 7…, at
-//     most 10 — so the album and the items last much longer than before (the album
-//     alone used to be full at 120 stars);
+//   - the GAP between rewards grows: 5 stars for the first 2 rewards, then +1 every 2
+//     rewards, at most 20 (owner, 2026-10-05: everything lasts ~640 stars ≈ 80 min of
+//     play per profile; the album alone used to be full at 120 stars);
 //   - items go into the child's own scene, as many copies as they like (at most
 //     SCENE_MAX at once, so it stays readable on a phone). Nothing is ever taken away.
 //
@@ -14,8 +14,8 @@
 //   nextAt  = the star count at which the next reward comes.
 
 export const GAP_START = 5;
-export const GAP_MAX = 10;
-export const GAP_EVERY = 4; // the gap grows by 1 star every 4 rewards
+export const GAP_MAX = 20;
+export const GAP_EVERY = 2; // the gap grows by 1 star every 2 rewards
 export const SCENE_MAX = 30;
 
 // Stars between reward number k−1 and reward number k (k = 1, 2, 3…).

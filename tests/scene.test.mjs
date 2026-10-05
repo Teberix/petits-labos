@@ -33,10 +33,10 @@ function play(state, n, rand) {
   return { rewards, scene, got };
 }
 
-test('the gap: 5 stars for the first 4 rewards, +1 every 4, at most 10', () => {
-  assert.deepEqual([1, 2, 3, 4, 5, 8, 9, 12, 13, 21, 40].map(gap), [5, 5, 5, 5, 6, 6, 7, 7, 8, 10, 10]);
+test('the gap: 5 stars for the first 2 rewards, +1 every 2, at most 20 (owner, 2026-10-05)', () => {
+  assert.deepEqual([1, 2, 3, 4, 5, 8, 9, 12, 13, 21, 31, 40].map(gap), [5, 5, 6, 6, 7, 8, 9, 10, 11, 15, 20, 20]);
   assert.equal(GAP_START, 5);
-  assert.equal(GAP_MAX, 10);
+  assert.equal(GAP_MAX, 20);
 });
 
 test('rewards alternate sticker / item; when one kind is done, only the other', () => {
@@ -47,20 +47,24 @@ test('rewards alternate sticker / item; when one kind is done, only the other', 
   assert.equal(kindOf(7, 0, 0), null);
 });
 
-test('a new player: rewards at 5, 10, 15, 20, 26… alternating, each a new one', () => {
-  const { got, rewards, scene } = play(fresh(), 60, seeded(3));
-  assert.deepEqual(got.map((r) => r.at), [5, 10, 15, 20, 26, 32, 38, 44, 51, 58]);
+test('a new player: rewards at 5, 10, 16, 22, 29… alternating, each a new one', () => {
+  const { got, rewards, scene } = play(fresh(), 70, seeded(3));
+  assert.deepEqual(got.map((r) => r.at), [5, 10, 16, 22, 29, 36, 44, 52, 61, 70]);
   assert.deepEqual(got.map((r) => r.kind), ['sticker', 'item', 'sticker', 'item', 'sticker', 'item', 'sticker', 'item', 'sticker', 'item']);
   assert.equal(new Set(rewards.stickers).size, rewards.stickers.length, 'no sticker twice');
   assert.equal(new Set(scene.items).size, scene.items.length, 'no item twice');
 });
 
-test('everything is unlocked in the end; the album now lasts far longer than 120 stars', () => {
+// ~40 stars per 5-minute session (owner's estimate, to re-tune with game 9's playtest):
+// everything ≈ 640 stars ≈ 80 min of play per profile (the album used to be full at 120).
+test('everything is unlocked at 640 stars (~80 min of play); the album is full with the last reward', () => {
   const end = play(fresh(), 2000, seeded(5));
   assert.equal(end.rewards.stickers.length, STICKERS.length);
   assert.equal(end.scene.items.length, ITEMS.length);
-  const lastSticker = end.got.filter((r) => r.kind === 'sticker').at(-1).at;
-  assert.ok(lastSticker > 240, `album full at ${lastSticker} stars (was 120)`);
+  assert.equal(end.got.length, STICKERS.length + ITEMS.length);
+  assert.equal(end.got.at(-1).at, 640, 'the last reward');
+  assert.equal(end.got.filter((r) => r.kind === 'sticker').at(-1).at, 640, 'album full = everything');
+  assert.equal(end.got.filter((r) => r.kind === 'item').at(-1).at, 560, 'the last item (~70 min)');
 });
 
 test('stars and rewards never go down; addStar does not change its inputs', () => {
@@ -83,8 +87,8 @@ test('startScene for a player who already has stickers', () => {
   const sc = startScene({ stars: 130, stickers: ALL.stickers.slice(0, 24) });
   assert.deepEqual(sc.items, []);
   assert.equal(sc.nextAt, 130 + gap(25));
-  const { got } = play({ rewards: { stars: 130, stickers: ALL.stickers.slice(0, 24) }, scene: sc }, 10, seeded(2));
-  assert.deepEqual(got, [{ kind: 'item', id: got[0].id, at: 140 }], 'all 24 stickers owned → the next reward is an item');
+  const { got } = play({ rewards: { stars: 130, stickers: ALL.stickers.slice(0, 24) }, scene: sc }, gap(25), seeded(2));
+  assert.deepEqual(got, [{ kind: 'item', id: got[0].id, at: 130 + gap(25) }], 'all 24 stickers owned → the next reward is an item');
 });
 
 test('the scene: place copies (unlocked only, at most SCENE_MAX), move, remove', () => {
