@@ -117,6 +117,20 @@ async function savedStars(page) {
   return page.evaluate(() => JSON.parse(localStorage.getItem('petits-labos')).profiles[0].rewards.stars);
 }
 
+// The saved path skill, and a fresh path (skill 1) for the same profile.
+async function savedSkill(page) {
+  return page.evaluate(() => JSON.parse(localStorage.getItem('petits-labos')).profiles[0].skills.train.skill);
+}
+
+async function resetSkill(page) {
+  await page.evaluate(() => {
+    const data = JSON.parse(localStorage.getItem('petits-labos'));
+    delete data.profiles[0].skills.train;
+    localStorage.setItem('petits-labos', JSON.stringify(data));
+  });
+  await page.reload();
+}
+
 const token = (id) => `.tr-tray .tr-token[data-token="${id}"]`;
 
 export default {
@@ -316,5 +330,38 @@ export default {
     }
     await page.locator('.path-play').waitFor({ timeout: 30000 });
     if (await page.locator('.path-stone').count() !== 3) throw new Error('expected three stones on the path');
+
+    // A fresh path, then one clean ▶ (no mistake): three trains must take the skill
+    // 1 → 3 → 5 → 7, and the next ▶ must show the step-7 level (id 8: 9 wagons, two gaps).
+    await resetSkill(page);
+    await playFromPath(page, kit);
+    for (let n = 1; n <= 3; n++) {
+      const { right } = await tokensFor(page);
+      await kit.drag(page, token(right), '.tr-car.tr-gap');
+      await page.waitForFunction(() => !document.querySelector('.tr-car.tr-gap'), null, { timeout: 3000 });
+      if (n < 3) {
+        await page.locator('.tr-car.tr-gap').first().waitFor({ timeout: 30000 });
+        await kit.settle(page);
+      }
+    }
+    await page.locator('.path-play').waitFor({ timeout: 30000 });
+    const skill = await savedSkill(page);
+    if (skill !== 7) throw new Error(`3 clean trains: skill is ${skill}, expected 7`);
+    // pickLevel on the saved skill names the level ▶ will play: it must be id 8.
+    const picked = await page.evaluate(async () => {
+      const { pickLevel } = await import('./js/progress.js');
+      const { PATH_LEVELS } = await import('./games/train/levels.js');
+      const state = JSON.parse(localStorage.getItem('petits-labos')).profiles[0].skills.train;
+      return pickLevel(PATH_LEVELS, state).id;
+    });
+    if (picked !== 8) throw new Error(`step 7: expected level 8, picked ${picked}`);
+    await kit.tap(page, page.locator('.path-play'));
+    await page.locator('.tr-tray .tr-token').first().waitFor();
+    await kit.settle(page);
+    const shown = await page.evaluate(() => ({
+      cars: document.querySelectorAll('.tr-train .tr-car').length,
+      gaps: document.querySelectorAll('.tr-car.tr-gap').length,
+    }));
+    if (shown.cars !== 9 || shown.gaps !== 2) throw new Error(`step 7: expected 9 wagons, 2 gaps; got ${JSON.stringify(shown)}`);
   },
 };

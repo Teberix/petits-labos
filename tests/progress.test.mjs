@@ -3,7 +3,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  START, STEP, SEEN_MAX, outcomeOf, maxStep, nextSkill, recordRound, pickLevel,
+  START, STEP, SEEN_MAX, outcomeOf, outcomeForMisses, maxStep, nextSkill, recordRound, pickLevel,
 } from '../js/progress.js';
 
 function seeded(seed) {
@@ -13,6 +13,8 @@ function seeded(seed) {
   };
 }
 
+const LEVELS_8 = [1, 2, 3, 4, 5, 6, 7, 8].map((d) => ({ id: `s${d}`, difficulty: d }));
+
 // 6 difficulty steps, 2 levels each (a level = a parameter set).
 const LEVELS = [1, 2, 3, 4, 5, 6].flatMap((d) => [{ id: `l${d}a`, difficulty: d }, { id: `l${d}b`, difficulty: d }]);
 
@@ -20,6 +22,21 @@ test('the owner\'s steps: no hint +2, clue 0, glow / dance / more −1', () => {
   assert.deepEqual(STEP, { none: 2, clue: 0, glow: -1, dance: -1, again: -1 });
   assert.equal(outcomeOf(null), 'none');
   assert.equal(outcomeOf('dance'), 'dance');
+});
+
+test('outcomeForMisses maps a miss count to an outcome', () => {
+  const got = [0, 1, 2, 3, 4, 9].map(outcomeForMisses);
+  assert.deepEqual(got, ['none', 'clue', 'glow', 'dance', 'again', 'again']);
+  assert.throws(() => outcomeForMisses(-1));
+  assert.throws(() => outcomeForMisses(1.5));
+});
+
+test('3 clean rounds take the skill from 1 to 7', () => {
+  let state = START;
+  for (let i = 0; i < 3; i++) {
+    state = recordRound(state, { id: 'x' }, outcomeForMisses(0), LEVELS_8);
+  }
+  assert.equal(state.skill, 7);
 });
 
 test('nextSkill stays between 1 and the top step', () => {

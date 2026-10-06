@@ -32,6 +32,7 @@
 // The puzzles (and their checks: one answer only, 2 full periods visible) are made in
 // pattern.js; the level data is in levels.js.
 import { h } from '../../js/dom.js';
+import { outcomeForMisses } from '../../js/progress.js';
 import { addStrings } from '../../js/i18n.js';
 import { speak } from '../../js/audio.js';
 import { draggable } from '../../js/dragdrop.js';
@@ -119,11 +120,6 @@ function createGame(container, ctx) {
     ctx.speak(t('train.path'));
   }
 
-  // The strongest hint this train needed, in js/progress.js names: no miss → null,
-  // the singing train (spoken) → 'clue', the outlined period → 'glow', the wiggling
-  // token → 'dance', more misses after that → 'again'.
-  const HINTS = [null, 'clue', 'glow', 'dance'];
-  const strongestHint = (misses) => HINTS[misses] ?? 'again';
 
   // The level's intro (and the "how to" of the first level) is said once per level:
   // on the fixed map at its first train, on the path the first time it is picked.
@@ -375,7 +371,7 @@ function createGame(container, ctx) {
     // 1 star per train (it flies from the locomotive). Every 5th star also brings a sticker.
     const sticker = ctx.rewards.star(play.els.train.querySelector('.tr-loco'));
     // On the path: the hidden skill moves and the path gets one stone more.
-    ctx.path?.record(play.level, strongestHint(puzzle.misses), PATH_LEVELS);
+    ctx.path?.record(play.level, outcomeForMisses(puzzle.misses), PATH_LEVELS);
     const tuneMs = 300 + puzzle.cars.length * PARTY_MS;
     puzzle.cars.forEach((token, i) => later(() => {
       restartAnimation(carAt(i), 'tr-sing');

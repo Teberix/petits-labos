@@ -27,6 +27,13 @@ export function outcomeOf(strongestHint) {
   return strongestHint ?? 'none';
 }
 
+// The outcome from a miss count: 0 → none, 1 → clue, 2 → glow, 3 → dance, 4+ → again.
+// Games pass their miss count, never a hint name.
+export function outcomeForMisses(misses) {
+  if (!Number.isInteger(misses) || misses < 0) throw new Error(`bad miss count ${misses}`);
+  return ['none', 'clue', 'glow', 'dance'][misses] ?? 'again';
+}
+
 // The highest difficulty step of a game's levels.
 export const maxStep = (levels) => Math.max(1, ...levels.map((l) => l.difficulty));
 

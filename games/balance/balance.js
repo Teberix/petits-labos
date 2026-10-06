@@ -7,6 +7,7 @@
 //        round.js (heavier / lighter rounds), cubes.js (cube rounds), free.js (free
 //        mode), plural.js, strings.js, art.js, balance.css.
 import { h } from '../../js/dom.js';
+import { outcomeForMisses } from '../../js/progress.js';
 import { addStrings } from '../../js/i18n.js';
 import { LEVELS, PATH_LEVELS, FREE } from './levels.js';
 import { buildScene, restartAnimation } from './scene.js';
@@ -63,10 +64,6 @@ function createGame(container, ctx) {
     ctx.speak(t('balance.path'));
   }
 
-  // The strongest hint this round needed, in js/progress.js names: no miss → null,
-  // then 'clue' (rule aloud), 'glow' (arrow), 'dance' (wiggle), 'again' after that.
-  const HINTS = [null, 'clue', 'glow', 'dance'];
-  const strongestHint = (misses) => HINTS[misses] ?? 'again';
 
   // Does this level's intro get said now? On the fixed map: at its first round (the
   // play functions do that). On the path: once per level, the first time it is picked.
@@ -129,7 +126,7 @@ function createGame(container, ctx) {
       rounds = play(ctx, level, els, showPath, {
         rounds: ROUNDS_PER_PLAY,
         sayIntro: sayIntro(level),
-        onRound: (misses) => ctx.path.record(level, strongestHint(misses), PATH_LEVELS),
+        onRound: (misses) => ctx.path.record(level, outcomeForMisses(misses), PATH_LEVELS),
       });
     } else {
       rounds = play(ctx, level, els, () => levelDone(level));

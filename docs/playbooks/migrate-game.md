@@ -38,9 +38,10 @@ preview. Work on `dev`. Follow the root `CLAUDE.md` for everything not listed he
   switch "Carte des niveaux" is on: the old fixed map must still work.
 - `ctx.path.show(container, { levels, onPlay, onFree })`; `onFree` only if the game
   has a free mode.
-- After each round: `ctx.path.record(level, strongestHint, PATH_LEVELS)` (one stone),
-  and `ctx.rewards.star(el)` (one star). Map the game's hints to the
-  `js/progress.js` names: none → `null`, then `clue`, `glow`, `dance`, `again`.
+- After each round: `ctx.path.record(level, outcomeForMisses(misses), PATH_LEVELS)` (one stone),
+  and `ctx.rewards.star(el)` (one star). Count the round's misses; import
+  `outcomeForMisses` from `js/progress.js` (0 → none, 1 → clue, 2 → glow, 3 → dance,
+  4+ → again). Never map hints by hand.
 - **Three rounds per ▶** (owner, 2026-10-05), all at the level ▶ picked, then back to
   the path. Each round still records its stone and its star.
 - Intros: on the path, say a level's intro the first time the path picks it. Keep a
@@ -115,4 +116,6 @@ mailbox, and stop. One build step per session.
 - **Subagent cost**: screenshots by a subagent = 98k tokens. Use a script.
 - **The first star unlocks the world**: its reveal shows before the next round. The
   offline check must wait for the next round, not assume it is instant.
+- **`HINTS[0]` is null**: `?? 'again'` turns a perfect round into −1. Use
+  `outcomeForMisses`. The offline check must assert the skill after a clean ▶.
 - **Preview**: the `-preview.N` bump lives only on the temp branch. Never merge it.

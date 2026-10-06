@@ -99,6 +99,20 @@ async function readFree(page) {
   }));
 }
 
+// The saved path skill, and a fresh path (skill 1) for the same profile.
+async function savedSkill(page) {
+  return page.evaluate(() => JSON.parse(localStorage.getItem('petits-labos')).profiles[0].skills.balance.skill);
+}
+
+async function resetSkill(page) {
+  await page.evaluate(() => {
+    const data = JSON.parse(localStorage.getItem('petits-labos'));
+    delete data.profiles[0].skills.balance;
+    localStorage.setItem('petits-labos', JSON.stringify(data));
+  });
+  await page.reload();
+}
+
 async function savedStars(page) {
   return page.evaluate(() => JSON.parse(localStorage.getItem('petits-labos')).profiles[0].rewards.stars);
 }
@@ -386,5 +400,33 @@ export default {
     }
     await page.locator('.path-play').waitFor({ timeout: 30000 });
     if (await page.locator('.path-stone').count() !== 3) throw new Error('expected three stones on the path');
+
+    // A fresh path, then one clean ▶ (no mistake): three rounds must take the skill
+    // 1 → 3 → 5 → 7, and the next ▶ must show the step-7 level (id 8: 3 objects, no cubes).
+    await resetSkill(page);
+    await playFromPath(page, kit);
+    for (let n = 1; n <= 3; n++) {
+      const [a, b] = (await readScale(page)).tray;
+      await kit.tap(page, trayObj(a));
+      await kit.drag(page, trayObj(b), pan(1));
+      const { pans, question } = await expectScale(page, { pans: [a, b] });
+      await kit.drag(page, onPan(answerFor(pans, question)), '.bl-podium');
+      if (n < 3) {
+        await page.waitForFunction(() => !document.querySelector('.sticker-reveal')
+          && document.querySelectorAll('.bl-tray .bl-obj').length === 2
+          && !document.querySelector('.bl-podium.bl-awake'), null, { timeout: 30000 });
+      }
+    }
+    await page.locator('.path-play').waitFor({ timeout: 30000 });
+    const skill = await savedSkill(page);
+    if (skill !== 7) throw new Error(`3 clean rounds: skill is ${skill}, expected 7`);
+    await kit.tap(page, page.locator('.path-play'));
+    await page.locator('.bl-tray > button').first().waitFor();
+    await kit.settle(page);
+    const shown = await page.evaluate(() => ({
+      tray: document.querySelectorAll('.bl-tray .bl-obj').length,
+      cubes: !!document.querySelector('[data-mode="cubes"]'),
+    }));
+    if (shown.tray !== 3 || shown.cubes) throw new Error(`step 7: expected 3 objects, no cubes; got ${JSON.stringify(shown)}`);
   },
 };
