@@ -120,7 +120,6 @@ function createGame(container, ctx) {
     ctx.speak(t('train.path'));
   }
 
-
   // The level's intro (and the "how to" of the first level) is said once per level:
   // on the fixed map at its first train, on the path the first time it is picked.
   function introLine(level) {

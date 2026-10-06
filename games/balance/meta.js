@@ -5,6 +5,7 @@ export default {
   titleKey: 'balance.title',
   // New engine: the path screen (js/path.js). The world the first stars unlock (step B2).
   path: true,
+  steps: 8, // difficulty steps of the path (= maxStep of its levels; a unit test checks it)
   scene: 'party',
   strings: {
     fr: { 'balance.title': 'La Balance' },

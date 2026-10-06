@@ -124,6 +124,15 @@ async function checkFixedArt(page) {
     return { w: Math.round(r.width), h: Math.round(r.height) };
   }));
   if (!sizes.length) throw new Error('no object on the left pan');
+  // Every object must sit inside the dish's horizontal bounds (±4 px): none crosses the strings.
+  const outside = await page.evaluate(() => {
+    const dish = document.querySelector('.bl-pan[data-side="0"] .bl-dish')?.getBoundingClientRect();
+    if (!dish) return ['no dish'];
+    return [...document.querySelectorAll('.bl-load .bl-fixed')].map((el) => el.getBoundingClientRect())
+      .filter((r) => r.left < dish.left - 4 || r.right > dish.right + 4)
+      .map((r) => `${Math.round(r.left)}..${Math.round(r.right)} vs dish ${Math.round(dish.left)}..${Math.round(dish.right)}`);
+  });
+  if (outside.length) throw new Error(`left-pan objects outside the dish: ${outside.join('; ')}`);
   const small = sizes.filter((s) => s.w < 44 || s.h < 44);
   if (small.length) throw new Error(`left-pan objects under 44 px: ${JSON.stringify(sizes)}`);
 }

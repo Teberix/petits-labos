@@ -7,7 +7,7 @@ import { LANGS, LANG_NAMES, getLang, setLang, t } from '../i18n.js';
 import { stopSpeaking } from '../audio.js';
 import {
   addProfile, copyLiveSave, deleteProfile, getProfile, getProfiles, isPreview, listBackups, resetProgress,
-  resetSkill, restoreBackup, setSetting, updateProfile,
+  getSkill, resetSkill, restoreBackup, setSetting, updateProfile,
 } from '../storage.js';
 import { GAMES } from '../../games/registry.js';
 import { checkNow } from '../updates.js';
@@ -182,10 +182,12 @@ export function render(root, params, app) {
       h('p', { class: 'hint' }, t('unlockAllHint')),
       h('p', { class: 'field-label' }, t('fixedMap')), mapSlot,
       h('p', { class: 'hint' }, t('fixedMapHint')),
-      // reset difficulty: one button per game on the path (new engine)
-      existing && GAMES.filter((g) => g.path).map((g) => h('button', {
-        class: 'btn reset-skill-btn', type: 'button', onclick: () => go({ name: 'confirmSkill', id, gameId: g.id }),
-      }, t('resetSkill', { game: t(g.titleKey) }))),
+      // reset difficulty: one button per game on the path (new engine), with the step reached
+      existing && GAMES.filter((g) => g.path).map((g) => h('div', { class: 'reset-skill' },
+        h('p', { class: 'hint' }, t('stepReached', { n: getSkill(id, g.id)?.best ?? 1, max: g.steps })),
+        h('button', {
+          class: 'btn reset-skill-btn', type: 'button', onclick: () => go({ name: 'confirmSkill', id, gameId: g.id }),
+        }, t('resetSkill', { game: t(g.titleKey) })))),
       h('div', { class: 'actions' },
         existing && h('button', {
           class: 'btn btn-danger reset-btn', type: 'button', onclick: () => go({ name: 'confirmReset', id }),

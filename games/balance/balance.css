@@ -171,8 +171,9 @@
   min-width: 0;
 }
 .bl-load[data-count="2"] .bl-fixed { --size: clamp(40px, min(16cqw, 26cqh), 110px); }
-/* Three objects: two on the dish, one above (wrap) — each can be as wide as half the pan. */
-.bl-load[data-count="3"] { flex-wrap: wrap; align-content: flex-end; gap: 0.5cqw; }
+/* Three objects: two on the dish, one on top, centred (wrap-reverse fills the bottom row
+   first). Each is at most half the pan wide, so none crosses the strings. */
+.bl-load[data-count="3"] { flex-wrap: wrap-reverse; align-content: flex-start; justify-content: center; gap: 0.5cqw; }
 .bl-load[data-count="3"] .bl-fixed { --size: clamp(44px, min(15.5cqw, 17cqh), 90px); flex: 0 0 auto; }
 .bl-fixed[data-look="small"] .bl-art { transform: scale(0.55); }
 .bl-fixed[data-look="medium"] .bl-art { transform: scale(0.78); }

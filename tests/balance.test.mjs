@@ -6,7 +6,9 @@ import {
   MIN_TILT, MAX_TILT, panWeight, tilt, answerFor, levelSets, makeRound, putOnPan, freePan, weighing, answerKnown,
   emptyPans, weighsLine, freeWeight, freePut, freeTakeOff, freeCube, cubeSide, freeObjectSide,
 } from '../games/balance/weigh.js';
-import { OBJECTS, LEVELS, MAX_CUBES } from '../games/balance/levels.js';
+import { PATH_LEVELS, OBJECTS, LEVELS, MAX_CUBES } from '../games/balance/levels.js';
+import meta from '../games/balance/meta.js';
+import { maxStep } from '../js/progress.js';
 import { OBJECT_ART } from '../games/balance/art.js';
 import STRINGS from '../games/balance/strings.js';
 
@@ -344,4 +346,8 @@ test('strings: same keys in fr / es / en, levels\' intros exist', () => {
   assert.deepEqual(keys('es'), keys('fr'));
   assert.deepEqual(keys('en'), keys('fr'));
   for (const level of LEVELS) if (level.intro) assert.ok(STRINGS.fr[level.intro], level.intro);
+});
+
+test('meta.steps matches the path levels', () => {
+  assert.equal(meta.steps, maxStep(PATH_LEVELS));
 });

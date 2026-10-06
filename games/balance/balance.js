@@ -64,7 +64,6 @@ function createGame(container, ctx) {
     ctx.speak(t('balance.path'));
   }
 
-
   // Does this level's intro get said now? On the fixed map: at its first round (the
   // play functions do that). On the path: once per level, the first time it is picked.
   function sayIntro(level) {

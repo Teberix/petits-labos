@@ -5,7 +5,9 @@ import assert from 'node:assert/strict';
 import {
   MAX_WAGONS, hasPeriod, repeats, fullPeriods, validFillings, gapIndices, makePuzzle, firstEmpty, firstFullPeriod, grows, dotCount, MAX_DOTS, fitTrain, CAR_RATIO, CAR_MAX, CAR_MIN, addToStart, removeFromStart, repeatStart,
 } from '../games/train/pattern.js';
-import { LEVELS } from '../games/train/levels.js';
+import { PATH_LEVELS, LEVELS } from '../games/train/levels.js';
+import meta from '../games/train/meta.js';
+import { maxStep } from '../js/progress.js';
 import { TOKENS } from '../games/train/art.js';
 import STRINGS from '../games/train/strings.js';
 import { PITCH } from '../games/train/music.js';
@@ -242,4 +244,8 @@ test('strings: same keys in fr / es / en, levels\' intros exist', () => {
   assert.deepEqual(keys('es'), keys('fr'));
   assert.deepEqual(keys('en'), keys('fr'));
   for (const level of LEVELS) if (level.intro) assert.ok(STRINGS.fr[level.intro], level.intro);
+});
+
+test('meta.steps matches the path levels', () => {
+  assert.equal(meta.steps, maxStep(PATH_LEVELS));
 });

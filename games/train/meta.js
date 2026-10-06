@@ -5,6 +5,7 @@ export default {
   titleKey: 'train.title',
   // New engine: the path screen (js/path.js) and its own world for the rewards.
   path: true,
+  steps: 8, // difficulty steps of the path (= maxStep of its levels; a unit test checks it)
   scene: 'dinosaurs',
   strings: {
     fr: { 'train.title': 'Le Train des Suites' },
