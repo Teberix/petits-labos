@@ -103,3 +103,37 @@
 ## Next session
 Start B1 again from the plan above. Work in the order: `levels.json` + schema +
 `solver.mjs` → `levels.js` → strings → CSS → `balance.js` path → `checks.js` → tests → gate.
+
+---
+
+## B2 — the party world (preview 0.9.0-preview.8)
+
+Model: Sonnet 5.5. Usage: about 90k tokens, plus the scene-artist (39k) and reviewer (72k over two runs).
+Full-gate runs: 0 (game gate only, as planned). Commit: "Balance B2: party world".
+
+### What changed
+- `scenes/party/pack.js`: 18 items, square 160×160, ground 0.45. `items[0]` = cake (the gift).
+  Ids use hyphens: `party-hat`, `party-blower` (the id rule forbids `_`).
+- `scenes/registry.js`: one line. `games/balance/meta.js`: `scene: 'party'`. PRECACHE refreshed.
+- `checks.js` offline: after the first star, wait until the reveal is gone (`.sticker-reveal`) and the tray is back.
+- No change to `js/`, `css/`, `index.html`, `tools/`.
+- Contact sheet: `game-06-migrated-b2.png` (360×640: 18 items on 3 grounds, the world with 10 items, the path, level 9).
+
+### Gate
+- `--game balance` (7 sizes): GATE PASSED (475 s). 105 screens, offline 1/1.
+- `tests/packs.test.mjs`: 8/8 pass. `--only privacy`: PASS.
+
+### kid-ux-reviewer (Haiku)
+First run found no files (wrong claim: the pack existed). Second run, 3 findings, all answered, none fixed:
+- Bunting and confetti outlines are 2–2.5 px wide. Answer: these are outlines, not thin details. The rope, strings and flames are ≥ 6 px.
+- Cells are about 50 px on the sheet. Answer: the sheet is an overview. In the app the items are larger.
+- Add `minCell` to meta.js. Answer: `minCell` belongs to grid games. The world is not a grid.
+- Reviewer found the animals clearly party animals and the pale items readable.
+
+### Risks
+- Party blower (spiral) and piñata (star with a face) may read poorly for a child. Check at playtest.
+- Real touch feel and voice names (fr/es/en) are not checked by the gate.
+
+### Questions
+1. Is the piñata (star with a face) recognisable to your daughters? If not, I redraw it as a donkey.
+2. Is the name « le pingouin » OK (instead of « le manchot »)?
