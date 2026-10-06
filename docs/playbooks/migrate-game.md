@@ -64,8 +64,10 @@ preview. Work on `dev`. Follow the root `CLAUDE.md` for everything not listed he
   the three rounds of one ▶ → back to the path with three stones.
 - Gate: `node tools/gate.mjs --game <id>` (7 sizes) +
   `node --test tests/packs.test.mjs` + `--only privacy`. Then `kid-ux-reviewer`.
-- Shared code changed (`js/`, `css/`, `index.html`, `sw.js` logic): also the
-  `pwa-guardian` subagent on the commit range. Never in parallel with a gate.
+- Shared code changed (`js/`, `css/`, `index.html`, `sw.js` logic): stop and report. The
+  owner runs the full gate (`node tools/gate.mjs`) in PowerShell. Do not run it in the
+  session. The `pwa-guardian` subagent then reviews the commit range, never in parallel
+  with a gate.
 
 ## 7. Contact sheets — a script, not a subagent
 - A screenshot subagent cost 98k tokens on Train T1. Write a small Playwright script
@@ -74,11 +76,16 @@ preview. Work on `dev`. Follow the root `CLAUDE.md` for everything not listed he
   join them into one PNG (one HTML page of `<img>`s, then one screenshot).
 - Save the PNG in `docs/mailbox/`.
 
+## Budget
+The hook warns at 120k and blocks at 150k. At 120k, commit what is green, write the
+mailbox, and stop. One build step per session.
+
 ## 8. Mailbox + preview
 - `docs/mailbox/game-NN-migrated.md` with the header of `engine-plan.md` §5, the
   levels table, the stored-data field table, results, usage, risks, max 3 questions.
 - Commit the step as soon as its gate is green; the mailbox in its own commit.
-- Push `dev`. Then the preview (never on `dev` or `main`):
+- Push `dev`. Then the preview (never on `dev` or `main`). Before the push, read the
+  current VERSION on Teberix/petits-labos-preview. Use the next number.
   1. `git switch -c preview-tmp`
   2. `VERSION` in `sw.js` and `js/version.js` → `<x.y.z>-preview.N`; commit.
   3. `git push --force https://github.com/Teberix/petits-labos-preview.git preview-tmp:main`
