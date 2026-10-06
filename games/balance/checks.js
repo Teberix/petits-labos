@@ -6,7 +6,34 @@ import { answerFor } from './weigh.js';
 
 // `last` pins Math.random near 1 in the page: the level then picks its LAST pair
 // (level 1: pineapple / pumpkin, the biggest drawings and the full tilt).
+// The level cases use the fixed level map (parent switch "Carte des niveaux"): the
+// test profile gets fixedMap, then the page reloads (the app reads the save at start).
+async function useFixedMap(page) {
+  await page.waitForSelector('.profile-tile');
+  await page.evaluate(() => {
+    const data = JSON.parse(localStorage.getItem('petits-labos'));
+    data.profiles[0].fixedMap = true;
+    localStorage.setItem('petits-labos', JSON.stringify(data));
+  });
+  await page.reload();
+}
+
+// The path (new engine): the game opens on it; ▶ plays three rounds.
+async function openPath(page, kit) {
+  await kit.openGame(page, 'balance');
+  await page.locator('.path-play').waitFor();
+  await kit.settle(page);
+}
+
+async function playFromPath(page, kit) {
+  await openPath(page, kit);
+  await kit.tap(page, page.locator('.path-play'));
+  await page.locator('.bl-tray > button').first().waitFor();
+  await kit.settle(page);
+}
+
 async function openLevel(page, kit, n, { last = false } = {}) {
+  await useFixedMap(page);
   await kit.openGame(page, 'balance');
   // Wait for balance.css (loaded when the game mounts): before it applies, the level
   // buttons aren't where they end up, and a tap can land next to them.
@@ -95,9 +122,39 @@ async function weighBoth(page, kit) {
 export default {
   // Objects (in the tray and on the pans: tap = put on / take off), the pans and the
   // podium (drop targets; tapping the podium repeats the question).
-  touch: ['.bl-obj', '.bl-level-btn', '.bl-pan', '.bl-podium', '.bl-continue', '.bl-cube-src', '.bl-cubes'],
+  touch: ['.bl-obj', '.bl-level-btn', '.bl-pan', '.bl-podium', '.bl-continue', '.bl-cube-src', '.bl-cubes', '.path-play', '.path-free'],
 
   worstCases: [
+    {
+      name: 'path screen (▶ + free button)',
+      async setup(page, kit) { await openPath(page, kit); },
+    },
+    {
+      name: 'path: one round at step 1',
+      async setup(page, kit) { await playFromPath(page, kit); },
+    },
+    {
+      // Cube level, 3 objects on the left pan: the smallest objects (data-count=3).
+      name: 'level 9: 3 objects on the left pan (data-count=3)',
+      async setup(page, kit) {
+        await openLevel(page, kit, 9, { last: true });
+        const count = await page.evaluate(() => document.querySelector('.bl-load')?.dataset.count);
+        if (count !== '3') throw new Error(`expected data-count=3, got ${count}`);
+        const { objects } = await readCubes(page);
+        if (objects.length !== 3) throw new Error(`expected 3 objects on the left pan, got ${objects.length}`);
+      },
+    },
+    {
+      name: 'fixed map, 9 buttons',
+      async setup(page, kit) {
+        await useFixedMap(page);
+        await kit.openGame(page, 'balance');
+        await page.locator('.bl-level-btn').first().waitFor();
+        await kit.settle(page);
+        const n = await page.locator('.bl-level-btn').count();
+        if (n !== 9) throw new Error(`expected 9 level buttons, got ${n}`);
+      },
+    },
     {
       // Pineapple + pumpkin: the full tilt, the biggest drawing on the pan that went
       // down — it must stay on screen.
@@ -285,27 +342,32 @@ export default {
     },
   ],
 
-  // Level 1: both objects onto the pans (one tapped, one dragged) → the beam leans
-  // toward the heavier one; a wrong answer on the podium gives nothing, the right one
-  // (dragged) gives one star; then a new round comes.
+  // On the path: ▶ → a wrong answer (no star), the right one (+1 star); three rounds per
+  // ▶ → back to the path with three stones.
   async offline(page, kit) {
-    await openLevel(page, kit, 1);
+    await playFromPath(page, kit);
     const before = await savedStars(page);
-    const [a, b] = (await readScale(page)).tray;
-    await kit.tap(page, trayObj(a));
-    await kit.drag(page, trayObj(b), pan(1));
-    const { pans, question } = await expectScale(page, { pans: [a, b] });
-    const right = answerFor(pans, question);
-    const wrong = pans.find((id) => id !== right);
-
-    await kit.drag(page, onPan(wrong), '.bl-podium');
-    if (await savedStars(page) !== before) throw new Error('wrong answer: expected no star');
-    if ((await readScale(page)).pans.join() !== pans.join()) throw new Error('wrong answer: it did not hop back');
-
-    await kit.drag(page, onPan(right), '.bl-podium');
-    if (await savedStars(page) !== before + 1) throw new Error('right answer: expected one more star');
-    // The next round: both objects wait in the tray again, the podium is asleep.
-    await page.waitForFunction(() => document.querySelectorAll('.bl-tray .bl-obj').length === 2
-      && !document.querySelector('.bl-podium.bl-awake'), null, { timeout: 8000 });
+    for (let n = 1; n <= 3; n++) {
+      const [a, b] = (await readScale(page)).tray;
+      await kit.tap(page, trayObj(a));
+      await kit.drag(page, trayObj(b), pan(1));
+      const { pans, question } = await expectScale(page, { pans: [a, b] });
+      const right = answerFor(pans, question);
+      if (n === 1) {
+        const wrong = pans.find((id) => id !== right);
+        await kit.drag(page, onPan(wrong), '.bl-podium');
+        if (await savedStars(page) !== before) throw new Error('wrong answer: expected no star');
+        if ((await readScale(page)).pans.join() !== pans.join()) throw new Error('wrong answer: it did not hop back');
+      }
+      await kit.drag(page, onPan(right), '.bl-podium');
+      if (await savedStars(page) !== before + n) throw new Error(`round ${n}: expected one more star`);
+      if (n < 3) {
+        // The next round: both objects wait in the tray again, the podium is asleep.
+        await page.waitForFunction(() => document.querySelectorAll('.bl-tray .bl-obj').length === 2
+          && !document.querySelector('.bl-podium.bl-awake'), null, { timeout: 30000 });
+      }
+    }
+    await page.locator('.path-play').waitFor({ timeout: 30000 });
+    if (await page.locator('.path-stone').count() !== 3) throw new Error('expected three stones on the path');
   },
 };

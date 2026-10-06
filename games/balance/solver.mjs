@@ -17,10 +17,8 @@ export function solve(level) {
 export function sampleRound(level, rng) {
   const round = makeRound(level, rng);
   if (level.cubes) {
-    // A cube total answers the round when it balances the left pan and fits on a pan.
-    let totals = 0;
-    for (let cubes = 0; cubes <= MAX_CUBES; cubes++) if (cubes === round.target) totals++;
-    return { answers: totals };
+    // The total is unique by construction: one cube count balances the left pan.
+    return { answers: round.target >= 1 && round.target <= MAX_CUBES ? 1 : 0 };
   }
   // The objects of the extreme weight (heaviest or lightest) answer the question.
   const weights = round.objects.map((id) => OBJECTS[id].weight);

@@ -25,7 +25,9 @@ const capitalize = (text) => text.charAt(0).toUpperCase() + text.slice(1);
 
 // Plays the cube `level` in the scene `els` (scene.js buildScene); calls onDone() after
 // the last round. Returns { stop }.
-export function playCubeRounds(ctx, level, els, onDone) {
+// opts: rounds, sayIntro, onRound(misses) — as in round.js (a cube round has no misses: 0).
+export function playCubeRounds(ctx, level, els, onDone, opts = {}) {
+  const { rounds = level.rounds, sayIntro = true, onRound } = opts;
   const { t, sfx } = ctx;
   const remark = (text) => speak(text, ctx.lang); // a reaction: the repeat button keeps the instruction
   const timers = new Set();
@@ -49,7 +51,7 @@ export function playCubeRounds(ctx, level, els, onDone) {
   function start() {
     round = { ...makeRound(level, Math.random, round?.key ?? null), cubes: 0, busy: false };
     render();
-    ctx.speak(index === 0 && level.intro ? t(level.intro) : t('balance.cubes.ask'));
+    ctx.speak(index === 0 && sayIntro && level.intro ? t(level.intro) : t('balance.cubes.ask'));
   }
 
   // ---------- Drawing ----------
@@ -110,12 +112,13 @@ export function playCubeRounds(ctx, level, els, onDone) {
     const line = capitalize(t(pluralKey(key, round.target, ctx.lang), { a: names[0], b: names[1], n: round.target }));
     // 1 star per round (it flies from the cubes). Every 5th star also brings a sticker.
     const sticker = ctx.rewards.star(els.pans[1].querySelector('.bl-cubes'));
+    onRound?.(0);
     later(() => remark(line), SAY_MS);
     later(async () => {
       if (sticker) await ctx.rewards.showSticker(sticker);
       if (stopped) return; // (the player left during the sticker)
       index++;
-      if (index < level.rounds) start();
+      if (index < rounds) start();
       else onDone();
     }, SAY_MS + NEXT_MS);
   }

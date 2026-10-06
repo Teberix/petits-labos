@@ -1,13 +1,14 @@
 // "La Balance" — a two-pan balance: the side that goes down is the heavier one.
 //
-// Flow: level map → level (5 rounds) → map.
+// Flow: path (▶ = 3 rounds at the level the path picks) or, with the parent's fixed
+// map, level map → level (its rounds) → map.
 // Files: levels.js (the one weight table + levels), weigh.js (pure logic, tested),
 //        scene.js (the balance DOM + tilt), input.js (touches on objects),
 //        round.js (heavier / lighter rounds), cubes.js (cube rounds), free.js (free
 //        mode), plural.js, strings.js, art.js, balance.css.
 import { h } from '../../js/dom.js';
 import { addStrings } from '../../js/i18n.js';
-import { LEVELS } from './levels.js';
+import { LEVELS, PATH_LEVELS, FREE } from './levels.js';
 import { buildScene, restartAnimation } from './scene.js';
 import { playRounds } from './round.js';
 import { playCubeRounds } from './cubes.js';
@@ -25,6 +26,8 @@ function loadStylesheet() {
   }));
 }
 
+const ROUNDS_PER_PLAY = 3; // path: rounds per ▶ (each one = one stone + one star)
+
 function createGame(container, ctx) {
   const { t, sfx } = ctx;
   let rounds = null; // the level being played (round.js), or null on the map
@@ -35,10 +38,45 @@ function createGame(container, ctx) {
   }
 
   // ---------- Progress (saved per player) ----------
-  // { completed: [level ids] }
+  // { completed: [level ids] (fixed map), heard: [level ids whose intro was said] }
+  // (`heard` is new with the path; older saves simply don't have it.)
 
   function progress() {
-    return { completed: [], ...ctx.load() };
+    return { completed: [], heard: [], ...ctx.load() };
+  }
+
+  // The game's home: the path, or the fixed level map.
+  function home() {
+    if (ctx.path) showPath();
+    else showLevels();
+  }
+
+  // ---------- Path (new engine) ----------
+
+  function showPath() {
+    stopLevel();
+    ctx.path.show(container, {
+      levels: PATH_LEVELS,
+      onPlay: (level) => { sfx.pop(); playLevel(level); },
+      onFree: () => { sfx.pop(); playLevel(FREE); },
+    });
+    ctx.speak(t('balance.path'));
+  }
+
+  // The strongest hint this round needed, in js/progress.js names: no miss → null,
+  // then 'clue' (rule aloud), 'glow' (arrow), 'dance' (wiggle), 'again' after that.
+  const HINTS = [null, 'clue', 'glow', 'dance'];
+  const strongestHint = (misses) => HINTS[misses] ?? 'again';
+
+  // Does this level's intro get said now? On the fixed map: at its first round (the
+  // play functions do that). On the path: once per level, the first time it is picked.
+  function sayIntro(level) {
+    if (!ctx.path) return true;
+    const p = progress();
+    if (p.heard.includes(level.id)) return false;
+    p.heard.push(level.id);
+    ctx.save(p);
+    return true;
   }
 
   function isUnlocked(index) {
@@ -85,7 +123,17 @@ function createGame(container, ctx) {
       return;
     }
     const play = level.cubes ? playCubeRounds : playRounds;
-    rounds = play(ctx, level, els, () => levelDone(level));
+    if (ctx.path) {
+      // Three rounds per ▶ (owner, 2026-10-05), all at the level ▶ picked; each one
+      // moves the hidden skill and adds a stone, then back to the path.
+      rounds = play(ctx, level, els, showPath, {
+        rounds: ROUNDS_PER_PLAY,
+        sayIntro: sayIntro(level),
+        onRound: (misses) => ctx.path.record(level, strongestHint(misses), PATH_LEVELS),
+      });
+    } else {
+      rounds = play(ctx, level, els, () => levelDone(level));
+    }
   }
 
   function markCompleted(level) {
@@ -111,7 +159,7 @@ function createGame(container, ctx) {
   }
 
   return {
-    start: showLevels,
+    start: home,
     destroy() {
       stopLevel();
       container.replaceChildren();

@@ -44,7 +44,7 @@ row.
 
 ## Files
 - `levels.js` — the weight table + level data. `weigh.js` — pure logic, tested in
-  `tests/weigh.test.mjs`: `tilt`, `panWeight`, `levelSets`/`makeRound`, `answerFor`,
+  `tests/balance.test.mjs`: `tilt`, `panWeight`, `levelSets`/`makeRound`, `answerFor`,
   `weighing`/`answerKnown`, `putOnPan`/`freePan`, free-mode pans (`freePut`, `freeCube`,
   `cubeSide`…).
 - `balance.js` — level map, level done, progress. `scene.js` — the balance DOM, tilt,

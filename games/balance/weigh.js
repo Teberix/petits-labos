@@ -1,4 +1,4 @@
-// "La Balance" pure logic (no DOM) — tested in tests/weigh.test.mjs.
+// "La Balance" pure logic (no DOM) — tested in tests/balance.test.mjs.
 import { OBJECTS, MAX_CUBES } from './levels.js';
 
 // How far the beam tilts, in degrees. Any difference, even 1 cube, tilts it at least

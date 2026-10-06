@@ -30,7 +30,10 @@ const pickOne = (n) => 1 + Math.floor(Math.random() * n);
 
 // Plays `level` in the scene `els` (scene.js buildScene); calls onDone() after the
 // last round. Returns { stop }.
-export function playRounds(ctx, level, els, onDone) {
+// opts: rounds (default level.rounds), sayIntro (default true: the level's intro and
+// "how to" are said at the first round), onRound(misses) (after each solved round).
+export function playRounds(ctx, level, els, onDone, opts = {}) {
+  const { rounds = level.rounds, sayIntro = true, onRound } = opts;
   const { t, sfx } = ctx;
   const remark = (text) => speak(text, ctx.lang); // a reaction: the repeat button keeps the question
   const timers = new Set();
@@ -56,7 +59,7 @@ export function playRounds(ctx, level, els, onDone) {
     };
     render();
     let line = placeLine();
-    if (index === 0) {
+    if (index === 0 && sayIntro) {
       if (level.id === LEVELS[0].id) line += ' ' + t('balance.howTo');
       if (level.intro) line += ' ' + t(level.intro);
     }
@@ -159,11 +162,12 @@ export function playRounds(ctx, level, els, onDone) {
     remark(t(`balance.right.${pickOne(3)}`));
     // 1 star per round (it flies from the podium). Every 5th star also brings a sticker.
     const sticker = ctx.rewards.star(els.podium);
+    onRound?.(round.misses);
     later(async () => {
       if (sticker) await ctx.rewards.showSticker(sticker);
       if (stopped) return; // (the player left during the sticker)
       index++;
-      if (index < level.rounds) start();
+      if (index < rounds) start();
       else onDone();
     }, NEXT_MS);
   }
