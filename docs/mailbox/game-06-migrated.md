@@ -31,6 +31,35 @@
 1. Rename `tests/weigh.test.mjs` to `tests/balance.test.mjs`, so the unit gate passes?
 2. Is the "heavy or light" intro for id 8 clear enough aloud?
 
+## B1b — path, checks, small fixes (done)
+
+- Model: Sonnet 5.5. Usage: about 85k. Full-gate runs: 0. Reviewers: kid-ux-reviewer PASS, pwa-guardian PASS (eae9073..HEAD).
+- Commit: `70b2882`.
+
+### What changed
+- `tests/weigh.test.mjs` renamed to `tests/balance.test.mjs`. The unit gate now passes.
+- Intro id 8 (fr/es/en): new text from the owner.
+- `solver.mjs`: cube branch gives `answers: 1` when `1 <= target <= MAX_CUBES`.
+- `meta.js`: `path: true`. No `scene`.
+- `balance.js`: path home. ▶ plays 3 rounds at the level the path picks. Each round: one `ctx.path.record` and one star. Then back to the path. Free button plays FREE. `heard` + `sayIntro` as in Train. Fixed map unchanged.
+- `round.js`, `cubes.js`: options `{ rounds, sayIntro, onRound }`. No copy of the code.
+- New string `balance.path` (fr/es/en).
+- `checks.js`: level cases use the fixed map. New worst cases: path screen, path one round, level 9 (`data-count=3`), fixed map with 9 buttons. Offline plays 3 rounds from the path: 3 stones, 3 stars.
+
+### Gate tail
+- `--game balance`: unit 27 pass. privacy PASS. levels PASS (8 levels). layout PASS (105 screens, 7 sizes). offline PASS.
+- `--only privacy`: PASS.
+
+### Risks
+- Cube rounds report 0 misses to the path. A cube round cannot go wrong, so the hint is always null.
+- Free mode (level 7) on the path gives no stone. It stays on screen until the child leaves.
+- Stars go to START_WORLD until step B2.
+- Not checked by the gate: voice quality of the new id 8 intro, touch feel.
+
+### Questions
+1. Should free mode on the path return to the path after the first weighing?
+2. Fixed-map order (level 7 free before 8 and 9): keep?
+
 ## B1 — NOT DONE (budget stop)
 
 - Model: Sonnet 5.5. Usage: about 124k, all spent reading. No migration code written.
