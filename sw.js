@@ -43,6 +43,7 @@ const PRECACHE = [
   'games/balance/free.js',
   'games/balance/input.js',
   'games/balance/levels.js',
+  'games/balance/levels.json',
   'games/balance/meta.js',
   'games/balance/plural.js',
   'games/balance/round.js',

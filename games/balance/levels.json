@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "game": "balance",
+  "levels": [
+    {"id": 1, "difficulty": 1, "pairs": [["apple", "watermelon"], ["apple", "pumpkin"], ["apple", "pineapple"], ["teddy", "watermelon"], ["teddy", "pumpkin"], ["pineapple", "pumpkin"]], "questions": ["heavy"], "rounds": 5},
+    {"id": 2, "difficulty": 2, "pairs": [["balloon", "apple"], ["balloon", "ball"], ["balloon", "stone"], ["pillow", "ball"], ["pillow", "stone"], ["teddy", "ball"], ["teddy", "stone"], ["pillow", "pineapple"]], "questions": ["heavy"], "rounds": 5, "intro": "balance.intro.surprise"},
+    {"id": 3, "difficulty": 3, "objects": ["balloon", "apple", "teddy", "pillow", "ball", "pineapple", "stone", "watermelon", "pumpkin"], "questions": ["heavy", "light"], "rounds": 5, "intro": "balance.intro.light"},
+    {"id": 4, "difficulty": 4, "cubes": true, "count": 1, "objects": ["balloon", "apple", "teddy", "pillow", "ball", "pineapple", "stone", "watermelon", "pumpkin"], "rounds": 5, "intro": "balance.intro.cubes"},
+    {"id": 5, "difficulty": 5, "cubes": true, "count": 2, "objects": ["balloon", "apple", "teddy", "pillow", "ball", "pineapple", "stone", "watermelon", "pumpkin"], "rounds": 5, "intro": "balance.intro.two"},
+    {"id": 6, "difficulty": 6, "count": 3, "objects": ["balloon", "apple", "teddy", "pillow", "ball", "pineapple", "stone", "watermelon", "pumpkin"], "questions": ["heavy"], "rounds": 5, "intro": "balance.intro.three"},
+    {"id": 8, "difficulty": 7, "count": 3, "objects": ["balloon", "apple", "teddy", "pillow", "ball", "pineapple", "stone", "watermelon", "pumpkin"], "questions": ["heavy", "light"], "rounds": 5, "intro": "balance.intro.threeLight"},
+    {"id": 9, "difficulty": 8, "cubes": true, "count": 3, "objects": ["balloon", "apple", "teddy", "pillow", "ball", "pineapple", "stone", "watermelon", "pumpkin"], "rounds": 5, "intro": "balance.intro.threeCubes"}
+  ]
+}

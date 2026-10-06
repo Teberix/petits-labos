@@ -23,6 +23,8 @@ const LOOKS = ['small', 'medium', 'big'];
 const lookRank = (id) => LOOKS.indexOf(OBJECTS[id].look);
 // Every level but free mode plays rounds (makeRound).
 const ROUND_LEVELS = LEVELS.filter((l) => !l.free);
+// A level by its id (never by index: free mode sits at id 7, between the path levels).
+const byId = (id) => LEVELS.find((l) => l.id === id);
 
 // Plays `n` rounds of a level in a row, like the game does.
 function rounds(level, n, seed = 1) {
@@ -131,7 +133,7 @@ test('makeRound: every group comes up; the answer is not always in the same plac
 });
 
 test('level 1: obvious pairs — the heavier looks bigger, at least 3 cubes apart', () => {
-  for (const [a, b] of LEVELS[0].pairs) {
+  for (const [a, b] of byId(1).pairs) {
     const [light, heavy] = weight(a) < weight(b) ? [a, b] : [b, a];
     assert.ok(weight(heavy) - weight(light) >= 3, `${a}/${b}`);
     assert.ok(lookRank(heavy) > lookRank(light), `${a}/${b}: the heavier doesn't look bigger`);
@@ -139,7 +141,7 @@ test('level 1: obvious pairs — the heavier looks bigger, at least 3 cubes apar
 });
 
 test('level 2: surprise pairs — the one that looks bigger is the lighter one', () => {
-  for (const [a, b] of LEVELS[1].pairs) {
+  for (const [a, b] of byId(2).pairs) {
     const [light, heavy] = weight(a) < weight(b) ? [a, b] : [b, a];
     assert.ok(weight(light) < weight(heavy), `${a}/${b}: same weight`);
     assert.ok(lookRank(light) > lookRank(heavy), `${a}/${b}: not a surprise`);
@@ -147,19 +149,40 @@ test('level 2: surprise pairs — the one that looks bigger is the lighter one',
 });
 
 test('level 3: asks for the heavier and for the lighter one', () => {
-  const questions = new Set(rounds(LEVELS[2], 100).map((r) => r.question));
+  const questions = new Set(rounds(byId(3), 100).map((r) => r.question));
   assert.deepEqual([...questions].sort(), ['heavy', 'light']);
 });
 
 test('level 6: three objects of three different weights, find the heaviest', () => {
-  const level = LEVELS.find((l) => l.count === 3);
-  assert.ok(level && !level.cubes, 'a 3-object level exists');
+  const level = byId(6);
+  assert.ok(level && level.count === 3 && !level.cubes, 'a 3-object level exists');
   assert.deepEqual(level.questions, ['heavy']);
   for (const round of rounds(level, 300)) {
     assert.equal(round.objects.length, 3);
     assert.equal(new Set(round.objects.map(weight)).size, 3, `${round.objects}: equal weights`);
   }
-  assert.equal(LEVELS.indexOf(level), LEVELS.length - 1 - (LEVELS.at(-1).free ? 1 : 0), 'the last level before free mode (owner)');
+});
+
+test('level 8: three objects, asks for the heaviest and for the lightest', () => {
+  const level = byId(8);
+  assert.ok(level.count === 3 && !level.cubes);
+  const asked = new Set();
+  for (let seed = 1; seed <= 200; seed++) {
+    for (const round of rounds(level, 1, seed)) asked.add(round.question);
+  }
+  assert.deepEqual([...asked].sort(), ['heavy', 'light']);
+});
+
+test('level 9: three objects on a pan, total never > MAX_CUBES, never two of the same weight', () => {
+  const level = byId(9);
+  assert.ok(level.cubes && level.count === 3);
+  for (let seed = 1; seed <= 200; seed++) {
+    for (const round of rounds(level, 5, seed)) {
+      assert.equal(round.objects.length, 3);
+      assert.ok(round.target <= MAX_CUBES, `seed ${seed}: ${round.target} cubes`);
+      assert.equal(new Set(round.objects.map(weight)).size, 3, `seed ${seed}: equal weights`);
+    }
+  }
 });
 
 test('weighing: [heavier, lighter] whichever pan', () => {
@@ -197,7 +220,7 @@ test('answerKnown: three objects — the heaviest must have beaten both others',
 });
 
 test('answerKnown: every order of weighing every level-6 trio agrees with answerFor', () => {
-  const level = LEVELS.find((l) => l.count === 3);
+  const level = byId(6);
   for (const set of levelSets(level)) {
     const pairs = [[set[0], set[1]], [set[0], set[2]], [set[1], set[2]]].map(([a, b]) => weighing(a, b));
     for (const first of pairs) {
@@ -240,9 +263,9 @@ test('levels: ids unique, fields sane', () => {
 });
 
 // Owner's rule: a cube level never needs more cubes than fit on a pan.
-test('cube levels: every group of objects weighs 1..MAX_CUBES; both levels exist', () => {
+test('cube levels: every group of objects weighs 1..MAX_CUBES; all three levels exist', () => {
   const cubeLevels = LEVELS.filter((l) => l.cubes);
-  assert.deepEqual(cubeLevels.map((l) => l.count), [1, 2]);
+  assert.deepEqual(cubeLevels.map((l) => l.count), [1, 2, 3]);
   for (const level of cubeLevels) {
     for (const set of levelSets(level)) {
       assert.ok(panWeight(set) >= 1 && panWeight(set) <= MAX_CUBES, `level ${level.id}: ${set} = ${panWeight(set)}`);
@@ -258,14 +281,14 @@ test('spoken results: « … pèse N cubes » says the table weight, singular/pl
   assert.equal(pluralKey('balance.weighs', 2, 'fr'), 'balance.weighs.other');
   assert.equal(pluralKey('balance.weighs', 1, 'en'), 'balance.weighs.one');
   for (const lang of ['fr', 'es', 'en']) {
-    for (const key of ['balance.weighs', 'balance.weighsTwo']) {
+    for (const key of ['balance.weighs', 'balance.weighsTwo', 'balance.weighsThree']) {
       for (const form of ['one', 'other']) assert.ok(STRINGS[lang][`${key}.${form}`].includes('{n}'), `${lang} ${key}.${form}`);
     }
   }
 });
 
-test('free mode: the last level, every object, no rounds', () => {
-  const free = LEVELS.at(-1);
+test('free mode: id 7, every object, no rounds', () => {
+  const free = byId(7);
   assert.ok(free.free);
   assert.deepEqual([...free.objects].sort(), Object.keys(OBJECTS).sort());
   assert.ok(!('rounds' in free) && !('questions' in free));

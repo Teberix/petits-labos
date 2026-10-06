@@ -1,4 +1,5 @@
-// "La Balance" data — edit this file to add or change objects and levels; no game logic here.
+// "La Balance" data — OBJECTS (the weight table) and FREE mode live here; the path levels
+// live in levels.json. No game logic here.
 //
 // OBJECTS: the ONE weight table. Every object always weighs the same, in every level
 // (weight = how many cubes balance it). Toy weights, but in a realistic order: `grams`
@@ -20,7 +21,9 @@ export const OBJECTS = {
 
 export const MAX_CUBES = 10;
 
-// Level fields:
+import data from './levels.json' with { type: 'json' };
+
+// Path level fields (levels.json; `difficulty` = the step on the path, 1…8):
 //   id         number shown on the level map (levels unlock in this order; progress is
 //              saved by id, so never renumber an existing level)
 //   pairs      the pairs of objects the level uses (one pair per round, never the same
@@ -31,42 +34,14 @@ export const MAX_CUBES = 10;
 //   cubes      true → a cube level: `count` objects of `objects` sit on the left pan,
 //              the child balances them with cubes (never more than MAX_CUBES; tested)
 //   rounds    rounds to finish the level
-//   free       true → free mode (see free.js): no rounds, no stars
 //   intro      (optional) extra line said at the first round (key in strings.js)
-export const LEVELS = [
-  // Obvious: the heavier one also looks bigger (tested: at least 3 cubes apart).
-  {
-    id: 1,
-    pairs: [['apple', 'watermelon'], ['apple', 'pumpkin'], ['apple', 'pineapple'],
-      ['teddy', 'watermelon'], ['teddy', 'pumpkin'], ['pineapple', 'pumpkin']],
-    questions: ['heavy'],
-    rounds: 5,
-  },
-  // Surprises: the one that looks bigger is the lighter one (tested).
-  {
-    id: 2,
-    pairs: [['balloon', 'apple'], ['balloon', 'ball'], ['balloon', 'stone'], ['pillow', 'ball'],
-      ['pillow', 'stone'], ['teddy', 'ball'], ['teddy', 'stone'], ['pillow', 'pineapple']],
-    questions: ['heavy'],
-    rounds: 5,
-    intro: 'balance.intro.surprise',
-  },
-  // Any two objects; sometimes the heavier, sometimes the lighter.
-  {
-    id: 3,
-    objects: Object.keys(OBJECTS),
-    questions: ['heavy', 'light'],
-    rounds: 5,
-    intro: 'balance.intro.light',
-  },
-  // How many cubes does it weigh? One object, balanced with cubes.
-  { id: 4, cubes: true, count: 1, objects: Object.keys(OBJECTS), rounds: 5, intro: 'balance.intro.cubes' },
-  // Two objects (of different weights) together, balanced with cubes: adding up.
-  { id: 5, cubes: true, count: 2, objects: Object.keys(OBJECTS), rounds: 5, intro: 'balance.intro.two' },
-  // Three objects, only two pans: weigh them two by two to find the heaviest (weights
-  // hidden again). The podium wakes once the heaviest is known (weigh.js answerKnown).
-  { id: 6, count: 3, objects: Object.keys(OBJECTS), questions: ['heavy'], rounds: 5, intro: 'balance.intro.three' },
-  // Free mode: every object and the cubes, on any pan (equal weights allowed: balancing
-  // two different things is the fun). No stars; done after the first weighing.
-  { id: 7, free: true, objects: Object.keys(OBJECTS) },
-];
+export const PATH_LEVELS = data.levels;
+
+// Free mode (the path's "free" button; level 7 on the fixed map): every object and the
+// cubes, on any pan (equal weights allowed: balancing two different things is the fun).
+// No stars; done after the first weighing. Not a difficulty step, so not in levels.json.
+export const FREE = { id: 7, free: true, objects: Object.keys(OBJECTS) };
+
+// The fixed level map (parent switch "Carte des niveaux"): every level by id, free mode
+// at its old place (id 7, before 8 and 9). Levels unlock in this order.
+export const LEVELS = [...PATH_LEVELS, FREE].sort((a, b) => a.id - b.id);
