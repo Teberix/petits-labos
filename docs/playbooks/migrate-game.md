@@ -102,6 +102,8 @@ mailbox, and stop. One build step per session.
 - [ ] Mailbox + contact sheet committed; `dev` and the preview pushed.
 
 ## Pitfalls found on Train
+- **kid-ux-reviewer**: give it the explicit file paths (PNG, pack.js) in the brief.
+  Without them it reported the pack as missing and needed a second run (72k).
 - **Fixed-map checks**: once `path: true` is on, the game opens on the path; every
   old level check must switch the profile to the fixed map first (and reload).
 - **Check-only levels** pushed into `LEVELS` from the page are lost on reload: call

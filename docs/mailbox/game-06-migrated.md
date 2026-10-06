@@ -137,3 +137,13 @@ First run found no files (wrong claim: the pack existed). Second run, 3 findings
 ### Questions
 1. Is the piñata (star with a face) recognisable to your daughters? If not, I redraw it as a donkey.
 2. Is the name « le pingouin » OK (instead of « le manchot »)?
+
+## B2 fix: cube-pan objects readable
+- Bug: on level 9 (3 objects, 360×640) the ball was about 15 px and the pillow about 30 px.
+- Fix in `balance.css`: cube levels draw the left-pan objects at full size (no `data-look` scale). Weigh levels keep the scale.
+- Three objects now wrap: two on the dish, one above. Each is at least 44 px.
+- `checks.js`: levels 4, 5 and 9 fail if a left-pan drawing is under 44 px wide or high, at all 7 sizes.
+- Playbook: kid-ux-reviewer pitfall added.
+- Gate: `--game balance` (7 sizes) PASSED, `--only privacy` PASSED. No reviewer.
+- Crop of level 9 at 360×640: `game-06-b2-fix.png`.
+- Question: do the three objects read well on the pan (two low, one above)?

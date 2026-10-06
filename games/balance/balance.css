@@ -171,9 +171,14 @@
   min-width: 0;
 }
 .bl-load[data-count="2"] .bl-fixed { --size: clamp(40px, min(16cqw, 26cqh), 110px); }
-.bl-load[data-count="3"] .bl-fixed { --size: clamp(40px, min(11cqw, 22cqh), 90px); }
+/* Three objects: two on the dish, one above (wrap) — each can be as wide as half the pan. */
+.bl-load[data-count="3"] { flex-wrap: wrap; align-content: flex-end; gap: 0.5cqw; }
+.bl-load[data-count="3"] .bl-fixed { --size: clamp(44px, min(15.5cqw, 17cqh), 90px); flex: 0 0 auto; }
 .bl-fixed[data-look="small"] .bl-art { transform: scale(0.55); }
 .bl-fixed[data-look="medium"] .bl-art { transform: scale(0.78); }
+/* Cube levels: the look scale would make 3 objects tiny (ball ≈ 15 px) — draw them at
+   full size. The weigh levels keep the scale (level 2 needs it). */
+.bl-play[data-mode="cubes"] .bl-fixed .bl-art { transform: none; }
 
 /* The cubes on the right pan: a 2 × 5 frame (a ten-frame). One button: tap = take a
    cube off. */

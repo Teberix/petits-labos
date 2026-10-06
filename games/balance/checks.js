@@ -103,6 +103,17 @@ async function savedStars(page) {
   return page.evaluate(() => JSON.parse(localStorage.getItem('petits-labos')).profiles[0].rewards.stars);
 }
 
+// The objects on the left pan must stay readable: every drawing ≥ 44 px wide and high.
+async function checkFixedArt(page) {
+  const sizes = await page.evaluate(() => [...document.querySelectorAll('.bl-load .bl-fixed .bl-art')].map((el) => {
+    const r = el.querySelector('svg').getBoundingClientRect();
+    return { w: Math.round(r.width), h: Math.round(r.height) };
+  }));
+  if (!sizes.length) throw new Error('no object on the left pan');
+  const small = sizes.filter((s) => s.w < 44 || s.h < 44);
+  if (small.length) throw new Error(`left-pan objects under 44 px: ${JSON.stringify(sizes)}`);
+}
+
 const trayObj = (id) => `.bl-tray .bl-obj[data-object="${id}"]`;
 const panObj = (side) => `.bl-pan[data-side="${side}"] .bl-obj`;
 const pan = (side) => `.bl-pan[data-side="${side}"]`;
@@ -142,6 +153,7 @@ export default {
         if (count !== '3') throw new Error(`expected data-count=3, got ${count}`);
         const { objects } = await readCubes(page);
         if (objects.length !== 3) throw new Error(`expected 3 objects on the left pan, got ${objects.length}`);
+        await checkFixedArt(page);
       },
     },
     {
@@ -247,6 +259,7 @@ export default {
         await openLevel(page, kit, 4, { last: true });
         const { objects, target } = await readCubes(page);
         if (objects.join() !== 'pumpkin' || target !== 10) throw new Error(`expected the pumpkin, got ${objects}`);
+        await checkFixedArt(page);
         for (let i = 0; i < 9; i++) await kit.tap(page, '.bl-cube-src');
         let now = await readCubes(page);
         if (now.cubes !== 9 || now.tilt !== 'left') throw new Error(`9 cubes: ${now.cubes} on the pan, beam ${now.tilt}`);
@@ -265,6 +278,7 @@ export default {
         await openLevel(page, kit, 5, { last: true });
         const { objects, target } = await readCubes(page);
         if (objects.length !== 2) throw new Error(`${objects.length} objects on the left pan`);
+        await checkFixedArt(page);
         const stars = await savedStars(page);
         await kit.drag(page, '.bl-cube-src', pan(1));
         await kit.drag(page, '.bl-cube-src', pan(1));
