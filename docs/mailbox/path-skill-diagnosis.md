@@ -45,3 +45,16 @@ After the 3 clean rounds of one ▶ (no wrong answer, so the existing wrong answ
 1. `JSON.parse(localStorage['petits-labos']).profiles[0].skills.<game>.skill === 7`.
 2. Tap ▶ again. Balance: the tray shows 3 objects (level id 8). Train: the picked level is id 8 (`gap: two`, 9 wagons).
 Note: the current offline blocks make 1 wrong answer in round 1, so skill goes 1→1→3→5 (clue = 0). Use a separate clean ▶ for the skill===7 check.
+
+## Fix (commit 9a0797b)
+- Model: Sonnet 5.5. Usage: about 70k tokens (estimate). Full-gate runs: 0 (the owner runs it).
+- Reviewer findings: pwa-guardian PASS on 86d13ff..HEAD, no findings.
+- Change: `outcomeForMisses(misses)` in `js/progress.js`. Balance and Train call it. `HINTS` and `strongestHint` are deleted.
+- `path.record` → `outcomeOf('none')` returns `'none'`. `js/path.js` is unchanged.
+- Offline blocks: a clean ▶ on a reset skill asserts skill 7. Balance then shows 3 objects, no cubes. Train asserts `pickLevel` returns id 8, then 9 wagons and 2 gaps.
+- Gate tail:
+  - unit: progress, balance, train tests 53/53 PASS.
+  - `--game balance`: PASS (486 s).
+  - `--game train`: first run FAIL (setup timeout, 640x360 "AAB x 3" layout case). Re-run PASS (180 s).
+  - `--only privacy`: PASS.
+- Risk: the Train layout timeout looks like load flakiness. The failing case does not touch this change.
