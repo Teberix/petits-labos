@@ -4,7 +4,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   MIN_TILT, MAX_TILT, panWeight, tilt, answerFor, levelSets, makeRound, putOnPan, freePan, weighing, answerKnown,
-  emptyPans, freeWeight, freePut, freeTakeOff, freeCube, cubeSide, freeObjectSide,
+  emptyPans, weighsLine, freeWeight, freePut, freeTakeOff, freeCube, cubeSide, freeObjectSide,
 } from '../games/balance/weigh.js';
 import { OBJECTS, LEVELS, MAX_CUBES } from '../games/balance/levels.js';
 import { OBJECT_ART } from '../games/balance/art.js';
@@ -283,6 +283,23 @@ test('spoken results: « … pèse N cubes » says the table weight, singular/pl
   for (const lang of ['fr', 'es', 'en']) {
     for (const key of ['balance.weighs', 'balance.weighsTwo', 'balance.weighsThree']) {
       for (const form of ['one', 'other']) assert.ok(STRINGS[lang][`${key}.${form}`].includes('{n}'), `${lang} ${key}.${form}`);
+    }
+  }
+});
+
+test('weighsLine: the key and a param for every placeholder (1, 2, 3 objects)', () => {
+  const want = { 1: 'balance.weighs', 2: 'balance.weighsTwo', 3: 'balance.weighsThree' };
+  for (const n of [1, 2, 3]) {
+    const { key, params } = weighsLine(['apple', 'teddy', 'pumpkin'].slice(0, n));
+    assert.equal(key, want[n]);
+    assert.equal(Object.keys(params).length, n);
+    for (const lang of ['fr', 'es', 'en']) {
+      for (const form of ['one', 'other']) {
+        const text = STRINGS[lang][`${key}.${form}`];
+        for (const [, name] of text.matchAll(/\{(\w+)\}/g)) {
+          assert.ok(name === 'n' || name in params, `${lang} ${key}.${form}: {${name}} has no param`);
+        }
+      }
     }
   }
 });

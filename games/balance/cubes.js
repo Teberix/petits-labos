@@ -12,7 +12,7 @@
 import { h } from '../../js/dom.js';
 import { speak } from '../../js/audio.js';
 import { draggable } from '../../js/dragdrop.js';
-import { makeRound } from './weigh.js';
+import { makeRound, weighsLine } from './weigh.js';
 import { OBJECTS } from './levels.js';
 import { setTilt, restartAnimation, cubeFrame, cubeSource } from './scene.js';
 import { pluralKey } from './plural.js';
@@ -107,9 +107,9 @@ export function playCubeRounds(ctx, level, els, onDone, opts = {}) {
   function balanced() {
     round.busy = true; // locked: nothing moves while the beam settles and the voice talks
     render();
-    const names = round.objects.map((id) => t(`balance.obj.${id}`));
-    const key = round.objects.length === 1 ? 'balance.weighs' : 'balance.weighsTwo';
-    const line = capitalize(t(pluralKey(key, round.target, ctx.lang), { a: names[0], b: names[1], n: round.target }));
+    const { key, params } = weighsLine(round.objects);
+    const names = Object.fromEntries(Object.entries(params).map(([p, id]) => [p, t(`balance.obj.${id}`)]));
+    const line = capitalize(t(pluralKey(key, round.target, ctx.lang), { ...names, n: round.target }));
     // 1 star per round (it flies from the cubes). Every 5th star also brings a sticker.
     const sticker = ctx.rewards.star(els.pans[1].querySelector('.bl-cubes'));
     onRound?.(0);

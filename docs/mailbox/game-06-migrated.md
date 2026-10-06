@@ -60,6 +60,10 @@
 1. Should free mode on the path return to the path after the first weighing?
 2. Fixed-map order (level 7 free before 8 and 9): keep?
 
+### Fix after owner review of `70b2882`
+- Bug: `cubes.js` named only two objects on level 9. New pure `weighsLine(ids)` in `weigh.js` picks key and params for 1, 2 or 3 objects. Test covers key and placeholders in fr/es/en.
+- Q1 answered: free mode on the path stays on screen until the child leaves (as Train). Q2 answered in B1a: keep the order.
+
 ## B1 — NOT DONE (budget stop)
 
 - Model: Sonnet 5.5. Usage: about 124k, all spent reading. No migration code written.

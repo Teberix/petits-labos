@@ -71,6 +71,16 @@ export function makeRound(level, random, previousKey = null) {
   return { objects, question, answer: answerFor(set, question), key };
 }
 
+// The closing line of a cube round: which string says « {a}, {b} et {c} pèsent {n} cubes ».
+// Pure: returns the string key (before plural.js adds .one/.other) and its params as
+// object ids; the caller translates the ids to names and adds {n}.
+export function weighsLine(ids) {
+  const [a, b, c] = ids;
+  if (ids.length === 1) return { key: 'balance.weighs', params: { a } };
+  if (ids.length === 2) return { key: 'balance.weighsTwo', params: { a, b } };
+  return { key: 'balance.weighsThree', params: { a, b, c } };
+}
+
 // A weighing seen on the balance: [heavier, lighter] (a round's objects never weigh the
 // same, so there is always one).
 export function weighing(a, b) {
