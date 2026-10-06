@@ -6,8 +6,10 @@
 // Nothing else changes (js/items.js, js/scene.js and js/rewards.js read this list).
 import meadow from './meadow/pack.js';
 import dinosaurs from './dinosaurs/pack.js';
+import party from './party/pack.js';
 
 export const PACKS = [
   meadow,
   dinosaurs,
+  party,
 ];

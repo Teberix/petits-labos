@@ -138,6 +138,7 @@ const PRECACHE = [
   'js/version.js',
   'scenes/dinosaurs/pack.js',
   'scenes/meadow/pack.js',
+  'scenes/party/pack.js',
   'scenes/registry.js',
 ];
 // PRECACHE:END

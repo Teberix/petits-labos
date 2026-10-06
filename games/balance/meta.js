@@ -3,8 +3,9 @@ export default {
   id: 'balance',
   // Non-linguistic game → played in the app language (French by default).
   titleKey: 'balance.title',
-  // New engine: the path screen (js/path.js). No `scene` yet (step B2).
+  // New engine: the path screen (js/path.js). The world the first stars unlock (step B2).
   path: true,
+  scene: 'party',
   strings: {
     fr: { 'balance.title': 'La Balance' },
     es: { 'balance.title': 'La Balanza' },

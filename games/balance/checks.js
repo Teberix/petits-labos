@@ -363,7 +363,10 @@ export default {
       if (await savedStars(page) !== before + n) throw new Error(`round ${n}: expected one more star`);
       if (n < 3) {
         // The next round: both objects wait in the tray again, the podium is asleep.
-        await page.waitForFunction(() => document.querySelectorAll('.bl-tray .bl-obj').length === 2
+        // The first star unlocks the party world: its reveal (closes by itself after ~5 s)
+        // shows before the next round — wait for it to be gone, do not assume it.
+        await page.waitForFunction(() => !document.querySelector('.sticker-reveal')
+          && document.querySelectorAll('.bl-tray .bl-obj').length === 2
           && !document.querySelector('.bl-podium.bl-awake'), null, { timeout: 30000 });
       }
     }
