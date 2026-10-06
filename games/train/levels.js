@@ -13,7 +13,7 @@
 //              'period' (the whole last period; the train is then exactly 3 periods),
 //              'two' (two wagons anywhere after the first)
 //   choices    how many different tokens in the tray (at least the pattern's letters)
-//   rounds     trains per level on the fixed level map (the path plays one train per ▶)
+//   rounds     trains per level on the fixed level map (the path plays three per ▶)
 //   intro      (optional) extra line said the first time the child gets this level
 //   grow       true → a growing train instead of a pattern: 1 to 5 dots, one more (or
 //              one less) each wagon; uses `before` = [min, max] wagons before the gap

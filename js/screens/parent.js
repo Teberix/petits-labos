@@ -268,7 +268,8 @@ export function render(root, params, app) {
     );
   }
 
-  // Difficulty of one path game back to step 1 for one profile (the stones stay).
+  // Difficulty of one path game back to step 1 for one profile, and its level map
+  // starts over (the stones stay).
   function confirmSkillView({ id, gameId }) {
     const game = GAMES.find((g) => g.id === gameId);
     const back = () => go({ name: 'edit', id });

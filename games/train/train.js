@@ -1,9 +1,9 @@
 // "Le Train des Suites" — a train whose wagons follow a pattern (red, blue, red, blue…)
 // has empty wagons; the child finds what goes in them.
 //
-// Flow:   path (new engine, meta `path: true`): ▶ → one train at the level js/progress.js
-//         picks for the child's hidden skill → the path again, one stone more; the
-//         free-mode button sits next to ▶.
+// Flow:   path (new engine, meta `path: true`): ▶ → three trains at the level
+//         js/progress.js picks for the child's hidden skill (each train = one stone +
+//         one star) → the path again; the free-mode button sits next to ▶.
 //         Fixed level map (ctx.path null: parent switch "Carte des niveaux"): level
 //         map → level (5 trains) → level done → map
 // Train:  the locomotive pulls the wagons (left to right = reading order, wrapping onto
@@ -48,6 +48,7 @@ const PARTY_MS = 170;        // between two notes of a full train's tune
 const LEAVE_MS = 1300;       // the train rolling away (matches .tr-leave in train.css)
 const FREE_NOTE_MS = 350;    // free mode: between two wagons of the child's train
 const ADMIRE_MS = 900;       // free mode: the full train waits a little before leaving
+const TRAINS_PER_PLAY = 3;   // path: trains per ▶ (each one = one stone + one star)
 
 function loadStylesheet() {
   if (document.querySelector('link[data-game="train"]')) return;
@@ -388,8 +389,11 @@ function createGame(container, ctx) {
       if (sticker) await ctx.rewards.showSticker(sticker);
       if (destroyed) return;
       play.index++;
-      if (ctx.path) showPath(); // one train per ▶
-      else if (play.index < play.level.rounds) startTrain();
+      if (ctx.path) {
+        // Three trains per ▶ (owner, 2026-10-05), all at the level ▶ picked.
+        if (play.index < TRAINS_PER_PLAY) startTrain();
+        else showPath();
+      } else if (play.index < play.level.rounds) startTrain();
       else levelDone();
     }, tuneMs + 200 + LEAVE_MS);
   }

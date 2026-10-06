@@ -32,7 +32,7 @@ export default {
   fixedMap: 'Level map',
   fixedMapHint: 'Yes: path games show their fixed level map instead of adapting to the child.',
   resetSkill: 'Reset the difficulty: {game}',
-  confirmResetSkill: 'Reset the difficulty for {name}: {game}? The path’s stones stay.',
+  confirmResetSkill: 'Start over for {name}: {game}? The difficulty and the level map start again. The path’s stones stay.',
   yesResetSkill: 'Yes, reset the difficulty',
   version: 'Version',
   checkUpdates: 'Check for updates',

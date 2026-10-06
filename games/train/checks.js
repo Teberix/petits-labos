@@ -293,22 +293,28 @@ export default {
 
   // Level 1: a wrong token gives nothing and leaves the gap empty; the right one
   // (dragged, like a child would) fills it and gives one star; the next train comes.
-  // On the path: ▶ → a wrong token (no star), the right one (+1 star) → back to the
-  // path with one stone.
+  // On the path: ▶ → a wrong token (no star), the right one (+1 star); three trains
+  // per ▶ → back to the path with three stones.
   async offline(page, kit) {
     await playFromPath(page, kit);
     const before = await savedStars(page);
-    const { cars, right, wrong } = await tokensFor(page);
+    const { right, wrong } = await tokensFor(page);
     await kit.tap(page, token(wrong));
     if ((await readTrain(page)).cars.indexOf(null) === -1) throw new Error('wrong token accepted');
     if (await savedStars(page) !== before) throw new Error('wrong token: expected no star');
 
-    await kit.drag(page, token(right), '.tr-car.tr-gap');
-    await page.waitForFunction(() => !document.querySelector('.tr-car.tr-gap'), null, { timeout: 3000 });
-    if (await savedStars(page) !== before + 1) throw new Error('right token: expected one more star');
-
-    // (The first star unlocks the dinosaurs world: its reveal closes by itself.)
+    for (let n = 1; n <= 3; n++) {
+      const answer = n === 1 ? right : (await tokensFor(page)).right;
+      await kit.drag(page, token(answer), '.tr-car.tr-gap');
+      await page.waitForFunction(() => !document.querySelector('.tr-car.tr-gap'), null, { timeout: 3000 });
+      if (await savedStars(page) !== before + n) throw new Error(`train ${n}: expected one more star`);
+      if (n < 3) {
+        // The next train comes (the first star's world reveal closes by itself).
+        await page.locator('.tr-car.tr-gap').first().waitFor({ timeout: 30000 });
+        await kit.settle(page);
+      }
+    }
     await page.locator('.path-play').waitFor({ timeout: 30000 });
-    if (await page.locator('.path-stone').count() !== 1) throw new Error('expected one stone on the path');
+    if (await page.locator('.path-stone').count() !== 3) throw new Error('expected three stones on the path');
   },
 };

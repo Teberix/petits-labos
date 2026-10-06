@@ -125,6 +125,38 @@ test('a new install starts at the latest schema; new profiles have every field',
   assert.deepEqual(p.worlds, { unlocked: ['meadow'], meadow: { placed: [] } });
 });
 
+test('resetSkill: difficulty back to step 1 and the level map starts over; stones, best and other data stay', async () => {
+  fakeStorage();
+  const s = await freshV2();
+  const p = s.addProfile({ name: 'Joueur A', avatar: '🦊', readingLang: 'fr' });
+  const q = s.addProfile({ name: 'Joueur B', avatar: '🐸', readingLang: 'fr' });
+  for (const id of [p.id, q.id]) {
+    s.setSkill(id, 'train', { skill: 5, best: 6, rounds: 12, seen: [1, 2, 5] });
+    s.setGameData(id, 'train', { completed: [1, 2, 3], heard: [1, 2] });
+  }
+  s.setGameData(p.id, 'robot', { completed: [1] });
+
+  s.resetSkill(p.id, 'train');
+  assert.deepEqual(s.getSkill(p.id, 'train'), { skill: 1, best: 6, rounds: 12, seen: [] });
+  assert.deepEqual(s.getGameData(p.id, 'train'), { completed: [], heard: [1, 2] });
+  // Only that game and that profile.
+  assert.deepEqual(s.getGameData(p.id, 'robot'), { completed: [1] });
+  assert.deepEqual(s.getGameData(q.id, 'train'), { completed: [1, 2, 3], heard: [1, 2] });
+  assert.equal(s.getSkill(q.id, 'train').skill, 5);
+  // Saved, not only in memory.
+  const saved = JSON.parse(globalThis.localStorage.getItem(KEY)).profiles.find((x) => x.id === p.id);
+  assert.deepEqual(saved.games.train.completed, []);
+
+  // A game played only on the map (no skill yet): the map still starts over.
+  s.setGameData(q.id, 'shapes', { completed: [1, 2] });
+  s.resetSkill(q.id, 'shapes');
+  assert.deepEqual(s.getGameData(q.id, 'shapes'), { completed: [] });
+  assert.equal(s.getSkill(q.id, 'shapes'), null);
+  // A game never played: nothing is created.
+  s.resetSkill(q.id, 'balance');
+  assert.deepEqual(s.getGameData(q.id, 'balance'), {});
+});
+
 test('MIGRATIONS cover every schema step', async () => {
   fakeStorage();
   const s = await freshV2();

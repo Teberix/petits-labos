@@ -377,11 +377,18 @@ export function setSkill(profileId, gameId, value) {
   save();
 }
 
-// The parent's "reset difficulty" for one game: back to step 1. The stones (rounds) and
-// the best step reached stay — the child's path never shrinks.
+// The parent's "reset difficulty" for one game: back to step 1, and the numbered level
+// map ("Carte des niveaux") starts over too (owner, 2026-10-05: its `completed` list is
+// emptied). The stones (rounds) and the best step reached stay — the child's path
+// never shrinks. The game's other data (e.g. the train's `heard` list) is not touched.
 export function resetSkill(profileId, gameId) {
-  const state = getSkill(profileId, gameId);
-  if (state) setSkill(profileId, gameId, { ...state, skill: 1, seen: [] });
+  const profile = getProfile(profileId);
+  if (!profile) return;
+  const state = profile.skills?.[gameId];
+  if (state) profile.skills[gameId] = { ...state, skill: 1, seen: [] };
+  const game = profile.games?.[gameId];
+  if (Array.isArray(game?.completed)) game.completed = [];
+  save();
 }
 
 // ---- Ask the browser not to evict our data when the device is low on space ----

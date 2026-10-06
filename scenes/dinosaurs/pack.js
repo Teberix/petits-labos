@@ -24,7 +24,7 @@ export default {
   items: [
     // ---- eggs and babies (items[0] = the gift) ----
     { id: 'egg', art: `
-      <path d="M50 20C72 20 82 56 82 72C82 86 68 95 50 95C32 95 18 86 18 72C18 56 28 20 50 20Z" fill="#F7EBC8"/>
+      <path d="M50 20C72 20 82 56 82 72C82 86 68 95 50 95C32 95 18 86 18 72C18 56 28 20 50 20Z" fill="#EFD9A6" stroke="#9C7A52" stroke-width="3"/>
       <circle cx="30" cy="68" r="6" fill="#7FC8A0"/><circle cx="68" cy="76" r="7" fill="#7FC8A0"/><circle cx="62" cy="48" r="5" fill="#7FC8A0"/><circle cx="40" cy="86" r="4" fill="#7FC8A0"/>
       ${eye(41, 60, 3.5)}${eye(59, 60, 3.5)}${smile(44, 70, 12)}${cheek(34, 70)}${cheek(66, 70)}` },
     { id: 'baby', art: `
@@ -34,8 +34,8 @@ export default {
       ${eye(42, 52, 5)}${eye(58, 52, 5)}${smile(44, 62, 12)}${cheek(34, 60)}${cheek(66, 60)}
       <path d="M14 70L24 62L30 76L38 66L46 80L54 68L62 80L70 66L76 76L84 62L90 72L90 82C90 90 76 95 52 95C28 95 14 90 14 82Z" fill="#F7EBC8"/>` },
     { id: 'eggs', art: `
-      <path d="M30 40C44 40 50 62 50 72C50 84 42 92 30 92C18 92 10 84 10 72C10 62 16 40 30 40Z" fill="#F7EBC8"/>
-      <path d="M70 34C86 34 92 58 92 70C92 84 82 94 70 94C58 94 48 84 48 70C48 58 54 34 70 34Z" fill="#E8F3D6"/>
+      <path d="M30 40C44 40 50 62 50 72C50 84 42 92 30 92C18 92 10 84 10 72C10 62 16 40 30 40Z" fill="#EFD9A6" stroke="#9C7A52" stroke-width="3"/>
+      <path d="M70 34C86 34 92 58 92 70C92 84 82 94 70 94C58 94 48 84 48 70C48 58 54 34 70 34Z" fill="#CFE6B2" stroke="#6E8F4E" stroke-width="3"/>
       <circle cx="22" cy="72" r="5" fill="#F28C28"/><circle cx="36" cy="60" r="4" fill="#F28C28"/><circle cx="34" cy="82" r="4" fill="#F28C28"/>
       <circle cx="62" cy="62" r="5" fill="#6FB1E0"/><circle cx="78" cy="78" r="6" fill="#6FB1E0"/><circle cx="68" cy="84" r="3" fill="#6FB1E0"/>` },
     { id: 'nest', art: `
@@ -114,7 +114,7 @@ export default {
     { id: 'volcano', art: `
       <path d="M8 95L38 38Q50 28 62 38L92 95Z" fill="#A98A7A"/>
       <path d="M38 38Q50 30 62 38L66 46Q50 38 34 46Z" fill="#8E6F62"/>
-      <path d="M44 46L48 66L40 76L50 90" stroke="#E4572E" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="0.8"/>
+      <path d="M44 46L48 66L40 76L50 90" stroke="#E4572E" stroke-width="8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
       <circle cx="52" cy="24" r="8" fill="#F4F0EC"/><circle cx="62" cy="14" r="7" fill="#F4F0EC"/><circle cx="72" cy="6" r="5" fill="#F4F0EC"/>` },
     { id: 'rock', art: `
       <path d="M10 95Q8 62 34 54Q56 46 72 62Q94 70 90 95Z" fill="#A8A29A"/>
@@ -123,10 +123,12 @@ export default {
     { id: 'footprints', art: `
       ${[[30, 72, -12], [66, 48, 12]].map(([x, y, r]) => `<g fill="#8E6F52" transform="rotate(${r} ${x} ${y})"><ellipse cx="${x}" cy="${y + 10}" rx="13" ry="12"/><ellipse cx="${x - 13}" cy="${y - 6}" rx="5" ry="8"/><ellipse cx="${x}" cy="${y - 11}" rx="5" ry="8"/><ellipse cx="${x + 13}" cy="${y - 6}" rx="5" ry="8"/></g>`).join('')}` },
     { id: 'bone', art: `
-      <path d="M26 78L74 58" stroke="#F4EBD8" stroke-width="12" stroke-linecap="round"/>
-      <circle cx="20" cy="72" r="9" fill="#F4EBD8"/><circle cx="26" cy="86" r="9" fill="#F4EBD8"/>
-      <circle cx="80" cy="52" r="9" fill="#F4EBD8"/><circle cx="74" cy="66" r="9" fill="#F4EBD8"/>
-      <path d="M32 74L68 60" stroke="#E4D8BE" stroke-width="3" stroke-linecap="round"/>` },
+      <g stroke="#9C7A52" stroke-width="3" fill="#E6D3A8"><circle cx="20" cy="72" r="9"/><circle cx="26" cy="86" r="9"/><circle cx="80" cy="52" r="9"/><circle cx="74" cy="66" r="9"/></g>
+      <path d="M26 78L74 58" stroke="#9C7A52" stroke-width="15" stroke-linecap="round"/>
+      <path d="M26 78L74 58" stroke="#E6D3A8" stroke-width="12" stroke-linecap="round"/>
+      <circle cx="20" cy="72" r="9" fill="#E6D3A8"/><circle cx="26" cy="86" r="9" fill="#E6D3A8"/>
+      <circle cx="80" cy="52" r="9" fill="#E6D3A8"/><circle cx="74" cy="66" r="9" fill="#E6D3A8"/>
+      <path d="M32 74L68 60" stroke="#CBB487" stroke-width="3" stroke-linecap="round"/>` },
     { id: 'flower', art: `
       <path d="M50 95V50" stroke="#3FA34D" stroke-width="5" stroke-linecap="round"/>
       <ellipse cx="64" cy="76" rx="12" ry="5" fill="#3FA34D" transform="rotate(30 64 76)"/>

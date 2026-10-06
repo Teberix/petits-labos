@@ -32,7 +32,7 @@ export default {
   fixedMap: 'Carte des niveaux',
   fixedMapHint: 'Oui : les jeux à chemin montrent leur carte de niveaux fixe au lieu de s’adapter à l’enfant.',
   resetSkill: 'Remettre la difficulté au départ : {game}',
-  confirmResetSkill: 'Remettre la difficulté au départ pour {name} : {game} ? Les pierres du chemin restent.',
+  confirmResetSkill: 'Remettre au départ pour {name} : {game} ? La difficulté et la carte des niveaux recommencent. Les pierres du chemin restent.',
   yesResetSkill: 'Oui, remettre au départ',
   version: 'Version',
   checkUpdates: 'Rechercher une mise à jour',

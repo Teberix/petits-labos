@@ -32,7 +32,7 @@ export default {
   fixedMap: 'Mapa de niveles',
   fixedMapHint: 'Sí: los juegos con camino muestran su mapa de niveles fijo en vez de adaptarse al niño.',
   resetSkill: 'Volver a la dificultad inicial: {game}',
-  confirmResetSkill: '¿Volver a la dificultad inicial para {name}: {game}? Las piedras del camino se quedan.',
+  confirmResetSkill: '¿Volver al inicio para {name}: {game}? La dificultad y el mapa de niveles empiezan de nuevo. Las piedras del camino se quedan.',
   yesResetSkill: 'Sí, volver a la dificultad inicial',
   version: 'Versión',
   checkUpdates: 'Buscar actualizaciones',
