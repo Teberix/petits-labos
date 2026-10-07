@@ -410,8 +410,8 @@ export default {
     await page.locator('.path-play').waitFor({ timeout: 30000 });
     if (await page.locator('.path-stone').count() !== 3) throw new Error('expected three stones on the path');
 
-    // A fresh path, then one clean ▶ (no mistake): three rounds must take the skill
-    // 1 → 3 → 5 → 7, and the next ▶ must show the step-7 level (id 8: 3 objects, no cubes).
+    // A fresh path, then one clean ▶ (no mistake): its three rounds must take the skill
+    // 1 → 2, and the next ▶ must show the step-2 level (id 2: 2 objects, no cubes).
     await resetSkill(page);
     await playFromPath(page, kit);
     for (let n = 1; n <= 3; n++) {
@@ -428,7 +428,14 @@ export default {
     }
     await page.locator('.path-play').waitFor({ timeout: 30000 });
     const skill = await savedSkill(page);
-    if (skill !== 7) throw new Error(`3 clean rounds: skill is ${skill}, expected 7`);
+    if (skill !== 2) throw new Error(`clean play: skill is ${skill}, expected 2`);
+    const picked = await page.evaluate(async () => {
+      const { pickLevel } = await import('./js/progress.js');
+      const { PATH_LEVELS } = await import('./games/balance/levels.js');
+      const state = JSON.parse(localStorage.getItem('petits-labos')).profiles[0].skills.balance;
+      return pickLevel(PATH_LEVELS, state).id;
+    });
+    if (picked !== 2) throw new Error(`step 2: expected level 2, picked ${picked}`);
     await kit.tap(page, page.locator('.path-play'));
     await page.locator('.bl-tray > button').first().waitFor();
     await kit.settle(page);
@@ -436,6 +443,20 @@ export default {
       tray: document.querySelectorAll('.bl-tray .bl-obj').length,
       cubes: !!document.querySelector('[data-mode="cubes"]'),
     }));
-    if (shown.tray !== 3 || shown.cubes) throw new Error(`step 7: expected 3 objects, no cubes; got ${JSON.stringify(shown)}`);
+    if (shown.tray !== 2 || shown.cubes) throw new Error(`step 2: expected 2 objects, no cubes; got ${JSON.stringify(shown)}`);
+
+    // Leave the ▶ after one clean round (home button): the skill must not move.
+    const [a, b] = (await readScale(page)).tray;
+    await kit.tap(page, trayObj(a));
+    await kit.drag(page, trayObj(b), pan(1));
+    const { pans, question } = await expectScale(page, { pans: [a, b] });
+    await kit.drag(page, onPan(answerFor(pans, question)), '.bl-podium');
+    await page.waitForFunction(() => !document.querySelector('.sticker-reveal')
+      && document.querySelectorAll('.bl-tray .bl-obj').length === 2
+      && !document.querySelector('.bl-podium.bl-awake'), null, { timeout: 30000 });
+    await kit.tap(page, page.locator('.top-bar .icon-btn').first());
+    await page.waitForFunction(() => document.querySelector('#app')?.dataset.screen !== 'game');
+    const after = await savedSkill(page);
+    if (after !== 2) throw new Error(`left a play after 1 round: skill is ${after}, expected 2`);
   },
 };

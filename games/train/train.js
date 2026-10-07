@@ -387,7 +387,7 @@ function createGame(container, ctx) {
       if (ctx.path) {
         // Three trains per ▶ (owner, 2026-10-05), all at the level ▶ picked.
         if (play.index < TRAINS_PER_PLAY) startTrain();
-        else showPath();
+        else { ctx.path.endPlay(PATH_LEVELS); showPath(); }
       } else if (play.index < play.level.rounds) startTrain();
       else levelDone();
     }, tuneMs + 200 + LEAVE_MS);

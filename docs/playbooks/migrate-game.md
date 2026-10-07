@@ -38,8 +38,11 @@ preview. Work on `dev`. Follow the root `CLAUDE.md` for everything not listed he
   switch "Carte des niveaux" is on: the old fixed map must still work.
 - `ctx.path.show(container, { levels, onPlay, onFree })`; `onFree` only if the game
   has a free mode.
-- After each round: `ctx.path.record(level, outcomeForMisses(misses), PATH_LEVELS)` (one stone),
-  and `ctx.rewards.star(el)` (one star). Count the round's misses; import
+- After each round: `ctx.path.record(level, outcomeForMisses(misses), PATH_LEVELS)` (one stone,
+  the outcome is kept), and `ctx.rewards.star(el)` (one star).
+- After the last round of a ▶, once, before `showPath`: `ctx.path.endPlay(PATH_LEVELS)`.
+  The skill moves once per ▶, by its worst round (owner, 2026-10-07): all clean +1,
+  worst is a clue 0, worst is glow / dance / again −1. A ▶ left early changes nothing. Count the round's misses; import
   `outcomeForMisses` from `js/progress.js` (0 → none, 1 → clue, 2 → glow, 3 → dance,
   4+ → again). Never map hints by hand.
 - **Three rounds per ▶** (owner, 2026-10-05), all at the level ▶ picked, then back to
@@ -117,5 +120,7 @@ mailbox, and stop. One build step per session.
 - **The first star unlocks the world**: its reveal shows before the next round. The
   offline check must wait for the next round, not assume it is instant.
 - **`HINTS[0]` is null**: `?? 'again'` turns a perfect round into −1. Use
-  `outcomeForMisses`. The offline check must assert the skill after a clean ▶.
+  `outcomeForMisses`. The offline check must assert the skill after a clean ▶ (1 → 2).
+- **Per-round steps × rounds per ▶ skip levels**: +2 per round × 3 rounds = +6 per ▶,
+  so a good player never saw steps 2–6. The skill moves once per ▶ (`endPlay`).
 - **Preview**: the `-preview.N` bump lives only on the temp branch. Never merge it.

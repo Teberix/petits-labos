@@ -1,10 +1,13 @@
 // The new engine's adaptive difficulty — pure logic, no DOM, no storage (games 9+;
-// tested in tests/progress.test.mjs). Owner's rules, 2026-10-03:
+// tested in tests/progress.test.mjs). Owner's rules, 2026-10-03,
+// changed 2026-10-07 (the skill moves once per play, not per round):
 //   - each player has, per game, a hidden SKILL = a difficulty step (1 … the game's
 //     highest step). It starts at 1.
-//   - after each round, from the strongest hint the child needed (the hint ladder every
-//     game already has): no hint → +2 steps, a spoken clue → same step, glow / dance /
-//     more → −1 step. Never below 1, never above the highest step.
+//   - after each PLAY (one ▶ = 3 rounds), from the WORST outcome of its rounds (the hint
+//     ladder every game already has): all rounds clean → +1 step, worst is a spoken clue
+//     → same step, worst is glow / dance / more → −1 step. Never below 1, never above the
+//     highest step. A play left before its last round does not move the skill (its rounds
+//     still count as stones). One step per play = a good player sees every step.
 //   - the next level = one at that step the child hasn't seen recently (a level is a
 //     parameter set; its rounds are generated and solver-checked — levels.json).
 //   - kids never see a step down: what they see is the number of rounds played
@@ -18,8 +21,11 @@ export const START = Object.freeze({ skill: 1, best: 1, rounds: 0, seen: Object.
 // How many recent levels count as "seen" (older ones can come back).
 export const SEEN_MAX = 20;
 
-// The steps per outcome (owner: asymmetric — quick players climb fast).
-export const STEP = { none: 2, clue: 0, glow: -1, dance: -1, again: -1 };
+// The skill steps per play, by its worst outcome (owner, 2026-10-07).
+export const STEP = { none: 1, clue: 0, glow: -1, dance: -1, again: -1 };
+
+// How bad each outcome is, to find the worst round of a play.
+const SEVERITY = ['none', 'clue', 'glow', 'dance', 'again'];
 
 // The outcome of a round = the strongest hint step reached (logic.js hintStep names:
 // null, 'clue', 'glow', 'dance', 'again').
@@ -37,23 +43,32 @@ export function outcomeForMisses(misses) {
 // The highest difficulty step of a game's levels.
 export const maxStep = (levels) => Math.max(1, ...levels.map((l) => l.difficulty));
 
-// The new skill after a round with `outcome`.
+// The new skill after a play whose worst outcome is `outcome`.
 export function nextSkill(skill, outcome, top) {
   const delta = STEP[outcome];
   if (delta === undefined) throw new Error(`unknown outcome ${outcome}`);
   return Math.min(top, Math.max(1, skill + delta));
 }
 
-// The state after playing `level` with `outcome` (a new object; `state` is not changed).
-export function recordRound(state, level, outcome, levels) {
+// The state after one round of `level`: rounds + 1 and `seen` only (a new object).
+// The skill does not move here — see recordPlay.
+export function recordRound(state, level) {
   const s = { ...START, ...state };
-  const skill = nextSkill(s.skill, outcome, maxStep(levels));
   return {
-    skill,
-    best: Math.max(s.best, skill),
+    ...s,
     rounds: s.rounds + 1,
     seen: [...s.seen.filter((id) => id !== level.id), level.id].slice(-SEEN_MAX),
   };
+}
+
+// The state after a finished play (all its rounds' outcomes): the skill and `best` move
+// by the worst outcome. No outcomes → no change.
+export function recordPlay(state, outcomes, levels) {
+  const s = { ...START, ...state };
+  if (!outcomes.length) return s;
+  const worst = outcomes.reduce((w, o) => (SEVERITY.indexOf(o) > SEVERITY.indexOf(w) ? o : w), 'none');
+  const skill = nextSkill(s.skill, worst, maxStep(levels));
+  return { ...s, skill, best: Math.max(s.best, skill) };
 }
 
 // The next level for a player at `skill`: levels at that step first (if the step has

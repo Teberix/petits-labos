@@ -6,20 +6,26 @@
 //   ctx.path.show(container, { levels, onPlay(level), onFree })
 //       ▶ → onPlay(the next level, picked by js/progress.js at the player's skill);
 //       onFree (optional) = the game's free mode, its own button next to ▶
-//   ctx.path.record(level, strongestHint, levels)
-//       after a round: the adaptive skill moves (progress.js) and one stone is added
+//   ctx.path.record(level, outcome, levels)
+//       after each round: one stone is added; the outcome is kept (the skill does not move)
+//   ctx.path.endPlay(levels)
+//       once, after the last round of a ▶ (before show): the skill moves once, by the
+//       worst kept outcome (progress.js recordPlay). show() drops kept outcomes, so a play
+//       left early changes nothing.
 import { h } from './dom.js';
 import { t } from './i18n.js';
 import { ICONS } from './icons.js';
 import { getSkill, setSkill } from './storage.js';
-import { outcomeOf, pickLevel, recordRound } from './progress.js';
+import { pickLevel, recordPlay, recordRound } from './progress.js';
 
 // The most stones drawn: older ones scroll off the start of the path.
 export const STONES_SHOWN = 24;
 
 export function createPath(profileId, gameId) {
+  let outcomes = []; // outcomes of the current play's rounds
   return {
     show(container, { levels, onPlay, onFree }) {
+      outcomes = [];
       const rounds = getSkill(profileId, gameId)?.rounds ?? 0;
       const stones = Array.from({ length: Math.min(rounds, STONES_SHOWN) }, (_, i) => h('span', {
         class: `path-stone tone-${i % 3}`, 'aria-hidden': 'true',
@@ -37,8 +43,13 @@ export function createPath(profileId, gameId) {
         ),
       ));
     },
-    record(level, strongestHint, levels) {
-      setSkill(profileId, gameId, recordRound(getSkill(profileId, gameId), level, outcomeOf(strongestHint), levels));
+    record(level, outcome, levels) {
+      outcomes.push(outcome);
+      setSkill(profileId, gameId, recordRound(getSkill(profileId, gameId), level));
+    },
+    endPlay(levels) {
+      setSkill(profileId, gameId, recordPlay(getSkill(profileId, gameId), outcomes, levels));
+      outcomes = [];
     },
   };
 }

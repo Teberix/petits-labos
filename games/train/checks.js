@@ -331,8 +331,8 @@ export default {
     await page.locator('.path-play').waitFor({ timeout: 30000 });
     if (await page.locator('.path-stone').count() !== 3) throw new Error('expected three stones on the path');
 
-    // A fresh path, then one clean ▶ (no mistake): three trains must take the skill
-    // 1 → 3 → 5 → 7, and the next ▶ must show the step-7 level (id 8: 9 wagons, two gaps).
+    // A fresh path, then one clean ▶ (no mistake): the skill must go 1 → 2,
+    // and the next ▶ must show the step-2 level.
     await resetSkill(page);
     await playFromPath(page, kit);
     for (let n = 1; n <= 3; n++) {
@@ -346,22 +346,27 @@ export default {
     }
     await page.locator('.path-play').waitFor({ timeout: 30000 });
     const skill = await savedSkill(page);
-    if (skill !== 7) throw new Error(`3 clean trains: skill is ${skill}, expected 7`);
-    // pickLevel on the saved skill names the level ▶ will play: it must be id 8.
+    if (skill !== 2) throw new Error(`clean play: skill is ${skill}, expected 2`);
+    // pickLevel on the saved skill names the level ▶ will play: it must be id 2 (step 2).
     const picked = await page.evaluate(async () => {
       const { pickLevel } = await import('./js/progress.js');
       const { PATH_LEVELS } = await import('./games/train/levels.js');
       const state = JSON.parse(localStorage.getItem('petits-labos')).profiles[0].skills.train;
       return pickLevel(PATH_LEVELS, state).id;
     });
-    if (picked !== 8) throw new Error(`step 7: expected level 8, picked ${picked}`);
+    if (picked !== 2) throw new Error(`step 2: expected level 2, picked ${picked}`);
     await kit.tap(page, page.locator('.path-play'));
     await page.locator('.tr-tray .tr-token').first().waitFor();
     await kit.settle(page);
-    const shown = await page.evaluate(() => ({
-      cars: document.querySelectorAll('.tr-train .tr-car').length,
-      gaps: document.querySelectorAll('.tr-car.tr-gap').length,
-    }));
-    if (shown.cars !== 9 || shown.gaps !== 2) throw new Error(`step 7: expected 9 wagons, 2 gaps; got ${JSON.stringify(shown)}`);
+    await page.waitForFunction(() => document.querySelectorAll('.tr-train .tr-car').length > 0);
+
+    // Leave the ▶ after one clean train (home button): the skill must not move.
+    const { right: r2 } = await tokensFor(page);
+    await kit.drag(page, token(r2), '.tr-car.tr-gap');
+    await page.waitForFunction(() => !document.querySelector('.tr-car.tr-gap'), null, { timeout: 3000 });
+    await kit.tap(page, page.locator('.top-bar .icon-btn').first());
+    await page.waitForFunction(() => document.querySelector('#app')?.dataset.screen !== 'game');
+    const after = await savedSkill(page);
+    if (after !== 2) throw new Error(`left a play after 1 train: skill is ${after}, expected 2`);
   },
 };
