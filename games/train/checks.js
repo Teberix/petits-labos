@@ -368,5 +368,23 @@ export default {
     await page.waitForFunction(() => document.querySelector('#app')?.dataset.screen !== 'game');
     const after = await savedSkill(page);
     if (after !== 2) throw new Error(`left a play after 1 train: skill is ${after}, expected 2`);
+
+    // A new ▶ (step 2): solve the 3rd train, then leave during its celebration. The play's
+    // last train was recorded, so the skill must have moved 2 → 3.
+    await page.reload();
+    await playFromPath(page, kit);
+    for (let n = 1; n <= 3; n++) {
+      const { right } = await tokensFor(page);
+      await kit.drag(page, token(right), '.tr-car.tr-gap');
+      await page.waitForFunction(() => !document.querySelector('.tr-car.tr-gap'), null, { timeout: 3000 });
+      if (n < 3) {
+        await page.locator('.tr-car.tr-gap').first().waitFor({ timeout: 30000 });
+        await kit.settle(page);
+      }
+    }
+    await kit.tap(page, page.locator('.top-bar .icon-btn').first());
+    await page.waitForFunction(() => document.querySelector('#app')?.dataset.screen !== 'game');
+    const moved = await savedSkill(page);
+    if (moved !== 3) throw new Error(`left during the 3rd train's celebration: skill is ${moved}, expected 3`);
   },
 };

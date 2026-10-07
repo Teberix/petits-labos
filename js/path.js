@@ -3,15 +3,15 @@
 // meta.js) gets `ctx.path` from js/screens/game.js, unless the parent switch "Carte des
 // niveaux" (profile.fixedMap) brings back its fixed level map — then ctx.path is null.
 //
-//   ctx.path.show(container, { levels, onPlay(level), onFree })
+//   ctx.path.show(container, { levels, onPlay(level), onFree, roundsPerPlay })
 //       ▶ → onPlay(the next level, picked by js/progress.js at the player's skill);
-//       onFree (optional) = the game's free mode, its own button next to ▶
+//       onFree (optional) = the game's free mode, its own button next to ▶;
+//       roundsPerPlay = rounds in one ▶ (the game's constant). Drops any partial play.
 //   ctx.path.record(level, outcome, levels)
-//       after each round: one stone is added; the outcome is kept (the skill does not move)
-//   ctx.path.endPlay(levels)
-//       once, after the last round of a ▶ (before show): the skill moves once, by the
-//       worst kept outcome (progress.js recordPlay). show() drops kept outcomes, so a play
-//       left early changes nothing.
+//       after each round: one stone is added and the outcome is kept. When the play's last
+//       round is recorded (roundsPerPlay outcomes), the skill moves at once, by the worst
+//       outcome (progress.js recordPlay) — even if the child leaves during the celebration.
+//       A play left before its last round changes nothing.
 import { h } from './dom.js';
 import { t } from './i18n.js';
 import { ICONS } from './icons.js';
@@ -23,9 +23,11 @@ export const STONES_SHOWN = 24;
 
 export function createPath(profileId, gameId) {
   let outcomes = []; // outcomes of the current play's rounds
+  let perPlay = Infinity; // rounds in one play (set by show)
   return {
-    show(container, { levels, onPlay, onFree }) {
+    show(container, { levels, onPlay, onFree, roundsPerPlay }) {
       outcomes = [];
+      perPlay = roundsPerPlay;
       const rounds = getSkill(profileId, gameId)?.rounds ?? 0;
       const stones = Array.from({ length: Math.min(rounds, STONES_SHOWN) }, (_, i) => h('span', {
         class: `path-stone tone-${i % 3}`, 'aria-hidden': 'true',
@@ -45,11 +47,12 @@ export function createPath(profileId, gameId) {
     },
     record(level, outcome, levels) {
       outcomes.push(outcome);
-      setSkill(profileId, gameId, recordRound(getSkill(profileId, gameId), level));
-    },
-    endPlay(levels) {
-      setSkill(profileId, gameId, recordPlay(getSkill(profileId, gameId), outcomes, levels));
-      outcomes = [];
+      let state = recordRound(getSkill(profileId, gameId), level);
+      if (outcomes.length === perPlay) {
+        state = recordPlay(state, outcomes, levels);
+        outcomes = [];
+      }
+      setSkill(profileId, gameId, state);
     },
   };
 }

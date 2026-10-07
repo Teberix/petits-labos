@@ -60,6 +60,7 @@ function createGame(container, ctx) {
       levels: PATH_LEVELS,
       onPlay: (level) => { sfx.pop(); playLevel(level); },
       onFree: () => { sfx.pop(); playLevel(FREE); },
+      roundsPerPlay: ROUNDS_PER_PLAY,
     });
     ctx.speak(t('balance.path'));
   }
@@ -121,8 +122,8 @@ function createGame(container, ctx) {
     const play = level.cubes ? playCubeRounds : playRounds;
     if (ctx.path) {
       // Three rounds per ▶ (owner, 2026-10-05), all at the level ▶ picked; each one
-      // adds a stone; the hidden skill moves once at the end (endPlay), then the path.
-      rounds = play(ctx, level, els, () => { ctx.path.endPlay(PATH_LEVELS); showPath(); }, {
+      // adds a stone; the hidden skill moves when the 3rd is recorded (path.js), then the path.
+      rounds = play(ctx, level, els, showPath, {
         rounds: ROUNDS_PER_PLAY,
         sayIntro: sayIntro(level),
         onRound: (misses) => ctx.path.record(level, outcomeForMisses(misses), PATH_LEVELS),

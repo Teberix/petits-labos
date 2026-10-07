@@ -40,9 +40,11 @@ preview. Work on `dev`. Follow the root `CLAUDE.md` for everything not listed he
   has a free mode.
 - After each round: `ctx.path.record(level, outcomeForMisses(misses), PATH_LEVELS)` (one stone,
   the outcome is kept), and `ctx.rewards.star(el)` (one star).
-- After the last round of a ▶, once, before `showPath`: `ctx.path.endPlay(PATH_LEVELS)`.
+- Pass `roundsPerPlay` (the game's rounds-per-▶ constant) to `ctx.path.show`. There is no
+  `endPlay`: `record` moves the skill when the last round of the ▶ is recorded.
   The skill moves once per ▶, by its worst round (owner, 2026-10-07): all clean +1,
-  worst is a clue 0, worst is glow / dance / again −1. A ▶ left early changes nothing. Count the round's misses; import
+  worst is a clue 0, worst is glow / dance / again −1. A ▶ left before its last round changes nothing; a ▶
+  whose last round is recorded counts even if the child leaves during the celebration. Count the round's misses; import
   `outcomeForMisses` from `js/progress.js` (0 → none, 1 → clue, 2 → glow, 3 → dance,
   4+ → again). Never map hints by hand.
 - **Three rounds per ▶** (owner, 2026-10-05), all at the level ▶ picked, then back to
@@ -122,5 +124,5 @@ mailbox, and stop. One build step per session.
 - **`HINTS[0]` is null**: `?? 'again'` turns a perfect round into −1. Use
   `outcomeForMisses`. The offline check must assert the skill after a clean ▶ (1 → 2).
 - **Per-round steps × rounds per ▶ skip levels**: +2 per round × 3 rounds = +6 per ▶,
-  so a good player never saw steps 2–6. The skill moves once per ▶ (`endPlay`).
+  so a good player never saw steps 2–6. The skill moves once per ▶.
 - **Preview**: the `-preview.N` bump lives only on the temp branch. Never merge it.

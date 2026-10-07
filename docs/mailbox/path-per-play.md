@@ -35,3 +35,7 @@ A good player now visits steps 1…8 in order.
 
 ## Questions
 1. Should a play left early after 3 clean rounds, but before the path screen, count? (Now: no, `endPlay` is not called.)
+
+## Update (answer to Q1)
+The play counts when its last round is recorded: `record` applies `recordPlay` at `roundsPerPlay` outcomes. `endPlay` is removed; Balance and Train pass `roundsPerPlay` to `show`.
+Offline checks: 3rd round solved, then home during the celebration → skill +1 (2 → 3); left after 1 round → no change. Gates: unit 203 pass, balance, train, privacy pass; pwa-guardian PASS. Full gate not run.

@@ -116,6 +116,7 @@ function createGame(container, ctx) {
       levels: PATH_LEVELS,
       onPlay: (level) => { sfx.pop(); playLevel(level); },
       onFree: () => { sfx.pop(); playLevel(FREE); },
+      roundsPerPlay: TRAINS_PER_PLAY,
     });
     ctx.speak(t('train.path'));
   }
@@ -387,7 +388,7 @@ function createGame(container, ctx) {
       if (ctx.path) {
         // Three trains per ▶ (owner, 2026-10-05), all at the level ▶ picked.
         if (play.index < TRAINS_PER_PLAY) startTrain();
-        else { ctx.path.endPlay(PATH_LEVELS); showPath(); }
+        else showPath();
       } else if (play.index < play.level.rounds) startTrain();
       else levelDone();
     }, tuneMs + 200 + LEAVE_MS);
