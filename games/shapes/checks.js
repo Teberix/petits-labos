@@ -50,7 +50,8 @@ async function waitNextRound(page, kit, before) {
   await page.waitForFunction((b) => {
     const el = document.querySelector('.sh-pic, .sh-tg-board');
     return el && (el.dataset.picture ?? el.dataset.board) !== b && document.querySelectorAll('.sh-tray .sh-piece').length > 0
-      && !document.querySelector('.sh-tray .sh-spot');
+      && !document.querySelector('.sh-tray .sh-spot')
+      && !document.querySelector('.sticker-reveal'); // (the first star unlocks the arctic world: its reveal shows first)
   }, before, { timeout: 30_000 });
   await kit.settle(page);
 }
@@ -68,6 +69,31 @@ async function playRounds(page, kit, n) {
     await solveRound(page, kit);
     if (i < n) await waitNextRound(page, kit, before);
   }
+}
+
+// Strongest hint, not the sum: one wrong drop on each of 2 pieces in every round of a ▶
+// is a 'clue' outcome (1 miss at most per piece) → the skill stays 2 (a sum of 2 = 'glow').
+async function playClueRounds(page, kit) {
+  await setSkill(page, 2);
+  await openPath(page, kit);
+  await kit.tap(page, page.locator('.path-play'));
+  for (let r = 1; r <= 3; r++) {
+    const { pieces, holes } = await readPuzzle(page, kit);
+    const before = await pictureKey(page);
+    let wrongDrops = 0;
+    for (const q of pieces) {
+      const h = holes.find((x) => x.shape !== q.shape);
+      if (!h || wrongDrops === 2) continue;
+      await kit.drag(page, piece(q.id), hole(h.index));
+      wrongDrops++;
+    }
+    if (wrongDrops !== 2) throw new Error('strongest hint: could not make 2 wrong drops on 2 pieces');
+    await solvePuzzle(page, kit);
+    if (r < 3) await waitNextRound(page, kit, before);
+  }
+  await page.locator('.path-play').waitFor({ timeout: 30_000 });
+  const afterClues = await savedSkill(page);
+  if (afterClues !== 2) throw new Error('1 wrong drop on 2 pieces per round: skill is ' + afterClues + ', expected 2');
 }
 
 async function openMap(page, kit) {
@@ -241,6 +267,12 @@ export default {
   touch: ['.sh-level-btn', '.sh-continue', '.sh-piece'],
 
   worstCases: [
+    {
+      name: 'path: 1 wrong drop on 2 pieces per round → skill unchanged (strongest hint)',
+      async setup(page, kit) {
+        await playClueRounds(page, kit);
+      },
+    },
     {
       name: 'path screen',
       async setup(page, kit) {

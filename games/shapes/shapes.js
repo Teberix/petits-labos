@@ -112,7 +112,7 @@ function createGame(container, ctx) {
       rounds = play(ctx, level, container, showPath, {
         rounds: ROUNDS_PER_PLAY,
         sayIntro: sayIntro(level),
-        onRound: (mistakes) => ctx.path.record(level, outcomeForMisses(mistakes), PATH_LEVELS),
+        onRound: (misses) => ctx.path.record(level, outcomeForMisses(misses), PATH_LEVELS),
       });
     } else {
       rounds = play(ctx, level, container, () => levelDone(level));

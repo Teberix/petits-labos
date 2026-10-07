@@ -35,7 +35,8 @@ export const isSmallBoard = (id) => regionOf(TANGRAMS[id]).size / 4 <= 6;
 // "square 2" → "square" (the kind of big shape, for its spoken name).
 const kindOf = (outline) => outline.split(' ')[0];
 
-// Same options as playPuzzle (rounds, onRound(mistakes), sayIntro).
+// Same options as playPuzzle (rounds, sayIntro, onRound(misses) = the most wrong drops on
+// one piece in the round, the strongest hint seen).
 export function playTangram(ctx, level, container, onDone, { rounds = level.rounds, onRound, sayIntro = true } = {}) {
   const { t, sfx } = ctx;
   const remark = (text) => speak(text, ctx.lang);
@@ -114,7 +115,7 @@ export function playTangram(ctx, level, container, onDone, { rounds = level.roun
         return { id, type: pl.type, angle, spin: angle, placed: null };
       }),
       misses: 0,
-      mistakes: 0,        // wrong drops in the whole round (misses restarts at every change)
+      worst: 0,           // the highest misses reached in the round (misses restarts at every change)
       hint: { glow: null, outline: null, dance: null },
       busy: false,
     };
@@ -296,7 +297,7 @@ export function playTangram(ctx, level, container, onDone, { rounds = level.roun
 
   function wrong(p) {
     round.misses++;
-    round.mistakes++;
+    round.worst = Math.max(round.worst, round.misses);
     sfx.boing();
     const step = hintStep(round.misses);
     const oops = t(`shapes.wrong.${pickOne(3)}`);
@@ -336,7 +337,7 @@ export function playTangram(ctx, level, container, onDone, { rounds = level.roun
     remark(t('shapes.tangram.done', { a: t(`shapes.outline.${kindOf(round.board.outline)}`) }));
     restartAnimation(boardEl, 'sh-cheer');
     drawDots(index + 1);
-    onRound?.(round.mistakes);
+    onRound?.(round.worst);
     const sticker = ctx.rewards.star(boardEl);
     later(async () => {
       if (sticker) await ctx.rewards.showSticker(sticker);

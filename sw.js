@@ -138,6 +138,7 @@ const PRECACHE = [
   'js/ui.js',
   'js/updates.js',
   'js/version.js',
+  'scenes/arctic/pack.js',
   'scenes/dinosaurs/pack.js',
   'scenes/meadow/pack.js',
   'scenes/party/pack.js',

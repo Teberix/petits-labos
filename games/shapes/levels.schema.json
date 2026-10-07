@@ -9,7 +9,7 @@
     "type": { "enum": ["puzzle", "tangram"] },
     "rounds": { "type": "integer", "minimum": 1 },
     "turn": { "enum": ["one", "all"] },
-    "intro": { "type": "string", "pattern": "^shapes.intro.[a-z]+$" },
+    "intro": { "type": "string", "pattern": "^shapes\\.intro\\.[a-z]+$" },
     "pictures": { "type": "array", "minItems": 2, "items": { "type": "string" } },
     "boards": { "type": "array", "minItems": 2, "items": { "type": "string", "pattern": "^board[0-9]+$" } }
   }

@@ -3,8 +3,9 @@ export default {
   id: 'shapes',
   // Non-linguistic game → played in the app language (French by default).
   titleKey: 'shapes.title',
-  // New engine: the path screen (js/path.js). No world of its own yet (step F2).
+  // New engine: the path screen (js/path.js). Its world: the arctic.
   path: true,
+  scene: 'arctic',
   steps: 8, // difficulty steps of the path (= maxStep of its levels; a unit test checks it)
   strings: {
     fr: { 'shapes.title': 'Formes à tourner' },

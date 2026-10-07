@@ -21,7 +21,8 @@ const NEXT_MS = 2000; // the finished picture stays on screen before the next ro
 
 // Plays puzzle `level` in `container`; calls onDone() after the last round.
 // options (the path): rounds = how many rounds to play (instead of level.rounds);
-// onRound(mistakes) = called once per round, with its wrong drops, before the next one;
+// onRound(misses) = called once per round, before the next one: the most wrong drops on
+// one piece in the round (the strongest hint seen);
 // sayIntro = false skips the level's intro line.
 // Returns { stop }.
 export function playPuzzle(ctx, level, container, onDone, { rounds = level.rounds, onRound, sayIntro = true } = {}) {
@@ -207,7 +208,7 @@ export function playPuzzle(ctx, level, container, onDone, { rounds = level.round
     remark(t('shapes.puzzle.done', { a: t(pictureNameKey(round.picture)) }));
     restartAnimation(picEl, 'sh-cheer');
     drawDots(index + 1);
-    onRound?.([...round.misses.values()].reduce((a, b) => a + b, 0));
+    onRound?.(Math.max(0, ...round.misses.values()));
     // 1 star per round (it flies from the picture). Every 5th star also brings a sticker.
     const sticker = ctx.rewards.star(picEl);
     later(async () => {
