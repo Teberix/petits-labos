@@ -1,0 +1,16 @@
+{
+  "$comment": "ONE level of shapes (Formes à tourner). The pictures and tangram boards themselves stay in levels.js (PICTURES, TANGRAMS); a level lists their keys. Dev-only (never precached).",
+  "type": "object",
+  "required": ["id", "difficulty", "type", "rounds"],
+  "additionalProperties": false,
+  "properties": {
+    "id": { "type": "integer", "minimum": 1 },
+    "difficulty": { "type": "integer", "minimum": 1, "maximum": 10 },
+    "type": { "enum": ["puzzle", "tangram"] },
+    "rounds": { "type": "integer", "minimum": 1 },
+    "turn": { "enum": ["one", "all"] },
+    "intro": { "type": "string", "pattern": "^shapes.intro.[a-z]+$" },
+    "pictures": { "type": "array", "minItems": 2, "items": { "type": "string" } },
+    "boards": { "type": "array", "minItems": 2, "items": { "type": "string", "pattern": "^board[0-9]+$" } }
+  }
+}

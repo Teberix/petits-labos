@@ -35,14 +35,15 @@ export const isSmallBoard = (id) => regionOf(TANGRAMS[id]).size / 4 <= 6;
 // "square 2" → "square" (the kind of big shape, for its spoken name).
 const kindOf = (outline) => outline.split(' ')[0];
 
-export function playTangram(ctx, level, container, onDone) {
+// Same options as playPuzzle (rounds, onRound(mistakes), sayIntro).
+export function playTangram(ctx, level, container, onDone, { rounds = level.rounds, onRound, sayIntro = true } = {}) {
   const { t, sfx } = ctx;
   const remark = (text) => speak(text, ctx.lang);
   const name = (type) => t(`shapes.tpiece.${type}`);
   const timers = timerSet();
   const later = timers.later;
   // Small boards first (rounds 1–2), then big ones (owner's review, step (h)).
-  const order = boardOrder(level.boards, level.rounds, isSmallBoard);
+  const order = boardOrder(level.boards, rounds, isSmallBoard);
   let cleanups = [];
   let index = 0;
   let round = null; // { key, board, region, cols, rows, cs, ox, oy, pieces, misses, hint, busy }
@@ -113,6 +114,7 @@ export function playTangram(ctx, level, container, onDone) {
         return { id, type: pl.type, angle, spin: angle, placed: null };
       }),
       misses: 0,
+      mistakes: 0,        // wrong drops in the whole round (misses restarts at every change)
       hint: { glow: null, outline: null, dance: null },
       busy: false,
     };
@@ -134,7 +136,7 @@ export function playTangram(ctx, level, container, onDone) {
     boardEl.classList.remove('sh-cheer');
     restartAnimation(boardEl, 'sh-pop-in');
     let line = t('shapes.ask.tangram');
-    if (index === 0 && level.intro) line = `${t(level.intro)} ${line}`;
+    if (index === 0 && level.intro && sayIntro) line = `${t(level.intro)} ${line}`;
     ctx.speak(line);
   }
 
@@ -294,6 +296,7 @@ export function playTangram(ctx, level, container, onDone) {
 
   function wrong(p) {
     round.misses++;
+    round.mistakes++;
     sfx.boing();
     const step = hintStep(round.misses);
     const oops = t(`shapes.wrong.${pickOne(3)}`);
@@ -333,12 +336,13 @@ export function playTangram(ctx, level, container, onDone) {
     remark(t('shapes.tangram.done', { a: t(`shapes.outline.${kindOf(round.board.outline)}`) }));
     restartAnimation(boardEl, 'sh-cheer');
     drawDots(index + 1);
+    onRound?.(round.mistakes);
     const sticker = ctx.rewards.star(boardEl);
     later(async () => {
       if (sticker) await ctx.rewards.showSticker(sticker);
       if (stopped) return;
       index++;
-      if (index < level.rounds) start();
+      if (index < rounds) start();
       else onDone();
     }, NEXT_MS);
   }

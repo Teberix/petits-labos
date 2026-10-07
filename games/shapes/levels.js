@@ -477,34 +477,25 @@ export const TANGRAMS = {
   ] },
 };
 
-// Level fields:
+// Level fields (levels.json; checked by levels.schema.json and the gate):
 //   id         number on the level map (levels unlock in this order; progress is saved
 //              by id — never renumber)
+//   difficulty the step on the path (1 … 8; = id): js/progress.js picks a level at the
+//              child's hidden skill
 //   type       'puzzle' (levels 1–7) | 'tangram' (level 8)
-//   rounds     pictures to finish the level (5); drawn from a shuffled deck of
-//              `pictures`: no picture twice in a level when there are enough
+//   rounds     pictures to finish the level on the fixed map (5; the path plays three
+//              per ▶); drawn from a shuffled deck of `pictures`: no picture twice in a
+//              level when there are enough
 //   pictures   the level's pictures (keys of PICTURES); tangram: boards (keys of TANGRAMS)
 //   turn       'one' → exactly one piece starts turned (it fits nowhere until turned),
 //              the others already face the right way; 'all' → every piece that can
 //              be turned starts turned (only circles and squares can't)
 //   intro      (optional) extra line said at the first round (key in strings.js)
-export const LEVELS = [
-  { id: 1, type: 'puzzle', rounds: 5, turn: 'one', intro: 'shapes.intro.turn',
-    pictures: ['house', 'tree', 'iceCream', 'flower', 'fish', 'rocket'] },
-  { id: 2, type: 'puzzle', rounds: 5, turn: 'all',
-    pictures: ['car', 'sailboat', 'tower', 'cottage', 'pot', 'mushroom'] },
-  { id: 3, type: 'puzzle', rounds: 5, turn: 'all',
-    pictures: ['train', 'cat', 'bird', 'crown', 'robot', 'snail'] },
-  { id: 4, type: 'puzzle', rounds: 5, turn: 'all',
-    pictures: ['turtle', 'chalet', 'butterfly', 'cup', 'plane', 'lighthouse'] },
-  { id: 5, type: 'puzzle', rounds: 5, turn: 'all',
-    pictures: ['truck', 'duck', 'castle', 'spaceship', 'farm', 'camel'] },
-  { id: 6, type: 'puzzle', rounds: 5, turn: 'all', intro: 'shapes.intro.lookalike',
-    pictures: ['robot2', 'sun', 'bridge', 'farmhouse', 'pirate', 'tractor'] },
-  { id: 7, type: 'puzzle', rounds: 5, turn: 'all', intro: 'shapes.intro.abstract',
-    pictures: ['abstract1', 'abstract2', 'abstract3', 'abstract4', 'abstract5', 'abstract6',
-      'abstract7', 'abstract8', 'abstract9', 'abstract10', 'abstract11', 'abstract12'] },
-  { id: 8, type: 'tangram', rounds: 5, intro: 'shapes.intro.tangram',
-    boards: ['board1', 'board2', 'board3', 'board4', 'board5', 'board6',
-      'board7', 'board8', 'board9', 'board10', 'board11', 'board12'] },
-];
+// PICTURES and TANGRAMS stay in this file (the tangram boards come from the owner's
+// private script); levels.json only lists their keys.
+import data from './levels.json' with { type: 'json' };
+
+// The path's levels (parameter sets), from levels.json. There is no free mode, so the
+// fixed map shows the same levels.
+export const PATH_LEVELS = data.levels;
+export const LEVELS = PATH_LEVELS;

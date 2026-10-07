@@ -5,7 +5,73 @@ import { LEVELS, PICTURES, PICTURE_PX, MIN_PIECE_PX, TANGRAMS } from './levels.j
 import { tapsToFit } from './logic.js';
 import { regionOf, trianglesOf, centroid, solve, snap, key, distinctAngles } from './grid.js';
 
+// The level cases use the fixed level map (parent switch "Carte des niveaux"): the test
+// profile gets fixedMap, then the page reloads (the app reads the save at start).
+async function useFixedMap(page) {
+  await page.waitForFunction(() => JSON.parse(localStorage.getItem('petits-labos') ?? 'null')?.profiles?.length > 0);
+  await page.evaluate(() => {
+    const data = JSON.parse(localStorage.getItem('petits-labos'));
+    data.profiles[0].fixedMap = true;
+    localStorage.setItem('petits-labos', JSON.stringify(data));
+  });
+  await page.reload();
+}
+
+// The path (new engine): the game opens on it; ▶ plays three rounds.
+async function openPath(page, kit) {
+  await kit.openGame(page, 'shapes');
+  await page.locator('.path-play').waitFor({ timeout: 30_000 });
+  await kit.settle(page);
+}
+
+const savedSkill = (page) => page.evaluate(() =>
+  JSON.parse(localStorage.getItem('petits-labos')).profiles[0].skills?.shapes?.skill);
+
+// Puts the saved path skill at `skill` (null = a fresh path), then reloads.
+async function setSkill(page, skill) {
+  await page.evaluate((n) => {
+    const data = JSON.parse(localStorage.getItem('petits-labos'));
+    data.profiles[0].skills ??= {};
+    if (n === null) delete data.profiles[0].skills.shapes;
+    else data.profiles[0].skills.shapes = { skill: n };
+    localStorage.setItem('petits-labos', JSON.stringify(data));
+  }, skill);
+  await page.reload();
+}
+
+// Plays one round on screen, whatever its type (picture or tangram board), cleanly.
+async function solveRound(page, kit) {
+  if (await page.locator('.sh-tg-board').count()) await solveBoard(page, kit, await readBoard(page, kit));
+  else await solvePuzzle(page, kit);
+}
+
+// Waits for the next round of the same ▶ (a different picture / board).
+async function waitNextRound(page, kit, before) {
+  await page.waitForFunction((b) => {
+    const el = document.querySelector('.sh-pic, .sh-tg-board');
+    return el && (el.dataset.picture ?? el.dataset.board) !== b && document.querySelectorAll('.sh-tray .sh-piece').length > 0
+      && !document.querySelector('.sh-tray .sh-spot');
+  }, before, { timeout: 30_000 });
+  await kit.settle(page);
+}
+
+// Plays `n` clean rounds of the ▶ now on screen (the last one ends back on the path
+// only when n is 3: the caller waits for it).
+async function playRounds(page, kit, n) {
+  for (let i = 1; i <= n; i++) {
+    await page.locator('.sh-tray .sh-piece').first().waitFor({ timeout: 30_000 });
+    await kit.settle(page);
+    const before = await page.evaluate(() => {
+      const el = document.querySelector('.sh-pic, .sh-tg-board');
+      return el.dataset.picture ?? el.dataset.board;
+    });
+    await solveRound(page, kit);
+    if (i < n) await waitNextRound(page, kit, before);
+  }
+}
+
 async function openMap(page, kit) {
+  await useFixedMap(page);
   await kit.openGame(page, 'shapes');
   // Wait for shapes.css (loaded when the game mounts): before it applies, the level
   // buttons aren't where they end up, and a tap can land next to them. This includes
@@ -175,6 +241,24 @@ export default {
   touch: ['.sh-level-btn', '.sh-continue', '.sh-piece'],
 
   worstCases: [
+    {
+      name: 'path screen',
+      async setup(page, kit) {
+        await openPath(page, kit);
+        if (!(await page.locator('.path-play').count())) throw new Error('no ▶ button');
+      },
+    },
+    {
+      name: 'path: one round at step 1',
+      async setup(page, kit) {
+        await openPath(page, kit);
+        await kit.tap(page, page.locator('.path-play'));
+        await page.locator('.sh-tray .sh-piece').first().waitFor({ timeout: 30_000 });
+        await kit.settle(page);
+        if (await page.locator('.sh-dot').count() !== 3) throw new Error('expected 3 progress dots on the path');
+        await checkFrame(page);
+      },
+    },
     {
       name: 'level map (all levels)',
       async setup(page, kit) {
@@ -385,6 +469,41 @@ export default {
   // Level 1: a wrong drop → no star, the piece stays; the whole picture → one star;
   // then the next picture.
   async offline(page, kit) {
+    // The path: a fresh path, one clean ▶ (3 rounds) → skill 1 → 2, ▶ then picks level 2.
+    await openPath(page, kit);
+    await setSkill(page, null);
+    await openPath(page, kit);
+    await kit.tap(page, page.locator('.path-play'));
+    await playRounds(page, kit, 3);
+    await page.locator('.path-play').waitFor({ timeout: 30_000 });
+    if (await page.locator('.path-stone').count() !== 3) throw new Error('expected three stones on the path');
+    const skill = await savedSkill(page);
+    if (skill !== 2) throw new Error('clean play: skill is ' + skill + ', expected 2');
+    const picked = await page.evaluate(async () => {
+      const { pickLevel } = await import('./js/progress.js');
+      const { PATH_LEVELS } = await import('./games/shapes/levels.js');
+      const state = JSON.parse(localStorage.getItem('petits-labos')).profiles[0].skills.shapes;
+      return pickLevel(PATH_LEVELS, state).id;
+    });
+    if (picked !== 2) throw new Error('step 2: expected level 2, picked ' + picked);
+
+    // Leave after one round: the skill must not move.
+    await kit.tap(page, page.locator('.path-play'));
+    await playRounds(page, kit, 1);
+    await kit.tap(page, page.locator('.top-bar .icon-btn').first());
+    await page.waitForFunction(() => document.querySelector('#app')?.dataset.screen !== 'game');
+    const after = await savedSkill(page);
+    if (after !== 2) throw new Error('left after 1 round: skill is ' + after + ', expected 2');
+
+    // Step 8 (tangram): one ▶ plays three boards, back on the path.
+    await setSkill(page, 8);
+    await openPath(page, kit);
+    await kit.tap(page, page.locator('.path-play'));
+    await page.locator('.sh-tg-board[data-board]').waitFor({ timeout: 30_000 });
+    await playRounds(page, kit, 3);
+    await page.locator('.path-play').waitFor({ timeout: 30_000 });
+
+    // The fixed map: level 1, wrong drop → no star, picture → one star, next picture.
     await openLevel(page, kit, 1);
     const before = await savedStars(page);
     const { pieces, holes } = await readPuzzle(page, kit);

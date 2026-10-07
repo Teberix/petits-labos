@@ -1,13 +1,15 @@
 // "Formes & Silhouettes" — shapes, silhouettes, turning pieces, mirror symmetry.
 //
-// Flow: level map → level (5 rounds) → level done → map.
+// Flow: path (▶ = 3 rounds at the level the path picks) or, with the parent's fixed
+//       map, level map → level (5 rounds) → level done → map.
 // Files: levels.js (shapes, objects, pictures, mirror patterns, levels), logic.js (pure
 //        logic, tested), puzzle.js (picture puzzles, levels 1–7), tangram.js + grid.js
 //        (level 8), common.js (small helpers), strings.js, art.js, geometry.js,
 //        shapes.css.
 import { h } from '../../js/dom.js';
 import { addStrings } from '../../js/i18n.js';
-import { LEVELS } from './levels.js';
+import { outcomeForMisses } from '../../js/progress.js';
+import { LEVELS, PATH_LEVELS } from './levels.js';
 import { playPuzzle } from './puzzle.js';
 import { playTangram } from './tangram.js';
 import { restartAnimation } from './common.js';
@@ -24,6 +26,8 @@ function loadStylesheet() {
   }));
 }
 
+const ROUNDS_PER_PLAY = 3; // path: rounds per ▶ (each one = one stone + one star)
+
 function createGame(container, ctx) {
   const { t, sfx } = ctx;
   let rounds = null; // the level being played ({ stop }), or null on the map
@@ -34,10 +38,34 @@ function createGame(container, ctx) {
   }
 
   // ---------- Progress (saved per player) ----------
-  // { completed: [level ids] }
+  // { completed: [level ids] (fixed map), heard: [level ids whose intro was said] }
+  // (`heard` is new with the path; older saves simply don't have it.)
 
   function progress() {
-    return { completed: [], ...ctx.load() };
+    return { completed: [], heard: [], ...ctx.load() };
+  }
+
+  // ---------- Path (new engine) ----------
+
+  function showPath() {
+    stopLevel();
+    ctx.path.show(container, {
+      levels: PATH_LEVELS,
+      onPlay: (level) => { sfx.pop(); playLevel(level); },
+      roundsPerPlay: ROUNDS_PER_PLAY,
+    });
+    ctx.speak(t('shapes.path'));
+  }
+
+  // Does this level's intro get said now? On the fixed map: at its first round (the
+  // play functions do that). On the path: once per level, the first time it is picked.
+  function sayIntro(level) {
+    if (!ctx.path) return true;
+    const p = progress();
+    if (p.heard.includes(level.id)) return false;
+    p.heard.push(level.id);
+    ctx.save(p);
+    return true;
   }
 
   function isUnlocked(index) {
@@ -78,7 +106,17 @@ function createGame(container, ctx) {
   function playLevel(level) {
     stopLevel();
     const play = { puzzle: playPuzzle, tangram: playTangram }[level.type];
-    rounds = play(ctx, level, container, () => levelDone(level));
+    if (ctx.path) {
+      // Three rounds per ▶, all at the level ▶ picked; each one adds a stone and a star;
+      // the hidden skill moves when the 3rd is recorded (js/path.js), then back to the path.
+      rounds = play(ctx, level, container, showPath, {
+        rounds: ROUNDS_PER_PLAY,
+        sayIntro: sayIntro(level),
+        onRound: (mistakes) => ctx.path.record(level, outcomeForMisses(mistakes), PATH_LEVELS),
+      });
+    } else {
+      rounds = play(ctx, level, container, () => levelDone(level));
+    }
   }
 
   // ---------- Level complete ----------
@@ -100,7 +138,7 @@ function createGame(container, ctx) {
   }
 
   return {
-    start: showLevels,
+    start: () => (ctx.path ? showPath() : showLevels()),
     destroy() {
       stopLevel();
       container.replaceChildren();

@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "game": "shapes",
+  "levels": [
+    {"id":1,"difficulty":1,"type":"puzzle","rounds":5,"turn":"one","intro":"shapes.intro.turn","pictures":["house","tree","iceCream","flower","fish","rocket"]},
+    {"id":2,"difficulty":2,"type":"puzzle","rounds":5,"turn":"all","pictures":["car","sailboat","tower","cottage","pot","mushroom"]},
+    {"id":3,"difficulty":3,"type":"puzzle","rounds":5,"turn":"all","pictures":["train","cat","bird","crown","robot","snail"]},
+    {"id":4,"difficulty":4,"type":"puzzle","rounds":5,"turn":"all","pictures":["turtle","chalet","butterfly","cup","plane","lighthouse"]},
+    {"id":5,"difficulty":5,"type":"puzzle","rounds":5,"turn":"all","pictures":["truck","duck","castle","spaceship","farm","camel"]},
+    {"id":6,"difficulty":6,"type":"puzzle","rounds":5,"turn":"all","intro":"shapes.intro.lookalike","pictures":["robot2","sun","bridge","farmhouse","pirate","tractor"]},
+    {"id":7,"difficulty":7,"type":"puzzle","rounds":5,"turn":"all","intro":"shapes.intro.abstract","pictures":["abstract1","abstract2","abstract3","abstract4","abstract5","abstract6","abstract7","abstract8","abstract9","abstract10","abstract11","abstract12"]},
+    {"id":8,"difficulty":8,"type":"tangram","rounds":5,"intro":"shapes.intro.tangram","boards":["board1","board2","board3","board4","board5","board6","board7","board8","board9","board10","board11","board12"]}
+  ]
+}

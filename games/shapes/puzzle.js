@@ -20,8 +20,11 @@ import { cap, nearestFirst, pickOne, restartAnimation, timerSet } from './common
 const NEXT_MS = 2000; // the finished picture stays on screen before the next round
 
 // Plays puzzle `level` in `container`; calls onDone() after the last round.
+// options (the path): rounds = how many rounds to play (instead of level.rounds);
+// onRound(mistakes) = called once per round, with its wrong drops, before the next one;
+// sayIntro = false skips the level's intro line.
 // Returns { stop }.
-export function playPuzzle(ctx, level, container, onDone) {
+export function playPuzzle(ctx, level, container, onDone, { rounds = level.rounds, onRound, sayIntro = true } = {}) {
   const { t, sfx } = ctx;
   const remark = (text) => speak(text, ctx.lang); // a reaction: the repeat button keeps the question
   const name = (shape) => t(`shapes.shape.${shape}`);
@@ -30,7 +33,7 @@ export function playPuzzle(ctx, level, container, onDone) {
   let cleanups = [];
   let index = 0;     // rounds played in this level
   let round = null;  // logic.js makeRound() + { filled, misses, spins, glow, dance, busy }
-  const order = roundOrder(level.pictures, level.rounds); // this level's pictures, in order
+  const order = roundOrder(level.pictures, rounds); // this level's pictures, in order
   let stopped = false;
   let finger = null; // where the finger is (nearestFirst)
 
@@ -72,7 +75,7 @@ export function playPuzzle(ctx, level, container, onDone) {
     picEl.classList.remove('sh-cheer'); // (it would win over the pop-in: later CSS rule)
     restartAnimation(picEl, 'sh-pop-in');
     let line = t('shapes.ask.puzzle');
-    if (index === 0 && level.intro) line = `${t(level.intro)} ${line}`;
+    if (index === 0 && level.intro && sayIntro) line = `${t(level.intro)} ${line}`;
     ctx.speak(line);
   }
 
@@ -204,13 +207,14 @@ export function playPuzzle(ctx, level, container, onDone) {
     remark(t('shapes.puzzle.done', { a: t(pictureNameKey(round.picture)) }));
     restartAnimation(picEl, 'sh-cheer');
     drawDots(index + 1);
+    onRound?.([...round.misses.values()].reduce((a, b) => a + b, 0));
     // 1 star per round (it flies from the picture). Every 5th star also brings a sticker.
     const sticker = ctx.rewards.star(picEl);
     later(async () => {
       if (sticker) await ctx.rewards.showSticker(sticker);
       if (stopped) return; // (the player left during the sticker)
       index++;
-      if (index < level.rounds) start();
+      if (index < rounds) start();
       else onDone();
     }, NEXT_MS);
   }
