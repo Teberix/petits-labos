@@ -33,3 +33,34 @@ Pictures and tangram boards stay in `levels.js`. `levels.json` lists their keys.
 ### Questions
 
 1. Run the 7-size layout now, or in F2?
+
+## F2 — arctic world, strongest-hint outcome
+
+Model: Sonnet 5.5. Usage: about 130k tokens (over the 110k limit, so no preview). Full-gate runs: 2 × `--game shapes` at 7 sizes (the first failed: offline() passed 60 s).
+
+**Done**
+- The path outcome is now the strongest hint on one piece in the round (`puzzle.js`: max of `round.misses`; `tangram.js`: `round.worst`). Option comments updated.
+- `levels.schema.json`: dots in the intro pattern are escaped.
+- Pack `arctic` (18 items, igloo = gift), registered, `meta.js` `scene: 'arctic'`, PRECACHE refreshed (112 files).
+- `checks.js`: the next-round wait also waits for the reveal. New worst case: 1 wrong drop on 2 pieces in each round of a ▶ keeps skill 2. A sum would give 'glow' and lower the skill.
+- Contact sheet: `docs/mailbox/game-08-migrated-f2.png` (360×640).
+
+**Gate tail**
+```
+✓ layout   84 screens checked (578s)
+✓ offline  111 files precached, 1/1 games played offline (52s)
+GATE PASSED (631s)
+```
+Unit tests (shapes, packs): 39 pass. Privacy: PASS.
+
+**kid-ux-reviewer (Haiku):** PASS. White-on-white is safe on all 3 grounds. Stroke widths under 6 px on small details: husky nose 2.5, walrus tusks, puffin beak and feet 3.5.
+
+**Risks**
+- The puffin looks like a penguin on the sheet (dark body, white belly). The party pack has a penguin. The reviewer disagreed. Check by eye.
+- The contact-sheet path and tangram screens look incomplete. The right image shows an empty board. Not re-taken (budget).
+- Thin strokes above. Not changed.
+- No preview built. `preview.13` is still to do.
+
+**Questions**
+1. Redraw the puffin (orange body stripes, bigger beak), or keep it?
+2. Build `0.9.0-preview.13` in the next session?
