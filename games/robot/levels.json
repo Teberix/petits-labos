@@ -5,6 +5,7 @@
     {
       "id": 1,
       "difficulty": 1,
+      "note": "Straight lines on a 3×3 grid, 2 moves.",
       "cards": ["up","down","left","right"],
       "slots": 4,
       "shuffle": true,
@@ -20,6 +21,7 @@
     {
       "id": 2,
       "difficulty": 2,
+      "note": "Corners on a 4×4 grid.",
       "cards": ["up","down","left","right"],
       "slots": 7,
       "shuffle": true,
@@ -35,6 +37,7 @@
     {
       "id": 3,
       "difficulty": 3,
+      "note": "Rocks to go around, 5×5 grid.",
       "cards": ["up","down","left","right"],
       "slots": 10,
       "shuffle": true,
@@ -49,6 +52,7 @@
     {
       "id": 4,
       "difficulty": 4,
+      "note": "Pick up a star on the way (4×4).",
       "cards": ["up","down","left","right"],
       "slots": 8,
       "intro": "robot.intro.stars",
@@ -64,6 +68,7 @@
     {
       "id": 5,
       "difficulty": 5,
+      "note": "Two stars and rocks (5×5).",
       "cards": ["up","down","left","right"],
       "slots": 10,
       "shuffle": true,
@@ -71,12 +76,15 @@
       "puzzles": [
         { "map": ["R . # . .",". * # . .",". . . . .",". . # * .",". . # . G"] },
         { "map": [". . . . .",". # * # .","R . . . G",". # * # .",". . . . ."] },
-        { "map": ["G . . . .","# # * # .",". . . . .",". # * # #",". . . . R"] }
+        { "map": ["G . . . .","# # * # .",". . . . .",". # * # #",". . . . R"] },
+        { "map": [". . R . *",". . . . #","G . * # .",". . . # .",". . # . #"] },
+        { "map": ["* . . . #",". . R . .","# . # . .","# . * . .","# # G . ."] }
       ]
     },
     {
       "id": 6,
       "difficulty": 6,
+      "note": "Loops! One \"repeat\" block does the whole straight line.",
       "cards": ["up","down","left","right","repeat"],
       "slots": 2,
       "intro": "robot.intro.repeat",
@@ -93,6 +101,7 @@
     {
       "id": 7,
       "difficulty": 7,
+      "note": "A loop and one arrow.",
       "cards": ["up","down","left","right","repeat"],
       "slots": 4,
       "shuffle": true,
@@ -107,6 +116,7 @@
     {
       "id": 8,
       "difficulty": 8,
+      "note": "Two loops (an L-shaped path).",
       "cards": ["up","down","left","right","repeat"],
       "slots": 5,
       "shuffle": true,
@@ -121,6 +131,7 @@
     {
       "id": 9,
       "difficulty": 9,
+      "note": "Loops around rocks, with stars on the way.",
       "cards": ["up","down","left","right","repeat"],
       "slots": 8,
       "shuffle": true,

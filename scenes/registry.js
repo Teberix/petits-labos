@@ -7,9 +7,11 @@
 import meadow from './meadow/pack.js';
 import dinosaurs from './dinosaurs/pack.js';
 import party from './party/pack.js';
+import space from './space/pack.js';
 
 export const PACKS = [
   meadow,
   dinosaurs,
   party,
+  space,
 ];

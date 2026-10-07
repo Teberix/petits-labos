@@ -138,9 +138,11 @@ export default {
     for (let n = 1; n <= 3; n++) {
       await solveClean(page, kit);
       if (n < 3) {
-        // The next puzzle: robot calm again, strip empty.
-        await page.waitForFunction(() => document.querySelector('.rb-robot')?.dataset.mood !== 'happy'
-          && !document.querySelector('.rb-strip > .rb-item'), null, { timeout: 15000 });
+        // The next puzzle: robot calm again, strip empty. The first star unlocks the space
+        // world: its reveal (closes by itself after ~5 s) shows first — wait for it to be gone.
+        await page.waitForFunction(() => !document.querySelector('.sticker-reveal')
+          && document.querySelector('.rb-robot')?.dataset.mood !== 'happy'
+          && !document.querySelector('.rb-strip > .rb-item'), null, { timeout: 30000 });
       }
     }
     await page.locator('.path-play').waitFor({ timeout: 30000 });

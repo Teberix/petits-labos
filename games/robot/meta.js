@@ -3,8 +3,9 @@ export default {
   id: 'robot',
   // Non-linguistic game → played in the app language (French by default).
   titleKey: 'robot.title',
-  // New engine: the path screen (js/path.js). The world comes in step R2.
+  // New engine: the path screen (js/path.js). The world: space.
   path: true,
+  scene: 'space',
   steps: 9, // difficulty steps of the path (= maxStep of its levels; a unit test checks it)
   strings: {
     fr: { 'robot.title': 'Robot Codeur' },

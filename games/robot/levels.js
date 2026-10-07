@@ -19,7 +19,7 @@
 //   free      true → free mode: the child builds the grid, then programs it
 //             (no puzzles, no stars; done after the first success). Only in FREE below.
 //
-// The puzzles are committed output (their generator is in the owner's private repo).
+// The puzzles are hand-made, in levels.json (`note` = a one-line description of each level).
 // tests/robot.test.mjs and games/robot/solver.mjs check that every puzzle can be solved
 // within its slots, and that loop levels really need the repeat card. The fewest cards
 // for the bonus star are computed by the solver in program.js — never write them here.
