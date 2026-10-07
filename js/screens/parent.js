@@ -184,7 +184,7 @@ export function render(root, params, app) {
       h('p', { class: 'hint' }, t('fixedMapHint')),
       // reset difficulty: one button per game on the path (new engine), with the step reached
       existing && GAMES.filter((g) => g.path).map((g) => h('div', { class: 'reset-skill' },
-        h('p', { class: 'hint' }, t('stepReached', { n: getSkill(id, g.id)?.best ?? 1, max: g.steps })),
+        h('p', { class: 'hint' }, t('stepReached', { n: getSkill(id, g.id)?.skill ?? 1, max: g.steps })),
         h('button', {
           class: 'btn reset-skill-btn', type: 'button', onclick: () => go({ name: 'confirmSkill', id, gameId: g.id }),
         }, t('resetSkill', { game: t(g.titleKey) })))),

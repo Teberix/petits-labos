@@ -31,7 +31,7 @@ export default {
   pathFree: 'Free play',
   fixedMap: 'Level map',
   fixedMapHint: "No: ▶ picks the difficulty from the child’s successes. Yes: numbered levels, unlocked in order.",
-  stepReached: 'Step reached: {n} of {max}',
+  stepReached: 'Current step: {n} of {max}',
   resetSkill: 'Start {game} over',
   confirmResetSkill: 'Start over for {name}: {game}? The difficulty and the level map start again. The path’s stones stay.',
   yesResetSkill: 'Yes, start over',

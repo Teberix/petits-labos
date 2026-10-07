@@ -31,7 +31,7 @@ export default {
   pathFree: 'Juego libre',
   fixedMap: 'Mapa de niveles',
   fixedMapHint: "No: ▶ elige la dificultad según los aciertos del niño. Sí: niveles numerados, desbloqueados en orden.",
-  stepReached: 'Etapa alcanzada: {n} de {max}',
+  stepReached: 'Etapa actual: {n} de {max}',
   resetSkill: 'Volver a empezar {game}',
   confirmResetSkill: '¿Volver al inicio para {name}: {game}? La dificultad y el mapa de niveles empiezan de nuevo. Las piedras del camino se quedan.',
   yesResetSkill: 'Sí, volver a empezar',

@@ -10,6 +10,7 @@
 2. Parent screen: help line under "Carte des niveaux"; "Étape atteinte : {n} sur {max}" per path game; reset button "Remettre {game} au départ"; confirm "Oui, remettre au départ". `steps` added to balance and train `meta.js`; unit tests check `meta.steps === maxStep(PATH_LEVELS)`.
 3. Doubled blank lines removed in `balance.js` and `train.js`.
 4. Preview: 0.9.0-preview.9 (preview.8 was live).
+5. Parent step line shows the current step (`skill`), not the best one. Text: "Étape actuelle : {n} sur {max}" (fr/es/en). Not in a preview yet.
 
 ## Gate tail
 - Unit (balance, train, progress): 55 pass, 0 fail.

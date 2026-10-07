@@ -31,7 +31,7 @@ export default {
   pathFree: 'Jeu libre',
   fixedMap: 'Carte des niveaux',
   fixedMapHint: "Non : ▶ choisit la difficulté selon les réussites de l’enfant. Oui : niveaux numérotés, débloqués dans l’ordre.",
-  stepReached: 'Étape atteinte : {n} sur {max}',
+  stepReached: 'Étape actuelle : {n} sur {max}',
   resetSkill: 'Remettre {game} au départ',
   confirmResetSkill: 'Remettre au départ pour {name} : {game} ? La difficulté et la carte des niveaux recommencent. Les pierres du chemin restent.',
   yesResetSkill: 'Oui, remettre au départ',
