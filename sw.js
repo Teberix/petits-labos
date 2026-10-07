@@ -79,6 +79,7 @@ const PRECACHE = [
   'games/registry.js',
   'games/robot/art.js',
   'games/robot/levels.js',
+  'games/robot/levels.json',
   'games/robot/meta.js',
   'games/robot/program.js',
   'games/robot/robot.css',

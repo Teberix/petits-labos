@@ -4,6 +4,7 @@
 export default {
   fr: {
     'robot.chooseLevel': 'Choisis un niveau !',
+    'robot.path': 'Appuie sur le bouton pour programmer le robot !',
     'robot.ask.1': 'Aide le robot à retourner à sa station !',
     'robot.ask.2': 'Le robot a besoin de recharger ses piles ! Montre-lui le chemin.',
     'robot.ask.3': 'Bip bip ! Où est ma station ? Programme-moi !',
@@ -46,6 +47,7 @@ export default {
   },
   es: {
     'robot.chooseLevel': '¡Elige un nivel!',
+    'robot.path': '¡Pulsa el botón para programar el robot!',
     'robot.ask.1': '¡Ayuda al robot a volver a su estación!',
     'robot.ask.2': '¡El robot necesita cargar sus pilas! Muéstrale el camino.',
     'robot.ask.3': '¡Bip bip! ¿Dónde está mi estación? ¡Prográmame!',
@@ -88,6 +90,7 @@ export default {
   },
   en: {
     'robot.chooseLevel': 'Pick a level!',
+    'robot.path': 'Press the button to program the robot!',
     'robot.ask.1': 'Help the robot get back to its charging station!',
     'robot.ask.2': 'The robot needs to recharge! Show it the way.',
     'robot.ask.3': 'Beep beep! Where is my station? Program me!',

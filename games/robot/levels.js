@@ -1,6 +1,7 @@
-// "Robot Codeur" levels — edit this file to add or change levels; no game logic here.
+// "Robot Codeur" levels — the puzzles live in levels.json (edit it to add or change
+// levels); only FREE mode and the lists the game uses live here. No game logic here.
 //
-// Level fields:
+// Path level fields (levels.json; `difficulty` = the step on the path, 1…9 = the id):
 //   id        number shown on the level map (levels unlock in this order; progress is
 //             saved by id, so never renumber an existing level)
 //   cards     the cards in the palette: 'up' 'down' 'left' 'right', and 'repeat'
@@ -11,266 +12,33 @@
 //             without any words.
 //   intro     (optional) extra line said at the first puzzle (key in strings.js)
 //   shuffle   play the puzzles in random order
-//   pick      play only this many puzzles (after shuffling) — keeps replays fresh
+//   pick      fixed map only: play this many puzzles (after shuffling). On the path a
+//             ▶ plays 3 puzzles (ROUNDS_PER_PLAY in robot.js), never the same one twice.
 //   puzzles   the grids, drawn as text rows, all rows the same length (max 5×5):
 //               R robot   G charging station   # rock   * star   . empty
 //   free      true → free mode: the child builds the grid, then programs it
-//             (no puzzles, no stars; done after the first success)
+//             (no puzzles, no stars; done after the first success). Only in FREE below.
 //
-// tests/robot.test.mjs checks that every puzzle can be solved within its slots, and
-// that loop levels really need the repeat card. The fewest cards for the bonus star
-// are computed by the solver in program.js — never write them here.
+// The puzzles are committed output (their generator is in the owner's private repo).
+// tests/robot.test.mjs and games/robot/solver.mjs check that every puzzle can be solved
+// within its slots, and that loop levels really need the repeat card. The fewest cards
+// for the bonus star are computed by the solver in program.js — never write them here.
+import data from './levels.json' with { type: 'json' };
 
 const ARROWS = ['up', 'down', 'left', 'right'];
 const WITH_REPEAT = [...ARROWS, 'repeat'];
 
-export const LEVELS = [
-  {
-    id: 1, // Straight lines on a 3×3 grid, 2 moves.
-    cards: ARROWS,
-    slots: 4,
-    shuffle: true,
-    pick: 4,
-    puzzles: [
-      { map: ['R . G',
-              '. . .',
-              '. . .'] },
-      { map: ['R . .',
-              '. . .',
-              'G . .'] },
-      { map: ['. . .',
-              '. . .',
-              'G . R'] },
-      { map: ['. . G',
-              '. . .',
-              '. . R'] },
-      { map: ['. . .',
-              'R . G',
-              '. . .'] },
-    ],
-  },
-  {
-    id: 2, // Corners on a 4×4 grid.
-    cards: ARROWS,
-    slots: 7,
-    shuffle: true,
-    pick: 4,
-    puzzles: [
-      { map: ['R . . .',
-              '. . . .',
-              '. . . G',
-              '. . . .'] },
-      { map: ['. . . .',
-              'G . . .',
-              '. . . .',
-              '. . R .'] },
-      { map: ['. . . R',
-              '. . . .',
-              '. . . .',
-              'G . . .'] },
-      { map: ['. G . .',
-              '. . . .',
-              '. . . .',
-              '. . . R'] },
-      { map: ['R . . .',
-              '. . . .',
-              '. . . .',
-              '. . G .'] },
-    ],
-  },
-  {
-    id: 3, // Rocks to go around, 5×5 grid.
-    cards: ARROWS,
-    slots: 10,
-    shuffle: true,
-    pick: 3,
-    puzzles: [
-      { map: ['R . # . G',
-              '. . # . .',
-              '. . . . .',
-              '. . . . .',
-              '. . . . .'] },
-      { map: ['. . R . .',
-              '. # # # .',
-              '. . G . .',
-              '. . . . .',
-              '. . . . .'] },
-      { map: ['. . . . .',
-              'R # . . .',
-              '. # . # .',
-              '. . . # G',
-              '. . . . .'] },
-      { map: ['. . . . .',
-              '. . # . .',
-              'R . # . G',
-              '. . # . .',
-              '. . . . .'] },
-    ],
-  },
-  {
-    id: 4, // Pick up a star on the way (4×4).
-    cards: ARROWS,
-    slots: 8,
-    intro: 'robot.intro.stars',
-    shuffle: true,
-    pick: 3,
-    puzzles: [
-      { map: ['R . . .',
-              '. . * .',
-              '. . . .',
-              '. . . G'] },
-      { map: ['. . . .',
-              'R . . G',
-              '. . . .',
-              '. * . .'] },
-      { map: ['G . . .',
-              '. . * .',
-              '. . . .',
-              'R . . .'] },
-      { map: ['. . . .',
-              '. * . .',
-              '. . . .',
-              'R . . G'] },
-    ],
-  },
-  {
-    id: 5, // Two stars and rocks (5×5).
-    cards: ARROWS,
-    slots: 10,
-    shuffle: true,
-    pick: 3,
-    puzzles: [
-      { map: ['R . # . .',
-              '. * # . .',
-              '. . . . .',
-              '. . # * .',
-              '. . # . G'] },
-      { map: ['. . . . .',
-              '. # * # .',
-              'R . . . G',
-              '. # * # .',
-              '. . . . .'] },
-      { map: ['G . . . .',
-              '# # * # .',
-              '. . . . .',
-              '. # * # #',
-              '. . . . R'] },
-    ],
-  },
-  {
-    id: 6, // Loops! One "repeat" block does the whole straight line.
-    cards: WITH_REPEAT,
-    slots: 2,
-    intro: 'robot.intro.repeat',
-    shuffle: true,
-    pick: 4,
-    puzzles: [
-      { map: ['R . . . G',
-              '. . . . .',
-              '. . . . .'] },
-      { map: ['R . .',
-              '. . .',
-              '. . .',
-              'G . .',
-              '. . .'] },
-      { map: ['. . . . .',
-              'G . . . R',
-              '. . . . .'] },
-      { map: ['. . . G .',
-              '. . . . .',
-              '. . . . .',
-              '. . . . .',
-              '. . . R .'] },
-      { map: ['. . . . .',
-              '. R . . G',
-              '. . . . .'] },
-    ],
-  },
-  {
-    id: 7, // A loop and one arrow.
-    cards: WITH_REPEAT,
-    slots: 4,
-    shuffle: true,
-    pick: 3,
-    puzzles: [
-      { map: ['R . . . .',
-              '. . . . G',
-              '. . . . .'] },
-      { map: ['. . . . .',
-              '. . . . .',
-              'G . . . .',
-              '. . . . R'] },
-      { map: ['. R . . .',
-              '. . . . .',
-              '. . . . .',
-              '. . . . .',
-              'G . . . .'] },
-      { map: ['. . . . G',
-              '. . . . .',
-              '. . . . .',
-              '. . . . .',
-              '. . . R .'] },
-    ],
-  },
-  {
-    id: 8, // Two loops (an L-shaped path).
-    cards: WITH_REPEAT,
-    slots: 5,
-    shuffle: true,
-    pick: 3,
-    puzzles: [
-      { map: ['R . . . .',
-              '. . . . .',
-              '# . . . .',
-              '. . . . G',
-              '. . . . .'] },
-      { map: ['. . . . R',
-              '. . . . .',
-              '. . . . .',
-              '. . . . .',
-              'G . . . .'] },
-      { map: ['. . . . .',
-              'G . . . .',
-              '. . . . .',
-              '. . . . #',
-              '. . . R .'] },
-      { map: ['. . . . .',
-              'G . . . .',
-              '. . . . .',
-              '. . . . .',
-              '. . . . R'] },
-    ],
-  },
-  {
-    id: 9, // Loops around rocks, with stars on the way.
-    cards: WITH_REPEAT,
-    slots: 8,
-    shuffle: true,
-    pick: 3,
-    puzzles: [
-      { map: ['R . . . *',
-              '# # # # .',
-              'G . . . .'] },
-      { map: ['R # . . G',
-              '. # . . .',
-              '. # . . .',
-              '. # . . .',
-              '. . . . *'] },
-      { map: ['* . . . R',
-              '. # # # #',
-              '. . . . G'] },
-      { map: ['R # G',
-              '. # .',
-              '. # .',
-              '. # .',
-              '. . *'] },
-    ],
-  },
-  {
-    id: 10, // Free mode: build your own grid, then program the robot.
-    free: true,
-    cards: WITH_REPEAT,
-    slots: 8,
-    intro: 'robot.intro.free',
-  },
-];
+export const PATH_LEVELS = data.levels;
+
+// Free mode (the path's "free" button; level 10 on the fixed map): the child builds the
+// grid, then programs the robot. No stars. Not a difficulty step, so not in levels.json.
+export const FREE = {
+  id: 10,
+  free: true,
+  cards: WITH_REPEAT,
+  slots: 8,
+  intro: 'robot.intro.free',
+};
+
+// The fixed level map (parent switch "Carte des niveaux"): every level by id.
+export const LEVELS = [...PATH_LEVELS, FREE].sort((a, b) => a.id - b.id);

@@ -1,0 +1,32 @@
+{
+  "$comment": "ONE level of robot (a set of committed puzzles). Dev-only (never precached). Free mode is not a level: it lives in levels.js (FREE).",
+  "type": "object",
+  "required": ["id", "difficulty", "cards", "slots", "shuffle", "pick", "puzzles"],
+  "additionalProperties": false,
+  "properties": {
+    "id": { "type": "integer", "minimum": 1 },
+    "difficulty": { "type": "integer", "minimum": 1, "maximum": 9 },
+    "cards": {
+      "type": "array", "minItems": 1,
+      "items": { "enum": ["up", "down", "left", "right", "repeat"] }
+    },
+    "slots": { "type": "integer", "minimum": 1, "maximum": 10 },
+    "intro": { "type": "string", "pattern": "^robot\\.intro\\.[a-z]+$" },
+    "shuffle": { "type": "boolean" },
+    "pick": { "type": "integer", "minimum": 3 },
+    "puzzles": {
+      "type": "array", "minItems": 3,
+      "items": {
+        "type": "object",
+        "required": ["map"],
+        "additionalProperties": false,
+        "properties": {
+          "map": {
+            "type": "array", "minItems": 1, "maxItems": 5,
+            "items": { "type": "string", "pattern": "^[RG#*.]( [RG#*.]){0,4}$" }
+          }
+        }
+      }
+    }
+  }
+}

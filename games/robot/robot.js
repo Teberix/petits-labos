@@ -1,7 +1,11 @@
 // "Robot Codeur" — the child builds a program from arrow cards; the robot runs it on
 // a grid and must reach its charging station.
 //
-// Flow:    level map → level (a few puzzles) → level done → map
+// Flow:    path (▶ = 3 puzzles at the level the path picks → back to the path), or, with
+//          the parent's fixed map, level map → level (a few puzzles) → level done → map
+// NOTE "path" means two things here: ctx.path is the new engine's progress path (the
+//          showPlayPath name); the "path hint" (pathShown, showPathHint, hint === 'path')
+//          is the footprints that show the solution. Unrelated.
 // Puzzle:  drag/tap cards into the strip → ▶ runs everything, ⏭ runs one card →
 //          station reached? happy + star : "bug" (funny bump, the robot goes back to
 //          its start, the program stays so it can be fixed).
@@ -19,7 +23,8 @@ import {
   parseMap, run, shortestPath, nextCorrectStep, cellsAlong, DIRS,
   slotsUsed, cardCount, fewestCards, REPEAT_MIN, REPEAT_MAX,
 } from './program.js';
-import { LEVELS } from './levels.js';
+import { outcomeForMisses } from '../../js/progress.js';
+import { LEVELS, PATH_LEVELS, FREE } from './levels.js';
 import STRINGS from './strings.js';
 import * as art from './art.js';
 
@@ -49,6 +54,8 @@ function shuffled(list) {
   return copy;
 }
 
+const ROUNDS_PER_PLAY = 3; // ctx.path: puzzles per ▶ (each one = one stone + its stars)
+
 const pickOne = (n) => 1 + Math.floor(Math.random() * n);
 const sameCell = (a, b) => a.x === b.x && a.y === b.y;
 
@@ -74,10 +81,12 @@ function createGame(container, ctx) {
   }
 
   // ---------- Progress (saved per player) ----------
-  // { completed: [level ids], perfect: [level ids finished with the fewest cards] }
+  // { completed: [level ids], perfect: [level ids finished with the fewest cards],
+  //   heard: [level ids whose intro was said on the path] }
+  // (`heard` is new with the path; older saves simply don't have it.)
 
   function progress() {
-    return { completed: [], perfect: [], ...ctx.load() };
+    return { completed: [], perfect: [], heard: [], ...ctx.load() };
   }
 
   function isUnlocked(index) {
@@ -90,6 +99,37 @@ function createGame(container, ctx) {
     if (!p.completed.includes(level.id)) p.completed.push(level.id);
     if (perfect && !p.perfect.includes(level.id)) p.perfect.push(level.id);
     ctx.save(p);
+  }
+
+  // ---------- Path (new engine: ctx.path, not the footprints hint) ----------
+
+  // The game's home: the progress path, or the fixed level map.
+  function home() {
+    if (ctx.path) showPlayPath();
+    else showLevels();
+  }
+
+  function showPlayPath() {
+    stopInputs();
+    ctx.path.show(container, {
+      levels: PATH_LEVELS,
+      onPlay: (level) => { sfx.pop(); playLevel(level); },
+      onFree: () => { sfx.pop(); playLevel(FREE); },
+      roundsPerPlay: ROUNDS_PER_PLAY,
+    });
+    ctx.speak(t('robot.path'));
+  }
+
+  // Does this level's intro get said now? Fixed map: at its first puzzle. Path: once
+  // per level, the first time the path picks it (every ▶ restarts at puzzle 0).
+  function sayIntro(level) {
+    if (!ctx.path) return play.index === 0;
+    if (play.index > 0) return false;
+    const p = progress();
+    if (p.heard.includes(level.id)) return false;
+    p.heard.push(level.id);
+    ctx.save(p);
+    return true;
   }
 
   // ---------- Level map ----------
@@ -171,7 +211,9 @@ function createGame(container, ctx) {
       return;
     }
     let puzzles = level.shuffle ? shuffled(level.puzzles) : [...level.puzzles];
-    if (level.pick) puzzles = puzzles.slice(0, level.pick);
+    // Path: 3 puzzles per ▶, all different (the list is shuffled). Fixed map: level.pick.
+    const count = ctx.path ? ROUNDS_PER_PLAY : level.pick;
+    if (count) puzzles = puzzles.slice(0, count);
     play.puzzles = puzzles;
     renderPalette('cards');
     renderControls('play');
@@ -200,7 +242,7 @@ function createGame(container, ctx) {
     setBusy(false);
 
     let line = t(`robot.ask.${pickOne(3)}`);
-    if (play.index === 0) {
+    if (sayIntro(play.level)) {
       if (play.level.id === LEVELS[0].id) line += ' ' + t('robot.howTo');
       if (play.level.intro) line += ' ' + t(play.level.intro);
     }
@@ -679,6 +721,9 @@ function createGame(container, ctx) {
 
     // Every 5th star also brings a sticker (so two stars can bring one).
     const stickers = [ctx.rewards.star(play.els.robot)];
+    // Path: one stone, and the hidden skill moves when the 3rd puzzle is recorded.
+    // Misses = this puzzle's bugs (failed runs).
+    ctx.path?.record(play.level, outcomeForMisses(round.bugs), PATH_LEVELS);
     if (bonus) later(() => stickers.push(ctx.rewards.star(play.els.robot)), BONUS_STAR_DELAY);
 
     later(async () => {
@@ -690,6 +735,7 @@ function createGame(container, ctx) {
       play.els.board.classList.remove('rb-charging');
       play.index++;
       if (play.index < play.puzzles.length) startPuzzle();
+      else if (ctx.path) showPlayPath();
       else levelDone();
     }, CELEBRATE_MS + (bonus ? BONUS_STAR_DELAY : 0));
   }
@@ -888,7 +934,7 @@ function createGame(container, ctx) {
   }
 
   return {
-    start: showLevels,
+    start: home,
     destroy() {
       destroyed = true;
       timers.forEach(clearTimeout);
