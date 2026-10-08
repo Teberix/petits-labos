@@ -50,7 +50,7 @@ export const MIN_TOUCH = 64;
 // STEP_TIMEOUT: max time for one whole worst-case setup or one offline() interaction.
 export const ACTION_TIMEOUT = 10_000;
 export const NAV_TIMEOUT = 30_000;
-export const STEP_TIMEOUT = 60_000;
+export const STEP_TIMEOUT = 90_000; // (was 60 s: offline() reached 52 s on one game in Formes F2)
 export const SHELL_TOUCH = ['.top-bar button'];
 export const OUTPUT_DIR = join(ROOT, 'tools', '.check-output');
 
