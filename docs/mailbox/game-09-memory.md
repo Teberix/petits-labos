@@ -50,3 +50,40 @@ Pure logic and level data are done. No UI. `games/registry.js`, `sw.js`, `js/` a
 - The owner must confirm the art of each look-alike couple in M1b with a screenshot.
 - Level 1 to 3 use one pack per board. Boards repeat a pack often. The "never twice in a row" rule uses the set of faces only.
 - Decision for the owner: keep the relaxed `solve()` check, or change the levels so every pack choice works?
+
+## M1b — solo mode, path, hints, checks
+
+Model: Opus 5.5. Commit `531b816` on `dev`.
+
+### Result
+- Solo mode is playable. Path: 2 boards per ▶, 1 star per board.
+- Fixed level map works when `ctx.path` is null (2 boards per level).
+- The grid is computed from the real board size (`fitGrid`, card cap 140 px phone / 160 px tablet).
+- Hints: `clue` = the twin wiggles face down. `glow` = the twin glows face down. The face is never shown.
+- A miss: both cards stay up 1.2 s, then turn back. Taps are ignored meanwhile. No penalty.
+- Registry: 2 lines (import + entry). PRECACHE refreshed (new app files).
+
+### Usage
+Context passed 100k before CHECKPOINT 1. Step 5 is skipped (no contact sheet, no kid-ux-reviewer).
+
+### Gate tails
+- `node --test tests/memory.test.mjs`: pass 13, fail 0.
+- `node tools/gate.mjs --game memory`: layout 63 screens (9 worst cases × 7 sizes) ✓, offline ✓, GATE PASSED (493 s).
+- `node tools/gate.mjs --only privacy`: GATE PASSED.
+- First gate run failed: the path checks inherited `fixedMap` from the board checks. Fixed in `checks.js` (check bug, not a game bug).
+
+### Checks added
+- Boards at steps 1, 5, 8; `clue` and `glow` states; the path screen.
+- Every `.mem-card` box is inside the viewport and inside the board (fails with the card index).
+- Path skill, asserted: clean ▶ 1 → 2; 2 misses on the same pair per round → stays 2; 1 miss on 2 different pairs per round → 3.
+- Offline: one step-1 board from the path, +1 star.
+
+### Risks
+- The look-alike couples are not judged by eye yet. Run step 5 (contact sheet row 3) in a new session.
+- No kid-ux-reviewer pass yet.
+- The hint stays on the twin until the next first tap. Confirm this in the playtest.
+
+### What the gate cannot check
+- Touch feel of the flip on a real phone.
+- Flip speed (350 ms) and miss delay (1.2 s) for a 6-year-old.
+- Voice lines and sound effects.
