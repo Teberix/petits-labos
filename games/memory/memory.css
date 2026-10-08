@@ -1,0 +1,123 @@
+/* Duo Mémoire — all classes start with mem-. */
+
+/* ---------- Board: memory.js sets --cols and --card from the board's size ---------- */
+
+.mem-board {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: repeat(var(--cols, 3), var(--card, 64px));
+  grid-auto-rows: var(--card, 64px);
+  place-content: center;
+  gap: 8px;   /* = GAP_PX in memory.js */
+  padding: 8px;
+}
+
+.mem-card {
+  position: relative;
+  width: var(--card, 64px);
+  height: var(--card, 64px);
+  padding: 0;
+  border: none;
+  background: none;
+  perspective: 600px;
+  touch-action: manipulation;
+}
+
+/* The flip: the inner box turns; the button itself never moves (stable touch box). */
+.mem-inner {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  transition: transform 0.35s ease-in-out; /* = FLIP_MS */
+}
+.mem-card.is-up .mem-inner { transform: rotateY(180deg); }
+
+.mem-back, .mem-front {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 14%;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  box-shadow: var(--shadow);
+}
+.mem-back { background: #3C7BE8; }
+.mem-back svg { width: 80%; height: 80%; }
+.mem-front { background: #fff; transform: rotateY(180deg); border: 3px solid #D5DCE6; }
+.mem-front svg { width: 86%; height: 86%; }
+.mem-card.is-matched .mem-front { border-color: var(--green); }
+
+/* ---------- Hints (always face down) ---------- */
+
+.mem-clue { animation: mem-wiggle 0.5s ease-in-out 3; }
+.mem-glow .mem-back { animation: mem-glow 1s ease-in-out infinite; }
+
+/* ---------- Animations ---------- */
+
+.mem-bounce { animation: mem-bounce 0.5s ease-out; }
+.mem-wiggle { animation: mem-wiggle 0.4s ease-in-out; }
+
+@keyframes mem-wiggle { 25% { transform: rotate(-7deg); } 75% { transform: rotate(7deg); } }
+@keyframes mem-bounce { 40% { transform: translateY(-12%) scale(1.06); } }
+@keyframes mem-glow {
+  0%, 100% { box-shadow: 0 0 0 4px #FFD23F, 0 0 12px 6px #FFE58A; }
+  50% { box-shadow: 0 0 0 6px #FFD23F, 0 0 22px 12px #FFE58A; }
+}
+
+/* ---------- Fixed level map + done screen ---------- */
+
+.mem-levels {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-content: center;
+  justify-content: center;
+  gap: var(--gap);
+  padding: var(--gap);
+}
+.mem-level-btn {
+  width: clamp(6rem, 24vmin, 10rem);
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  border: none;
+  border-radius: 1.5rem;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+.mem-level-btn.done { background: #E3F0FF; }
+.mem-level-btn.locked { opacity: 0.55; }
+.mem-level-num { font-size: clamp(2rem, 8vmin, 3.5rem); font-weight: 800; color: #3C7BE8; }
+
+.mem-done {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--gap);
+}
+.mem-done-art {
+  width: clamp(6rem, 30vmin, 12rem);
+  aspect-ratio: 1;
+  border-radius: 14%;
+  background: #3C7BE8;
+  animation: mem-bounce 0.8s ease-in-out infinite;
+}
+.mem-done-art svg { display: block; width: 100%; height: 100%; }
+.mem-continue {
+  width: var(--tap);
+  height: var(--tap);
+  padding: 0.9rem;
+  border: none;
+  border-radius: 50%;
+  background: var(--green);
+  color: #fff;
+  box-shadow: var(--shadow);
+}
+.mem-continue svg { width: 100%; height: 100%; }

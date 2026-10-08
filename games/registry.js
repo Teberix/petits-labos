@@ -11,6 +11,7 @@ import train from './train/meta.js';
 import balance from './balance/meta.js';
 import food from './food/meta.js';
 import shapes from './shapes/meta.js';
+import memory from './memory/meta.js';
 
 export const GAMES = [
   { ...potion, load: () => import('./potion/potion.js') },
@@ -20,4 +21,5 @@ export const GAMES = [
   { ...balance, load: () => import('./balance/balance.js') },
   { ...food, load: () => import('./food/food.js') },
   { ...shapes, load: () => import('./shapes/shapes.js') },
+  { ...memory, load: () => import('./memory/memory.js') },
 ];
