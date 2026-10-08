@@ -106,14 +106,16 @@ export default {
       <path d="M44 48H56L50 60Z" fill="#F28C28" ${S(3)}/>
       <path d="M40 94V88M50 94V88M60 94V88" stroke="#F28C28" stroke-width="7" stroke-linecap="round"/>` },
     { id: 'narwhal', art: `
+      <g transform="translate(3 4) scale(0.92)">
       ${bar('M26 56L8 18', '#FFE08A', 7)}
       <path d="M84 70Q92 58 88 44Q96 50 101 40Q101 62 92 76Z" fill="#6E9CC6" ${S()}/>
       <ellipse cx="52" cy="68" rx="38" ry="24" fill="#8FB4D6" ${S(4.5)}/>
       <ellipse cx="50" cy="80" rx="26" ry="9" fill="#D3E5F3"/>
       <ellipse cx="56" cy="82" rx="11" ry="5" fill="#6E9CC6" ${S(3.5)}/>
       <circle cx="68" cy="56" r="3" fill="#6E9CC6"/><circle cx="76" cy="66" r="3" fill="#6E9CC6"/><circle cx="58" cy="52" r="3" fill="#6E9CC6"/>
-      ${eye(28, 64)}${smile(30, 74, 5)}${cheeks(20, 40, 74)}` },
+      ${eye(28, 64)}${smile(30, 74, 5)}${cheeks(20, 40, 74)}</g>` },
     { id: 'reindeer', art: `
+      <g transform="translate(3 4) scale(0.94)">
       ${bar('M24 22L30 6M29 13L20 7M30 6L38 4', '#7A4B2A', 5)}
       ${bar('M42 24L48 8M47 15L38 9M48 8L56 6', '#7A4B2A', 5)}
       <rect x="30" y="68" width="9" height="27" rx="4" fill="#8E5C38" ${S()}/><rect x="42" y="68" width="9" height="27" rx="4" fill="#8E5C38" ${S()}/>
@@ -124,7 +126,7 @@ export default {
       <path d="M32 54L24 32L42 30L52 50Z" fill="#A66E45" ${S(4)}/>
       <ellipse cx="28" cy="34" rx="15" ry="11" fill="#A66E45" ${S(4.5)}/>
       <circle cx="14" cy="36" r="5" fill="#E63946" ${S(3)}/>
-      ${eye(27, 29, 3)}${smile(24, 44, 4)}` },
+      ${eye(27, 29, 3)}${smile(24, 44, 4)}</g>` },
     { id: 'husky', art: `
       <path d="M72 88Q96 88 90 62" stroke="${O}" stroke-width="16" fill="none" stroke-linecap="round"/>
       <path d="M72 88Q96 88 90 62" stroke="#8895A8" stroke-width="8" fill="none" stroke-linecap="round"/>
@@ -140,12 +142,13 @@ export default {
       <path d="M45 53Q50 62 55 53Z" fill="#F7A8A0" ${S(2.5)}/>
       ${eye(41, 37)}${eye(59, 37)}` },
     { id: 'sled', art: `
+      <g transform="translate(4 6) scale(0.92)">
       ${bar('M8 72Q4 90 22 90H84Q94 90 94 82', '#7A8DA3', 6)}
       <rect x="22" y="72" width="9" height="15" fill="#8E5C38" ${S(3.5)}/><rect x="66" y="72" width="9" height="15" fill="#8E5C38" ${S(3.5)}/>
       <rect x="14" y="56" width="74" height="16" rx="6" fill="#E4572E" ${S()}/>
       <path d="M24 64H78" stroke="#FFD23F" stroke-width="6" stroke-linecap="round"/>
       <path d="M12 62Q0 56 4 44" stroke="${O}" stroke-width="9" fill="none" stroke-linecap="round"/>
-      <path d="M12 62Q0 56 4 44" stroke="#F4D9A8" stroke-width="5" fill="none" stroke-linecap="round"/>` },
+      <path d="M12 62Q0 56 4 44" stroke="#F4D9A8" stroke-width="5" fill="none" stroke-linecap="round"/></g>` },
     { id: 'snowman', art: `
       ${bar('M30 68L8 52M70 68L92 52', '#7A4B2A', 5)}
       <circle cx="50" cy="73" r="22" fill="${W}" ${S(4.5)}/>
@@ -173,11 +176,14 @@ export default {
       <circle cx="50" cy="52" r="6" fill="${W}"/>` },
     { id: 'fish', art: `
       <ellipse cx="50" cy="88" rx="38" ry="8" fill="#4A8FC4" ${S()}/>
-      <g transform="rotate(-25 50 56)">
-        <path d="M76 56L98 40V72Z" fill="#F28C28" ${S()}/>
-        <ellipse cx="50" cy="56" rx="32" ry="21" fill="#F4A261" ${S(4.5)}/>
-        <path d="M44 38Q56 56 44 74M58 40Q68 56 58 72" stroke="${W}" stroke-width="6" fill="none" stroke-linecap="round"/>
-        <path d="M40 36L50 24L60 36Z" fill="#F28C28" ${S(3.5)}/>
+      <g transform="translate(4 3) scale(0.9) rotate(-25 50 56)">
+        <path d="M76 56L98 40V72Z" fill="#4F6A30" ${S()}/>
+        <path d="M40 36L50 24L60 36Z" fill="#4F6A30" ${S(3.5)}/>
+        <ellipse cx="50" cy="56" rx="32" ry="21" fill="#5E7A3A" ${S(4.5)}/>
+        <path d="M20 62Q32 80 52 77Q72 74 80 62Q60 68 20 62Z" fill="#E8636B"/>
+        <path d="M44 74L52 88L60 74Z" fill="#E8636B" ${S(3.5)}/>
+        <circle cx="46" cy="48" r="2.4" fill="#F6E8C3"/><circle cx="56" cy="44" r="2.4" fill="#F6E8C3"/><circle cx="64" cy="52" r="2.4" fill="#F6E8C3"/><circle cx="52" cy="56" r="2.4" fill="#F6E8C3"/><circle cx="41" cy="58" r="2.4" fill="#F6E8C3"/><circle cx="60" cy="62" r="2.4" fill="#F6E8C3"/>
+        <ellipse cx="50" cy="56" rx="32" ry="21" fill="none" ${S(4.5)}/>
         ${eye(28, 50, 3.5)}${smile(24, 62, 5)}
       </g>` },
     { id: 'kayak', art: `
@@ -193,14 +199,18 @@ export default {
         <ellipse cx="90" cy="85" rx="9" ry="5.5" fill="#4CC9F0" ${S(3.5)} transform="rotate(30 90 85)"/>
       </g>` },
     { id: 'puffin', art: `
-      <ellipse cx="50" cy="58" rx="29" ry="35" fill="#44587A" ${S(4.5)}/>
-      <ellipse cx="50" cy="70" rx="19" ry="24" fill="${W}" ${S(3.5)}/>
-      <ellipse cx="50" cy="38" rx="21" ry="17" fill="${W}" ${S(3.5)}/>
-      <ellipse cx="39" cy="38" rx="8" ry="5" fill="${SH}"/><ellipse cx="61" cy="38" rx="8" ry="5" fill="${SH}"/>
-      <path d="M36 44Q50 34 64 44L50 62Z" fill="#F28C28" ${S(3.5)}/>
-      <path d="M42 46Q50 41 58 46" stroke="#FFD23F" stroke-width="5" fill="none" stroke-linecap="round"/>
-      <ellipse cx="37" cy="94" rx="10" ry="5" fill="#F28C28" ${S(3.5)}/><ellipse cx="63" cy="94" rx="10" ry="5" fill="#F28C28" ${S(3.5)}/>
-      ${eye(39, 33, 3.2)}${eye(61, 33, 3.2)}` },
+      <ellipse cx="50" cy="64" rx="25" ry="25" fill="#2B2F3A" ${S(4.5)}/>
+      <ellipse cx="50" cy="72" rx="14" ry="16" fill="${W}" ${S(4)}/>
+      <ellipse cx="27" cy="64" rx="6" ry="16" fill="#2B2F3A" ${S(4)}/><ellipse cx="73" cy="64" rx="6" ry="16" fill="#2B2F3A" ${S(4)}/>
+      <ellipse cx="38" cy="91" rx="10" ry="4.5" fill="#F28C28" ${S(4)}/><ellipse cx="62" cy="91" rx="10" ry="4.5" fill="#F28C28" ${S(4)}/>
+      <circle cx="50" cy="34" r="21" fill="#2B2F3A" ${S(4.5)}/>
+      <ellipse cx="50" cy="36" rx="17" ry="13" fill="${W}" ${S(4)}/>
+      <ellipse cx="38" cy="43" rx="5.5" ry="4" fill="${SH}"/><ellipse cx="62" cy="43" rx="5.5" ry="4" fill="${SH}"/>
+      <path d="M42.5 38H57.5L50 62Z" fill="#E8472B" ${S(4)}/>
+      <path d="M44.4 44H55.6L53.4 51H46.6Z" fill="#FFD23F"/>
+      <path d="M42.5 38H57.5L55.6 44H44.4Z" fill="#7F9CB8"/>
+      <path d="M42.5 38H57.5L50 62Z" fill="none" ${S(4)}/>
+      ${eye(40, 32, 3.2)}${eye(60, 32, 3.2)}` },
     // ---- things ----
     { id: 'snowy-pine', art: `
       <rect x="43" y="82" width="14" height="13" fill="#8E5C38" ${S(3.5)}/>
@@ -211,8 +221,10 @@ export default {
       <path d="M50 26L66.7 46Q60 52 56 46Q50 54 44 46Q40 52 33.3 46Z" fill="${W}" ${S(3.5)}/>
       <path d="M50 8L61 24Q56 28 52 24Q48 30 44 24Q42 27 39 24Z" fill="${W}" ${S(3.5)}/>` },
     { id: 'ice-skates', art: `
-      <g transform="translate(10 -6)">${skate(SH)}</g>
-      <g transform="translate(-8 0)">${skate(W)}</g>` },
+      <g transform="translate(-4.5 3.6) scale(0.94)">
+        <g transform="translate(10 -6)">${skate(SH)}</g>
+        <g transform="translate(-8 0)">${skate(W)}</g>
+      </g>` },
   ],
   strings: {
     fr: {
