@@ -240,3 +240,11 @@ It runs the **full gate first and refuses if it fails** (nothing changed). Then 
 files under the app/tool/test/config paths only (prints the list, and what it left out),
 tags, and pushes `main`. Pages redeploys in ~1 min; devices download the new version in
 the background and switch at their next safe moment.
+
+### Preview builds
+- Build a preview on a temporary branch from `dev`.
+- Set `VERSION` to `<next>-preview.<n>` in `sw.js` and `js/version.js`.
+- Set these fields in `manifest.webmanifest`: `"id": "./preview"`, `"name": "Petits Labos · test"`,
+  `"short_name": "PL test"`, `"theme_color": "#D9480F"`.
+- Commit, then force-push to `Teberix/petits-labos-preview` `main`. Delete the temporary branch.
+- `dev` keeps no version bump and no manifest change.
