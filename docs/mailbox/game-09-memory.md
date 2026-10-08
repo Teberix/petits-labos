@@ -87,3 +87,39 @@ Context passed 100k before CHECKPOINT 1. Step 5 is skipped (no contact sheet, no
 - Touch feel of the flip on a real phone.
 - Flip speed (350 ms) and miss delay (1.2 s) for a 6-year-old.
 - Voice lines and sound effects.
+
+## M1c — too-similar couples, coupled items may appear alone
+
+Model: Sonnet 5.5. Commit: 312ca14.
+
+### Changes
+- `TOO_SIMILAR` in `board.js`: meadow/dinosaurs pond and mushroom.
+- These couples are never a trap. Their two items are never on the same board.
+- They still count as couples for the "both on one board" rule.
+- The free pool is now all items of the chosen packs, minus the trap items.
+- A free item is skipped when its couple partner (rule A, B or TOO_SIMILAR) is on the board.
+- A trap couple is rejected when it links to another trap couple.
+- Board rules are unchanged: `lookAlikes` 0 gives no couple; n gives exactly n.
+
+### Tests
+- `arctic.seal` appears without `arctic.walrus` (200 seeds).
+- Test (a) runs on level 3, not level 1. Level 1 has no arctic pack.
+- No board has both items of a TOO_SIMILAR couple (200 seeds, all levels).
+- No board uses a TOO_SIMILAR couple as a trap.
+
+### Gate tails
+- `node --test tests/memory.test.mjs`: 15 pass, 0 fail.
+- `gate --game memory --quick`: PASSED (215 s). Layout 27 screens, offline 1/1.
+- `gate --only levels,privacy`: PASSED (1 s).
+
+### Skipped
+- Contact sheet and kid-ux-reviewer: skipped by owner decision (`tools/` is owner-managed).
+- The owner reviews the boards on the phone.
+
+### Preview
+- Number: 0.10.0-preview.14. Commit: e46b53f (preview repo, main).
+- Built on a temporary branch. Dev has no version bump.
+
+### Risks
+- Boards at levels 1-3 now show more varied items. Check on the phone that no two cards look alike without being a couple.
+- Other look-alike pairs outside `TOO_SIMILAR` can still share a board only as an intended trap.
