@@ -63,9 +63,13 @@ export function shuffle(list, rng = Math.random) {
   return out;
 }
 
-// Every couple that may exist on a board: rule A + rule B (+ the level's own list).
+// Couples that look too much alike: never a trap, and never on the same board.
+// They still count as couples for the "both on one board" rule.
+export const TOO_SIMILAR = [['meadow.pond', 'dinosaurs.pond'], ['meadow.mushroom', 'dinosaurs.mushroom']];
+
+// Every couple that may exist on a board: rule A + rule B (+ the level's own list) + TOO_SIMILAR.
 function knownCouples(level) {
-  return [...sameNameCouples(), ...LOOK_ALIKES, ...(level.lookAlikeList ?? [])];
+  return [...sameNameCouples(), ...LOOK_ALIKES, ...TOO_SIMILAR, ...(level.lookAlikeList ?? [])];
 }
 
 // The couples whose two items are both in `items` (any rule, no duplicates).
@@ -80,20 +84,36 @@ export function couplesIn(items, level) {
   });
 }
 
-// The couples a level may ask for: rule A (automatic) + the level's lookAlikeList.
-function chooseable(items, level) {
-  const set = new Set(items);
-  const wanted = [...sameNameCouples(), ...(level.lookAlikeList ?? [])];
-  return wanted.filter(([a, b]) => set.has(a) && set.has(b));
+// id → the set of ids it forms a couple with (any rule).
+function partnersMap(level) {
+  const map = new Map();
+  for (const [a, b] of knownCouples(level)) {
+    map.set(a, (map.get(a) ?? new Set()).add(b));
+    map.set(b, (map.get(b) ?? new Set()).add(a));
+  }
+  return map;
 }
 
-// Greedy pick of `n` couples that share no item. Returns fewer when it cannot.
-function pickCouples(candidates, n) {
+// True when `id` has a couple partner among `taken` (a Set of ids already on the board).
+const clashes = (id, taken, partners) => [...(partners.get(id) ?? [])].some((p) => taken.has(p));
+
+// The couples a level may ask for: rule A (automatic) + the level's lookAlikeList,
+// without the TOO_SIMILAR ones.
+function chooseable(items, level) {
+  const set = new Set(items);
+  const banned = new Set(TOO_SIMILAR.map((c) => [...c].sort().join('|')));
+  const wanted = [...sameNameCouples(), ...(level.lookAlikeList ?? [])];
+  return wanted.filter(([a, b]) => set.has(a) && set.has(b) && !banned.has([a, b].sort().join('|')));
+}
+
+// Greedy pick of `n` couples that share no item and have no couple link between them.
+// Returns fewer when it cannot.
+function pickCouples(candidates, n, partners) {
   const used = new Set();
   const picked = [];
   for (const [a, b] of candidates) {
     if (picked.length === n) break;
-    if (used.has(a) || used.has(b)) continue;
+    if (used.has(a) || used.has(b) || clashes(a, used, partners) || clashes(b, used, partners)) continue;
     used.add(a);
     used.add(b);
     picked.push([a, b]);
@@ -101,30 +121,47 @@ function pickCouples(candidates, n) {
   return picked;
 }
 
-// What a board of these packs can offer: the couples to pick from and the free items
-// (no look-alike partner on the board) for the other pairs. null when it cannot be done.
+// Greedy pick of up to `need` free items from `pool`: skip an item whose couple partner
+// is already on the board (in `taken`, or picked before). `taken` is not changed.
+function pickFree(pool, need, taken, partners) {
+  const onBoard = new Set(taken);
+  const picked = [];
+  for (const id of pool) {
+    if (picked.length === need) break;
+    if (onBoard.has(id) || clashes(id, onBoard, partners)) continue;
+    onBoard.add(id);
+    picked.push(id);
+  }
+  return picked;
+}
+
+// What a board of these packs can offer: the items and the couples to pick from.
+// null when it cannot be done (checked with one greedy pick; makeBoard retries on bad luck).
 export function planFor(level, packIds) {
   const items = packIds.flatMap(itemsOf);
-  const partnered = new Set(couplesIn(items, level).flat());
-  const free = items.filter((id) => !partnered.has(id));
+  const partners = partnersMap(level);
   const candidates = chooseable(items, level);
-  if (pickCouples(candidates, level.lookAlikes).length < level.lookAlikes) return null;
-  if (free.length < level.pairs - 2 * level.lookAlikes) return null;
-  return { items, free, candidates };
+  const couples = pickCouples(candidates, level.lookAlikes, partners);
+  if (couples.length < level.lookAlikes) return null;
+  const need = level.pairs - 2 * level.lookAlikes;
+  if (pickFree(items, need, couples.flat(), partners).length < need) return null;
+  return { items, candidates };
 }
 
 // A board for this level, never the same set of faces as `previousKey`.
 // → { cards: ['meadow.tree', …] (shuffled), faces, couples, key }
 export function makeBoard(level, rng = Math.random, previousKey = null) {
+  const partners = partnersMap(level);
+  const need = level.pairs - 2 * level.lookAlikes;
   for (let attempt = 0; attempt < 500; attempt++) {
     const packIds = shuffle(level.packs, rng).slice(0, level.packsPerBoard);
     const plan = planFor(level, packIds);
     if (!plan) continue;
-    const couples = pickCouples(shuffle(plan.candidates, rng), level.lookAlikes);
-    const faces = [
-      ...couples.flat(),
-      ...shuffle(plan.free, rng).slice(0, level.pairs - 2 * level.lookAlikes),
-    ];
+    const couples = pickCouples(shuffle(plan.candidates, rng), level.lookAlikes, partners);
+    // Free items come from ALL items of the packs; the trap couples' items are already taken.
+    const free = pickFree(shuffle(plan.items, rng), need, couples.flat(), partners);
+    if (free.length < need) continue;
+    const faces = [...couples.flat(), ...free];
     const key = [...faces].sort().join(',');
     if (key === previousKey) continue;
     return { cards: shuffle([...faces, ...faces], rng), faces, couples, key };

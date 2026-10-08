@@ -2,7 +2,7 @@
 // Run: node --test tests/*.test.mjs
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { makeBoard, couplesIn, MAX_PAIRS } from '../games/memory/board.js';
+import { makeBoard, couplesIn, MAX_PAIRS, TOO_SIMILAR } from '../games/memory/board.js';
 import { createHintTracker } from '../games/memory/hints.js';
 import { solve, sampleRound } from '../games/memory/solver.mjs';
 import data from '../games/memory/levels.json' with { type: 'json' };
@@ -59,6 +59,28 @@ test('board: never the same set of faces twice in a row', () => {
 test('board: sampleRound runs for every level', () => {
   for (const level of data.levels) {
     for (let seed = 1; seed <= 30; seed++) assert.equal(sampleRound(level, seeded(seed)).answers, 1);
+  }
+});
+
+test('board: a coupled item may appear alone (arctic.seal without arctic.walrus)', () => {
+  const level = data.levels.find((l) => l.id === 3); // first level with the arctic pack (level 1 has meadow + party only)
+  let alone = 0;
+  for (let seed = 1; seed <= 200; seed++) {
+    const { faces } = makeBoard(level, seeded(seed));
+    if (faces.includes('arctic.seal') && !faces.includes('arctic.walrus')) alone++;
+  }
+  assert.ok(alone > 0);
+});
+
+test('board: no TOO_SIMILAR couple on one board, and none as a trap', () => {
+  for (const level of data.levels) {
+    for (let seed = 1; seed <= 200; seed++) {
+      const { faces, couples } = makeBoard(level, seeded(seed));
+      for (const [a, b] of TOO_SIMILAR) {
+        assert.ok(!(faces.includes(a) && faces.includes(b)), `level ${level.id} seed ${seed}: ${a} + ${b}`);
+        assert.ok(!couples.some(([x, y]) => (x === a && y === b) || (x === b && y === a)));
+      }
+    }
   }
 });
 
