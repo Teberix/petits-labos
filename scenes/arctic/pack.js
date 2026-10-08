@@ -199,18 +199,20 @@ export default {
         <ellipse cx="90" cy="85" rx="9" ry="5.5" fill="#4CC9F0" ${S(3.5)} transform="rotate(30 90 85)"/>
       </g>` },
     { id: 'puffin', art: `
-      <ellipse cx="50" cy="64" rx="25" ry="25" fill="#2B2F3A" ${S(4.5)}/>
-      <ellipse cx="50" cy="72" rx="14" ry="16" fill="${W}" ${S(4)}/>
-      <ellipse cx="27" cy="64" rx="6" ry="16" fill="#2B2F3A" ${S(4)}/><ellipse cx="73" cy="64" rx="6" ry="16" fill="#2B2F3A" ${S(4)}/>
-      <ellipse cx="38" cy="91" rx="10" ry="4.5" fill="#F28C28" ${S(4)}/><ellipse cx="62" cy="91" rx="10" ry="4.5" fill="#F28C28" ${S(4)}/>
-      <circle cx="50" cy="34" r="21" fill="#2B2F3A" ${S(4.5)}/>
-      <ellipse cx="50" cy="36" rx="17" ry="13" fill="${W}" ${S(4)}/>
-      <ellipse cx="38" cy="43" rx="5.5" ry="4" fill="${SH}"/><ellipse cx="62" cy="43" rx="5.5" ry="4" fill="${SH}"/>
-      <path d="M42.5 38H57.5L50 62Z" fill="#E8472B" ${S(4)}/>
-      <path d="M44.4 44H55.6L53.4 51H46.6Z" fill="#FFD23F"/>
-      <path d="M42.5 38H57.5L55.6 44H44.4Z" fill="#7F9CB8"/>
-      <path d="M42.5 38H57.5L50 62Z" fill="none" ${S(4)}/>
-      ${eye(40, 32, 3.2)}${eye(60, 32, 3.2)}` },
+      <ellipse cx="44" cy="66" rx="24" ry="25" fill="#2B2F3A" ${S(4.5)}/>
+      <ellipse cx="46" cy="72" rx="14" ry="17" fill="${W}" ${S(4)}/>
+      <ellipse cx="30" cy="66" rx="7" ry="16" fill="#2B2F3A" ${S(4)}/>
+      <path d="M30 92h12M48 92h12" stroke="${O}" stroke-width="9" stroke-linecap="round"/>
+      <path d="M30 92h12M48 92h12" stroke="#F28C28" stroke-width="5" stroke-linecap="round"/>
+      <circle cx="44" cy="32" r="22" fill="#2B2F3A" ${S(4.5)}/>
+      <path d="M30 30Q36 20 50 24Q58 28 58 40Q52 48 40 46Q30 42 30 30Z" fill="${W}" ${S(3.5)}/>
+      <ellipse cx="38" cy="40" rx="5" ry="3.5" fill="${SH}"/>
+      <path d="M56 24Q66 22 74 30L94 40L74 50Q66 56 56 46Z" fill="#E8472B" ${S(4)}/>
+      <path d="M64 25Q60 35 64 51" stroke="#FFD23F" stroke-width="5" fill="none"/>
+      <path d="M57 25Q55 35 57 46" stroke="#7F9CB8" stroke-width="5" fill="none"/>
+      <path d="M56 24Q66 22 74 30L94 40L74 50Q66 56 56 46Z" fill="none" ${S(4)}/>
+      <path d="M60 40H88" stroke="${O}" stroke-width="2.5" stroke-linecap="round"/>
+      ${eye(46, 33, 3.4)}` },
     // ---- things ----
     { id: 'snowy-pine', art: `
       <rect x="43" y="82" width="14" height="13" fill="#8E5C38" ${S(3.5)}/>
