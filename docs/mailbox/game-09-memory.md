@@ -123,3 +123,45 @@ Model: Sonnet 5.5. Commit: 312ca14.
 ### Risks
 - Boards at levels 1-3 now show more varied items. Check on the phone that no two cards look alike without being a couple.
 - Other look-alike pairs outside `TOO_SIMILAR` can still share a board only as an intended trap.
+
+## M2a — shared code for the duo (path button, players, starFor)
+
+Model: Opus 5.5. Commit: 8e9e0dd. No duo UI in this step.
+
+### Changes
+- `js/path.js`: `show()` accepts `freeIcon` (SVG string) and `freeLabel` (i18n key). Defaults: `ICONS.free` and `'pathFree'`. The 4 path games do not change.
+- `js/screens/game.js`: `ctx.players()` returns `[{ id, name, avatar }]` of all profiles (copies). `ctx.rewards.starFor(profileId, fromEl, toEl)` calls `starFor` in `js/rewards.js` with this game's world. The ctx contract comment is updated.
+- `js/rewards.js`: `starFor(profileId, world, fromEl, toEl)` throws on an unknown id, then calls `addStar` and `flyStar`. It returns the reward or null.
+- `flyStar(fromEl, profileId, toEl)`: `toEl` defaults to the top-bar badge. The star flies to `toEl .star-icon` (else `toEl`). The count goes only into `toEl .star-count`.
+- `showSticker(reward, { avatar })`: the avatar shows in the top-left corner (`.reveal-avatar` in `css/base.css`). No avatar: as before.
+- `CLAUDE.md`, "Rewards": the owner's duo exception (2026-10-08).
+- `games/memory/checks.js`: `offline()` now resets the profile to the path first. Reason: the shapes and balance offline checks leave `fixedMap` on in the shared test profile. `--game memory` did not show this. The full offline run did.
+
+### Usage
+```js
+const players = ctx.players(); // [{ id, name, avatar }]
+const reward = ctx.rewards.starFor(players[1].id, cardEl, panelEl); // panelEl has .star-icon + .star-count
+if (reward) await ctx.rewards.showSticker(reward, { avatar: players[1].avatar });
+ctx.path.show(stage, { levels, onPlay, onFree: openDuo, freeIcon: DUO_ICON, freeLabel: 'memDuo', roundsPerPlay: 2 });
+```
+
+### Tests
+- `tests/path.test.mjs`: default icon and label unchanged; custom icon and label used; no `onFree` gives no button.
+- `tests/rewards.test.mjs` (new): `starFor` writes only to the given profile. The other profile is deep-equal before and after. The count goes into `toEl` only, not the top-bar badge. Unknown id throws and changes nothing.
+- `tests/fixtures/fake-dom.mjs` (new): a small fake DOM and `localStorage` for these tests.
+
+### Gate tails
+- `node --test tests/*.test.mjs`: 227 pass, 0 fail.
+- `gate --quick`: layout 300 screens PASS (972 s). Offline FAILED on memory (cause above, not M2a).
+- `gate --only offline` after the fix: PASSED, 8/8 games offline (187 s).
+- `gate --only privacy`: PASSED (1 s).
+- Full gate: not run (owner runs it). `pwa-guardian`: not run.
+
+### Stored data
+No schema change. No stored field is written differently. `starFor` writes the same fields as `addStar`, for the given profile.
+
+### Risks
+- In the duo, the top-bar badge shows the host's stars. `starFor` does not update it. The duo UI must hide the badge or accept a stale count until the next screen.
+- `toEl` without `.star-count` gets the flight and the bump, but no count.
+- The avatar corner is not checked by the layout gate (the reveal is not a worst case). Check it on the phone.
+- `ctx.players()` lists every profile. With 1 profile, the game must hide the duo button (M2b).
