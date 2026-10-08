@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "game": "memory",
+  "levels": [
+    { "id": 1, "difficulty": 1, "pairs": 3, "packs": ["meadow", "party"], "packsPerBoard": 1, "lookAlikes": 0 },
+    { "id": 2, "difficulty": 2, "pairs": 4, "packs": ["meadow", "dinosaurs", "party"], "packsPerBoard": 1, "lookAlikes": 0 },
+    { "id": 3, "difficulty": 3, "pairs": 5, "packs": ["meadow", "dinosaurs", "party", "space", "arctic"], "packsPerBoard": 1, "lookAlikes": 0 },
+    { "id": 4, "difficulty": 4, "pairs": 6, "packs": ["meadow", "dinosaurs", "party", "space", "arctic"], "packsPerBoard": 2, "lookAlikes": 0 },
+    { "id": 5, "difficulty": 5, "pairs": 6, "packs": ["meadow", "dinosaurs", "party", "space", "arctic"], "packsPerBoard": 2, "lookAlikes": 1,
+      "lookAlikeList": [["arctic.seal", "arctic.walrus"], ["meadow.tree", "meadow.pine"], ["space.comet", "space.meteor"]] },
+    { "id": 6, "difficulty": 6, "pairs": 8, "packs": ["meadow", "dinosaurs", "party", "space", "arctic"], "packsPerBoard": 3, "lookAlikes": 1,
+      "lookAlikeList": [["arctic.seal", "arctic.walrus"], ["meadow.tree", "meadow.pine"], ["space.comet", "space.meteor"], ["dinosaurs.egg", "dinosaurs.eggs"]] },
+    { "id": 7, "difficulty": 7, "pairs": 10, "packs": ["meadow", "dinosaurs", "party", "space", "arctic"], "packsPerBoard": 5, "lookAlikes": 2,
+      "lookAlikeList": [["arctic.seal", "arctic.walrus"], ["meadow.tree", "meadow.pine"], ["space.comet", "space.meteor"], ["space.planet", "space.earth"], ["dinosaurs.egg", "dinosaurs.eggs"]] },
+    { "id": 8, "difficulty": 8, "pairs": 12, "packs": ["meadow", "dinosaurs", "party", "space", "arctic"], "packsPerBoard": 5, "lookAlikes": 3,
+      "lookAlikeList": [["arctic.seal", "arctic.walrus"], ["meadow.tree", "meadow.pine"], ["space.comet", "space.meteor"], ["space.planet", "space.earth"], ["space.ufo", "space.satellite"], ["party.penguin", "arctic.puffin"], ["meadow.fox", "arctic.husky"]] }
+  ]
+}
