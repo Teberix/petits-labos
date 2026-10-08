@@ -10,7 +10,7 @@ import { h } from './dom.js';
 import { ICONS } from './icons.js';
 import { t } from './i18n.js';
 import { sfx } from './audio.js';
-import { getRewards, getWorlds, setRewardsAndWorlds } from './storage.js';
+import { getProfile, getRewards, getWorlds, setRewardsAndWorlds } from './storage.js';
 import { STICKERS, stickerSvg } from './stickers.js';
 import { POOL_ITEMS, START_WORLD, itemById, itemSvg, packById, sceneAspect, sceneSvg } from './items.js';
 import { addStar as nextState, gap, granted, missingItems } from './scene.js';
@@ -55,12 +55,26 @@ export function starBadge(profileId) {
   );
 }
 
+// Duo (Duo Mémoire): +1 star for one of the players, who may not be the profile that
+// opened the game. Same as ctx.rewards.star, but for `profileId`, and the star flies to
+// `toEl` (that player's panel). Only that profile's rewards / collection / worlds change.
+// Throws on an unknown profile id (a bug in the game, not a child's mistake).
+export function starFor(profileId, world, fromEl, toEl) {
+  if (!getProfile(profileId)) throw new Error(`starFor(): unknown profile id ${profileId}`);
+  const reward = addStar(profileId, world);
+  flyStar(fromEl, profileId, toEl);
+  return reward;
+}
+
 // A star flies from `fromEl` to the counter, which then shows the new total.
-export function flyStar(fromEl, profileId) {
-  const badge = document.querySelector('.star-badge');
+// `toEl` (optional) = another counter, e.g. a duo player's panel: the star flies to it
+// (to its .star-icon if it has one) and the total goes only into its .star-count (if any).
+export function flyStar(fromEl, profileId, toEl = document.querySelector('.star-badge')) {
+  const badge = toEl;
   const update = () => {
     if (!badge) return;
-    badge.querySelector('.star-count').textContent = String(getRewards(profileId).stars);
+    const count = badge.querySelector('.star-count');
+    if (count) count.textContent = String(getRewards(profileId).stars);
     badge.classList.remove('bump');
     void badge.offsetWidth; // restart the bump animation
     badge.classList.add('bump');
@@ -69,7 +83,7 @@ export function flyStar(fromEl, profileId) {
   if (!badge || !fromEl) return update();
 
   const from = fromEl.getBoundingClientRect();
-  const to = badge.querySelector('.star-icon').getBoundingClientRect();
+  const to = (badge.querySelector('.star-icon') ?? badge).getBoundingClientRect();
   const star = h('div', { class: 'flying-star', html: ICONS.star });
   const size = 48;
   star.style.left = `${from.left + from.width / 2 - size / 2}px`;
@@ -86,7 +100,8 @@ export function flyStar(fromEl, profileId) {
 // game's first star, `reward.unlocked`), the new world's scene with the gift in front.
 // Resolves when it closes (tap, or after 5 s), so the game can wait before moving on.
 // (Named showSticker for the games' ctx — it shows any reward.)
-export function showSticker(reward) {
+// `avatar` (optional, duo) = whose reward it is, shown in a corner; none = as before.
+export function showSticker(reward, { avatar } = {}) {
   const item = reward.kind === 'item';
   const world = item && reward.unlocked;
   const title = world ? 'newWorldTitle' : item ? 'newItemTitle' : 'newStickerTitle';
@@ -102,6 +117,7 @@ export function showSticker(reward) {
     const overlay = h('div', { class: 'sticker-overlay', role: 'dialog', 'aria-label': t(title) },
       h('div', { class: 'sticker-rays', 'aria-hidden': 'true' }),
       shown,
+      avatar && h('span', { class: 'reveal-avatar', 'aria-hidden': 'true' }, avatar),
     );
     const openedAt = Date.now();
     let closed = false;

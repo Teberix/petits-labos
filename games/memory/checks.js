@@ -190,6 +190,8 @@ export default {
 
   // Offline: ▶ from a fresh path → one step-1 board to the end → one more star.
   async offline(page, kit) {
+    // earlier games' offline checks leave fixedMap on (shared profile): back to the path, step 1
+    await setSkill(page, null);
     await openPath(page, kit);
     const before = await savedStars(page);
     await kit.tap(page, page.locator('.path-play'));

@@ -3,9 +3,11 @@
 // meta.js) gets `ctx.path` from js/screens/game.js, unless the parent switch "Carte des
 // niveaux" (profile.fixedMap) brings back its fixed level map — then ctx.path is null.
 //
-//   ctx.path.show(container, { levels, onPlay(level), onFree, roundsPerPlay })
+//   ctx.path.show(container, { levels, onPlay(level), onFree, freeIcon, freeLabel, roundsPerPlay })
 //       ▶ → onPlay(the next level, picked by js/progress.js at the player's skill);
 //       onFree (optional) = the game's free mode, its own button next to ▶;
+//       freeIcon / freeLabel (optional) = that button's SVG string / i18n key (defaults:
+//       the free-play icon, 'pathFree') — e.g. Duo Mémoire's duo button;
 //       roundsPerPlay = rounds in one ▶ (the game's constant). Drops any partial play.
 //   ctx.path.record(level, outcome, levels)
 //       after each round: one stone is added and the outcome is kept. When the play's last
@@ -25,7 +27,7 @@ export function createPath(profileId, gameId) {
   let outcomes = []; // outcomes of the current play's rounds
   let perPlay = Infinity; // rounds in one play (set by show)
   return {
-    show(container, { levels, onPlay, onFree, roundsPerPlay }) {
+    show(container, { levels, onPlay, onFree, freeIcon = ICONS.free, freeLabel = 'pathFree', roundsPerPlay }) {
       // without it, a play never ends and the skill never moves: fail loudly in development
       if (!Number.isInteger(roundsPerPlay) || roundsPerPlay < 1) {
         throw new Error(`path.show(): roundsPerPlay must be a positive integer, got ${roundsPerPlay}`);
@@ -44,7 +46,7 @@ export function createPath(profileId, gameId) {
             onclick: () => onPlay(pickLevel(levels, getSkill(profileId, gameId))),
           }),
           onFree && h('button', {
-            class: 'path-free', type: 'button', 'aria-label': t('pathFree'), html: ICONS.free, onclick: onFree,
+            class: 'path-free', type: 'button', 'aria-label': t(freeLabel), html: freeIcon, onclick: onFree,
           }),
         ),
       ));

@@ -11,7 +11,14 @@
 //   ctx.load() / ctx.save(data)   this game's saved data for this player
 //   ctx.rewards.star(fromEl)      +1 star (flies from fromEl to the counter); returns a
 //                                 newly earned reward (a sticker or a meadow item) or null
-//   ctx.rewards.showSticker(r)    full-screen reveal of that reward; a Promise, resolves when closed
+//   ctx.rewards.showSticker(r, { avatar }?)   full-screen reveal of that reward; a Promise,
+//                                 resolves when closed. avatar (duo): whose reward, in a corner
+//   ctx.players()          [{ id, name, avatar }] of every profile on the device (copies:
+//                          read-only) — for a duo game to show both players
+//   ctx.rewards.starFor(profileId, fromEl, toEl)   duo only: +1 star for THAT profile (in
+//                                 this game's world), flying to toEl (its panel; the count
+//                                 goes in toEl's .star-count). Returns the reward or null,
+//                                 like star(). Throws on an unknown profileId.
 //   ctx.path               null (the game shows its fixed level map) or, for a game whose
 //                          meta says `path: true` while the parent switch "Carte des
 //                          niveaux" (profile.fixedMap) is off, the path screen: see js/path.js
@@ -19,10 +26,10 @@
 import { h } from '../dom.js';
 import { getLang, t } from '../i18n.js';
 import { sfx, stopSpeaking } from '../audio.js';
-import { getGameData, getProfile, setGameData } from '../storage.js';
+import { getGameData, getProfile, getProfiles, setGameData } from '../storage.js';
 import { iconButton, repeatButton, say, topBar } from '../ui.js';
 import { createPath } from '../path.js';
-import { addStar, flyStar, showSticker, starBadge } from '../rewards.js';
+import { addStar, flyStar, showSticker, starBadge, starFor } from '../rewards.js';
 import { GAMES } from '../../games/registry.js';
 
 export function render(root, { profileId, gameId }, app) {
@@ -55,8 +62,10 @@ export function render(root, { profileId, gameId }, app) {
         flyStar(fromEl, profileId);
         return sticker;
       },
+      starFor: (id, fromEl, toEl) => starFor(id, entry.scene, fromEl, toEl),
       showSticker,
     },
+    players: () => getProfiles().map(({ id, name, avatar }) => ({ id, name, avatar })),
     path: entry.path && !profile.fixedMap ? createPath(profileId, gameId) : null,
     exit,
   };

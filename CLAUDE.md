@@ -150,6 +150,9 @@ Conventions:
   especially efficient solution (Robot Codeur: fewest cards), and mark a level done that
   way with a crown. Always positive: a normal success still gets its star, nothing is
   ever shown as a failure, and "try to do better" is said at most once per level.
+  Exception (owner's decision, 2026-10-08): the Duo Mémoire duo mode gives **2 stars to
+  EACH of the 2 players** at the end of a board, through `ctx.rewards.starFor(profileId,
+  fromEl, toEl)`. No winner: both players are celebrated. The duo is not a free-play mode.
 
 ## Level data (level-based games)
 

@@ -302,7 +302,15 @@ input[type="text"] {
   overflow: hidden;
   background: rgba(43, 33, 65, 0.75);
 }
-.sticker-rays, .sticker-reveal { grid-area: 1 / 1; }
+.sticker-rays, .sticker-reveal, .reveal-avatar { grid-area: 1 / 1; }
+/* duo: whose reward it is — the player's avatar in the top-left corner (inside the safe area) */
+.reveal-avatar {
+  place-self: start start;
+  margin: calc(1rem + env(safe-area-inset-top)) 0 0 calc(1rem + env(safe-area-inset-left));
+  font-size: clamp(3rem, 12vmin, 5rem);
+  line-height: 1;
+  animation: sticker-pop 0.7s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
 .sticker-reveal {
   width: min(70vw, 60dvh, 22rem);
   filter: drop-shadow(0 0.6rem 0.8rem rgba(0, 0, 0, 0.35));
