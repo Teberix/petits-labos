@@ -64,3 +64,25 @@ Unit tests (shapes, packs): 39 pass. Privacy: PASS.
 **Questions**
 1. Redraw the puffin (orange body stripes, bigger beak), or keep it?
 2. Build `0.9.0-preview.13` in the next session?
+
+## F3
+
+**Model:** Sonnet 5.5, both F3 sessions.
+
+**Usage**
+- Session 1 (5466318: puffin, arctic char, item bounds): gate PASSED in 631 s. Token count was not recorded.
+- Session 2 (this one, F3b): about 45k tokens. No art rendered, no reviewer called.
+
+**Gate tails (F3b)**
+- `node --test tests/packs.test.mjs tests/shapes.test.mjs`: 39 pass, 0 fail.
+- Privacy: PASS (225 files, 108 app files network-free).
+- Layout gate: not run. Art only, same files.
+
+**Changes**
+- Commit 644fe60: puffin redrawn in `scenes/arctic/pack.js` (side view, striped beak, orange feet).
+- Preview: `0.9.0-preview.13` replaces `0.9.0-preview.12`. Preview commit: `a82048c`.
+
+**Risks**
+- (a) The path screen at skill 3 shows no marked stone in the contact sheet. Check it on the phone.
+- (b) polar-bear, seal, arctic-fox, husky and kayak touch 99-100 of the box. Accepted.
+- The new puffin art was not rendered. Check it by eye on the phone.
