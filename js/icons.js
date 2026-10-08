@@ -16,7 +16,9 @@ export const ICONS = {
   meadow: `<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="18" cy="6" r="3" fill="#FFC83D"/><path d="M1 21c4-6 8-7 11-6s7 2 11 6z" fill="#7CB342"/><rect x="7.2" y="11" width="1.6" height="5" fill="#8B5E3C"/><circle cx="8" cy="9.5" r="3.5" fill="#3FA34D"/></svg>`,
   // The next reward (end of the album's progress bar).
   gift: `<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="9" width="18" height="12" rx="2" fill="#EF476F"/><rect x="2" y="6" width="20" height="4" rx="1.5" fill="#F25C82"/><rect x="11" y="6" width="2" height="15" fill="#FFD23F"/><path d="M12 6C9 2 5.5 4 8 6zM12 6c3-4 6.5-2 4 0z" fill="#FFD23F"/></svg>`,
-  play: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 4.5v15l12-7.5z" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>`,
+  // ▶ centred optically: its box (x 6–20 with the stroke) sits 1 unit (~8 % of its width) right of
+  // the centre, so the point side doesn't look empty. No CSS offset needed.
+  play: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12-7.5z" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>`,
   free: `<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="#FFE29A"/><circle cx="8" cy="10" r="2" fill="#EF476F"/><circle cx="12.5" cy="7.5" r="2" fill="#2E86DE"/><circle cx="16" cy="11.5" r="2" fill="#3FA34D"/><circle cx="11" cy="15.5" r="2.4" fill="#fff"/></svg>`,
   plus: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>`,
 };

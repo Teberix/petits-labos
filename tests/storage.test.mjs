@@ -202,6 +202,39 @@ test('a restore never replaces a save it could not keep a copy of', async () => 
   assert.equal(map.get(KEY), before, 'the current save is untouched');
 });
 
+// A fake localStorage whose backup writes fail while `fail.on` is true.
+function failingBackups(initial) {
+  const map = fakeStorage(initial);
+  const fail = { on: true };
+  const setItem = globalThis.localStorage.setItem;
+  globalThis.localStorage.setItem = (k, v) => {
+    if (fail.on && k.includes('.backup-')) throw new Error('QuotaExceededError');
+    setItem(k, v);
+  };
+  return { map, fail };
+}
+
+test('a migration never overwrites a save it could not back up', async () => {
+  const { map, fail } = failingBackups({ [KEY]: V1_RAW });
+  const s = await freshV2();
+  const a = V1.profiles[0];
+  assert.deepEqual(v1Rewards(s.getRewards(a.id)), v1Rewards(a.rewards), 'the old save is used in memory');
+  s.setSetting('lang', 'es'); // a later write is held too
+  assert.equal(map.get(KEY), V1_RAW, 'the stored raw value is unchanged');
+  fail.on = false; // space again: the next write keeps the copy first, then saves
+  s.setSetting('lang', 'en');
+  assert.equal(map.get(`${KEY}.backup-v1`), V1_RAW);
+  assert.equal(JSON.parse(map.get(KEY)).schema, s.SCHEMA_VERSION);
+});
+
+test('a corrupt save is never replaced when its backup fails', async () => {
+  const { map } = failingBackups({ [KEY]: '{not json' });
+  const s = await freshV2();
+  assert.deepEqual(s.getProfiles(), []);
+  s.setSetting('lang', 'es');
+  assert.equal(map.get(KEY), '{not json', 'the stored raw value is unchanged');
+});
+
 test('the preview uses its own key and NEVER writes the live save', async () => {
   const map = fakeStorage({ [KEY]: V1_RAW }, '/petits-labos-preview/');
   const s = await freshV2();

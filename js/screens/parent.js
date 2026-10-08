@@ -3,7 +3,7 @@
 // profile again; on the preview: copy the live app's save in). A reset keeps the whole
 // save aside first (js/storage.js resetProgress), restorable from the Save card.
 import { h } from '../dom.js';
-import { LANGS, LANG_NAMES, getLang, setLang, t } from '../i18n.js';
+import { LANGS, LANG_NAMES, getLang, inSentence, setLang, t } from '../i18n.js';
 import { stopSpeaking } from '../audio.js';
 import {
   addProfile, copyLiveSave, deleteProfile, getProfile, getProfiles, isPreview, listBackups, resetProgress,
@@ -187,7 +187,7 @@ export function render(root, params, app) {
         h('p', { class: 'hint' }, t('stepReached', { n: getSkill(id, g.id)?.skill ?? 1, max: g.steps })),
         h('button', {
           class: 'btn reset-skill-btn', type: 'button', onclick: () => go({ name: 'confirmSkill', id, gameId: g.id }),
-        }, t('resetSkill', { game: t(g.titleKey) })))),
+        }, t('resetSkill', { game: inSentence(t(g.titleKey)) })))),
       h('div', { class: 'actions' },
         existing && h('button', {
           class: 'btn btn-danger reset-btn', type: 'button', onclick: () => go({ name: 'confirmReset', id }),

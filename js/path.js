@@ -26,6 +26,10 @@ export function createPath(profileId, gameId) {
   let perPlay = Infinity; // rounds in one play (set by show)
   return {
     show(container, { levels, onPlay, onFree, roundsPerPlay }) {
+      // without it, a play never ends and the skill never moves: fail loudly in development
+      if (!Number.isInteger(roundsPerPlay) || roundsPerPlay < 1) {
+        throw new Error(`path.show(): roundsPerPlay must be a positive integer, got ${roundsPerPlay}`);
+      }
       outcomes = [];
       perPlay = roundsPerPlay;
       const rounds = getSkill(profileId, gameId)?.rounds ?? 0;

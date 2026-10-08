@@ -27,6 +27,13 @@ export function addStrings(strings) {
   for (const lang of LANGS) Object.assign(dictionaries[lang], strings[lang] || {});
 }
 
+// A title used inside a sentence: its leading article goes lower case
+// ("Remettre Le Train…" → "Remettre le Train…"). Other words keep their capitals.
+const ARTICLES = { fr: /^(?:Les|Le|La)(?=\s)|^L(?=['’])/, es: /^(?:Los|Las|El|La)(?=\s)/, en: /^The(?=\s)/ };
+export function inSentence(title, lang = current) {
+  return title.replace(ARTICLES[lang] ?? ARTICLES[DEFAULT_LANG], (article) => article.toLowerCase());
+}
+
 // t('confirmDelete', { name: 'Zoé' }) → replaces {name}.
 // Missing key → French text → the key itself, so a gap never crashes a screen.
 export function t(key, vars = {}, lang = current) {

@@ -130,7 +130,7 @@ async function fakePathGame(page, kit, rounds = 0) {
     const s = await import('./js/storage.js');
     if (rounds) s.setSkill(s.getProfiles()[0].id, 'pathcheck', { skill: 1, best: 1, rounds, seen: [] });
     const levels = [{ id: 1, difficulty: 1 }];
-    const game = { mount(stage, ctx) { ctx.path.show(stage, { levels, onPlay() {}, onFree() {} }); }, unmount() {} };
+    const game = { mount(stage, ctx) { ctx.path.show(stage, { levels, onPlay() {}, onFree() {}, roundsPerPlay: 1 }); }, unmount() {} };
     GAMES.push({ id: 'pathcheck', titleKey: 'parentTitle', path: true, load: async () => ({ default: game }) });
   }, rounds);
 }

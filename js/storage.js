@@ -112,6 +112,10 @@ export const MIGRATIONS = {
 };
 
 let state = null;
+// The copy load() could not write before a migration or a corrupt replace ({ raw, label }),
+// or null. While it is set, save() never overwrites the stored save: it retries the copy
+// first, and writes only once the copy exists (the old save is never lost).
+let pendingBackup = null;
 
 function emptyState() {
   return { schema: SCHEMA_VERSION, settings: { lang: 'fr' }, profiles: [] };
@@ -128,7 +132,16 @@ function backup(raw, label) {
   }
 }
 
+// Keeps `raw` aside; if that fails, remembers it so save() holds every write (see above).
+function backupOrHold(raw, label) {
+  if (!backup(raw, label)) {
+    console.warn('Save kept as it is: no backup copy, so no overwrite');
+    pendingBackup = { raw, label };
+  }
+}
+
 function load() {
+  pendingBackup = null;
   let raw = null;
   try {
     raw = localStorage.getItem(KEY);
@@ -142,13 +155,14 @@ function load() {
     data = JSON.parse(raw);
   } catch {
     // Corrupted data: keep a copy aside instead of throwing it away, then start fresh.
-    backup(raw, `corrupt-${Date.now()}`);
+    backupOrHold(raw, `corrupt-${Date.now()}`);
     return emptyState();
   }
 
   const from = data.schema ?? 1;
   if (from < SCHEMA_VERSION) {
-    backup(raw, `v${from}`);
+    // if the copy fails, the migrated save lives in memory only (the stored one stays as is)
+    backupOrHold(raw, `v${from}`);
     for (let v = from; v < SCHEMA_VERSION; v++) {
       data = MIGRATIONS[v](data);
       data.schema = v + 1;
@@ -170,11 +184,18 @@ function ensureLoaded() {
   return state;
 }
 
+// Returns false if nothing was written.
 function save() {
+  if (pendingBackup) {
+    if (!backup(pendingBackup.raw, pendingBackup.label)) return false; // still no copy: keep the old save
+    pendingBackup = null;
+  }
   try {
     localStorage.setItem(KEY, JSON.stringify(state));
+    return true;
   } catch (err) {
     console.warn('Could not save progress', err);
+    return false;
   }
 }
 
@@ -358,8 +379,7 @@ export function resetProgress(profileId = null) {
     p.worlds = startWorlds(START_WORLD);
     delete p.scene; // (v3 progress: only read to make a missing collection)
   }
-  save();
-  return true;
+  return save(); // false if the write was held (see pendingBackup) or failed
 }
 
 // ---- New engine: per profile and game, the adaptive difficulty (js/progress.js) ----

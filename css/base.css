@@ -509,7 +509,7 @@ input[type="text"] {
 .path-actions { display: flex; justify-content: center; align-items: center; gap: 1.5rem; }
 .path-play, .path-free { border: 0; border-radius: 50%; display: grid; place-items: center; cursor: pointer; }
 .path-play { width: 7.5rem; height: 7.5rem; background: #3FA34D; color: #fff; box-shadow: 0 0.4rem 0 #2C7A37; }
-.path-play svg { width: 55%; height: 55%; margin-left: 10%; }
+.path-play svg { width: 55%; height: 55%; } /* the ▶ is centred in its SVG (js/icons.js) */
 .path-free { width: 5rem; height: 5rem; background: #fff; box-shadow: 0 0.3rem 0 #D6CFC2; }
 .path-free svg { width: 80%; height: 80%; }
 @keyframes pop-in { from { transform: scale(0); } }
