@@ -165,3 +165,40 @@ No schema change. No stored field is written differently. `starFor` writes the s
 - `toEl` without `.star-count` gets the flight and the bump, but no count.
 - The avatar corner is not checked by the layout gate (the reveal is not a worst case). Check it on the phone.
 - `ctx.players()` lists every profile. With 1 profile, the game must hide the duo button (M2b).
+
+## M2b + M2c — duo mode, stars before reveals
+
+Models: M2b Opus 5.5 (commit 0090959). M2c Sonnet 5.5 (commit 1b762d1).
+Usage: not available in the session context. Read it in the app.
+
+### Changes
+- M2b: `games/memory/duo.js`. Pick screen, shared board (8 pairs), turns, party screen. Duo button on the path and on the level map. Hidden with fewer than 2 profiles.
+- M2c fix: `boardDone()` now calls `starFor` 4 times first (player 1 twice, then player 2 twice). Then it shows the reveals one at a time, with `{ avatar }`. Leaving during a reveal loses no star.
+- M2c string: es `memory.duoDone` is now `'¡Muy bien, las dos!'`.
+- M2c check: new case "duo: leave during the 1st reveal → both profiles still +2 stars". It sets player 1 one star below `nextAt`, opens the 1st reveal, taps home, and asserts +2 for both profiles. Then it reloads and opens the duo pick screen so the layout checks have a screen to measure.
+
+### Reviews
+- `pwa-guardian` on M2a: 2 low findings, no bug.
+
+### Gate tails
+- M2b: tails are not in this session's context. Read them in the M2b commit message and the owner's run.
+- M2c: `node --test tests/memory.test.mjs`: 15 pass, 0 fail.
+- M2c: `gate --game memory --quick`: layout 39 screens PASS (297 s). Offline PASS (119 files precached, 1/1 games). GATE PASSED (305 s).
+- M2c: `gate --only privacy`: PASSED.
+- Full gate and `pwa-guardian`: not run for M2c. Shared code did not change.
+
+### Preview
+- Number: 0.10.0-preview.16. Commit: 35ce97c (preview repo, main). Previous: preview.15 (b21229d), checked before the build.
+- Built on a temporary branch, now deleted. Dev has no version bump.
+
+### Risks
+- The 4 stars are saved before any reveal. If the child leaves, the unseen stickers or items are in the album anyway. This is intended.
+- The 4 star flights start together, then one 700 ms wait. They may overlap on a small screen.
+- The new check covers only a reward for player 1. A reveal for player 2 uses the same code path.
+
+### What the gate cannot check
+- The spoken « à toi » (voice, all 3 languages).
+- Real touch feel on the tablet and the phone.
+- The glow on the active player's panel.
+- The party animation (confetti, both avatars).
+- The avatar corner in the reveal.
