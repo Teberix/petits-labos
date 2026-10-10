@@ -209,3 +209,37 @@ Usage: not available in the session context. Read it in the app.
 - Not checked by the reviewer: the keys `memory.duoPick`, `memory.yourTurn`, `memory.board`, `memory.right.0-2`, `memory.duoDone`, `memory.again` in fr, es and en (`strings.js`).
 - Not checked by the reviewer: that `--tap` is at least 64 px in the shared CSS (`memory.css` lines 114 and 245). The layout gate checks touch targets.
 - Nothing fixed, as ordered.
+
+## M3 — the ocean world
+
+### Model and usage
+- Model: Sonnet 5.5 (main) + `scene-artist` subagent (Sonnet): 38k tokens, 7 tool uses, about 3.5 min.
+- No contact sheet. No `kid-ux-reviewer`, as ordered.
+
+### Work done
+- New `scenes/ocean/pack.js`: square 160 × 160, ground 0.45, kind `free`, 18 items. `items[0]` is the gift: `treasure-chest`.
+- Registered in `scenes/registry.js`. `games/memory/meta.js` has `scene: 'ocean'`.
+- `node tools/update-precache.mjs`: PRECACHE lists 121 files.
+- Fix in `games/memory/checks.js`: the `pair()` wait grows from 10 s to 30 s. Memory now has a world, so the duo gives a world-gift reveal to each profile (5 s each). The old wait timed out. Test code only.
+
+### Gate
+- `node --test tests/*.test.mjs`: 228 pass, 0 fail.
+- `gate --game memory --quick`: first run FAILED (duo play-to-the-end, setup timeout, 3 sizes). After the fix: PASSED. Layout 39 screens (327 s). Offline: 120 files, 1/1 games (11 s).
+- `gate --only privacy`: PASSED. 245 files scanned.
+- Full gate and `pwa-guardian`: not run. Shared code did not change.
+
+### Commits and preview
+- Dev: 240da57 "Memory M3: ocean world".
+- Preview: 0.10.0-preview.17. Commit 8bf4962 (preview repo, main). Previous: preview.16 (35ce97c), checked before the build.
+- Incident: my first preview commit failed (`-m` and `-F` together). I force-pushed dev commit 240da57 to the preview repo for a few seconds. I then pushed the correct build 8bf4962. The preview repo is correct now. Nobody should have installed it in that window.
+- Built on a temporary branch, now deleted. Dev has no version bump.
+
+### Risks
+- No item was rendered. Margins (2 to 98) and outline width come from the artist's calculation. `tests/packs.test.mjs` passes.
+- `shark` and `dolphin` share a similar body. `seahorse` and `sea-turtle` may be hard to read at 64 px.
+- Duo boards use every pack. 18 new items join the pool. No same-name couple appears, and the memory tests pass.
+- The first star of a game now shows the ocean reveal. Each duo profile gets one at its first memory star: two 5 s reveals in a row.
+
+### What the gate cannot check
+- Look of the 18 items on the 3 grounds.
+- Real touch feel. Voice reading of the new names in fr, es and en.
