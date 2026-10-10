@@ -202,3 +202,10 @@ Usage: not available in the session context. Read it in the app.
 - The glow on the active player's panel.
 - The party animation (confetti, both avatars).
 - The avatar corner in the reveal.
+
+### M2 reviewer (kid-ux-reviewer, Haiku)
+- Result: PASS. No findings.
+- Files read: `games/memory/duo.js`, `games/memory/memory.css`.
+- Not checked by the reviewer: the keys `memory.duoPick`, `memory.yourTurn`, `memory.board`, `memory.right.0-2`, `memory.duoDone`, `memory.again` in fr, es and en (`strings.js`).
+- Not checked by the reviewer: that `--tap` is at least 64 px in the shared CSS (`memory.css` lines 114 and 245). The layout gate checks touch targets.
+- Nothing fixed, as ordered.
