@@ -59,7 +59,7 @@ async function pair(page, kit, a, b) {
   await page.waitForFunction(() => {
     const b = document.querySelector('.mem-board');
     return !b || !b.dataset.busy;
-  }, null, { timeout: 10_000 });
+  }, null, { timeout: 30_000 }); // the duo's last pair waits for 2 world-gift reveals (5 s each)
 }
 
 // Pairs: [[i, j], …] by face, in board order.

@@ -3,8 +3,9 @@ export default {
   id: 'memory',
   // Non-linguistic game → played in the app language (French by default).
   titleKey: 'memory.title',
-  // New engine: the path screen (js/path.js). No world of its own yet (step M3).
+  // New engine: the path screen (js/path.js). Its world is the ocean (step M3).
   path: true,
+  scene: 'ocean',
   steps: 8, // difficulty steps of the path (= maxStep of its levels; a unit test checks it)
   strings: {
     fr: { 'memory.title': 'Duo Mémoire' },

@@ -9,6 +9,7 @@ import dinosaurs from './dinosaurs/pack.js';
 import party from './party/pack.js';
 import space from './space/pack.js';
 import arctic from './arctic/pack.js';
+import ocean from './ocean/pack.js';
 
 export const PACKS = [
   meadow,
@@ -16,4 +17,5 @@ export const PACKS = [
   party,
   space,
   arctic,
+  ocean,
 ];
