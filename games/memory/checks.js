@@ -249,6 +249,32 @@ export default {
       },
     },
     {
+      // Leaving during the 1st reveal must not lose a star: both profiles still get +2.
+      name: 'duo: leave during the 1st reveal → both profiles still +2 stars',
+      async setup(page, kit) {
+        await page.waitForSelector('.profile-tile');
+        await startDuo(page, kit, 3);
+        // Player 1's next star earns a reward → the 1st reveal opens.
+        await page.evaluate(async () => {
+          const s = await import('./js/storage.js');
+          const id = s.getProfiles()[0].id;
+          const r = s.getRewards(id);
+          s.setRewards(id, { ...r, stars: r.nextAt - 1 });
+        });
+        const before = await allStars(page);
+        // The reveal closes by itself after 5 s: wait for it while the board is solved.
+        const opened = page.locator('.sticker-overlay').first().waitFor({ timeout: 60_000 });
+        await solveBoard(page, kit);
+        await opened;
+        await page.locator('.top-bar button').first().evaluate((b) => b.click()); // the home button (a reveal covers it)
+        await kit.wait(page, 500);
+        const gained = (await allStars(page)).map((s, i) => s - before[i]);
+        if (gained.length < 2 || gained[0] !== 2 || gained[1] !== 2) throw new Error(`stars after leaving: ${gained}, expected 2,2`);
+        await page.reload(); // back to the profiles screen, then a screen the layout checks can measure
+        await openDuo(page, kit, 3);
+      },
+    },
+    {
       name: 'path a: clean ▶ from skill 1 → skill 2',
       async setup(page, kit) { await playPath(page, kit, null, [], 2, 'clean ▶'); },
     },

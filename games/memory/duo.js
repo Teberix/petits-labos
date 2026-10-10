@@ -173,21 +173,27 @@ export function createDuo(container, ctx, tools) {
     }, MISS_MS);
   }
 
-  // ---------- End: 2 stars each, player 1 then player 2, one reveal at a time ----------
+  // ---------- End: 2 stars each (all given first), then the reveals one at a time ----------
 
   async function boardDone() {
     stop();
     duo.panels.forEach((el) => el.classList.remove('is-turn'));
     ctx.speak(t('memory.board'));
     const from = duo.round.els[duo.round.els.length - 1];
+    // 1) Give ALL the stars first (saved at once): leaving during a reveal loses nothing.
+    const rewards = [[], []];
     for (let p = 0; p < 2; p++) {
-      const player = duo.players[p];
-      duo.panels[p].classList.add('is-turn');
       for (let s = 0; s < STARS_EACH; s++) {
-        const reward = ctx.rewards.starFor(player.id, from, duo.panels[p]);
-        await wait(STAR_GAP_MS);
-        if (tools.isDestroyed()) return;
-        if (reward) await ctx.rewards.showSticker(reward, { avatar: player.avatar });
+        rewards[p].push(ctx.rewards.starFor(duo.players[p].id, from, duo.panels[p]));
+      }
+    }
+    await wait(STAR_GAP_MS);
+    if (tools.isDestroyed()) return;
+    // 2) Then the reveals, one at a time: player 1's, then player 2's.
+    for (let p = 0; p < 2; p++) {
+      duo.panels[p].classList.add('is-turn');
+      for (const reward of rewards[p]) {
+        if (reward) await ctx.rewards.showSticker(reward, { avatar: duo.players[p].avatar });
         if (tools.isDestroyed()) return;
       }
       duo.panels[p].classList.remove('is-turn');

@@ -36,7 +36,7 @@ export default {
     'memory.duo': 'Jugar de a dos',
     'memory.duoPick': '¿Con quién juegas? Toca su imagen.',
     'memory.yourTurn': '¡Te toca, {name}!',
-    'memory.duoDone': '¡Bravo a ustedes dos!',
+    'memory.duoDone': '¡Muy bien, las dos!',
     'memory.again': 'Jugar otra vez',
     'memory.backPath': 'Volver',
   },
