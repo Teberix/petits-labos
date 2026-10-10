@@ -129,6 +129,57 @@ async function expectHint(page, cls) {
   if (state[0]) throw new Error(`the ${cls} card is face up`);
 }
 
+// ---------- Duo ----------
+
+const allStars = (page) => page.evaluate(() =>
+  JSON.parse(localStorage.getItem('petits-labos')).profiles.map((p) => p.rewards.stars));
+
+// Reset the opener (path on, memory skill = `skill`), add a 2nd test profile if the kit
+// has only one (a fake player: never a real name), then open the duo pick screen.
+async function openDuo(page, kit, skill = null) {
+  await page.waitForSelector('.profile-tile');
+  await page.evaluate(async () => {
+    const s = await import('./js/storage.js');
+    if (s.getProfiles().length < 2) s.addProfile({ name: 'Duo', avatar: '🦊', readingLang: 'fr' });
+  });
+  await setSkill(page, skill);
+  await openPath(page, kit);
+  await kit.tap(page, page.locator('.path-free'));
+  await page.locator('.mem-pick-play').waitFor({ timeout: 30_000 });
+  await kit.settle(page);
+}
+
+async function startDuo(page, kit, skill = null) {
+  await openDuo(page, kit, skill);
+  await kit.tap(page, page.locator('.mem-pick-btn:not(.is-opener)').first());
+  await kit.tap(page, page.locator('.mem-pick-play'));
+  await waitBoard(page, kit);
+  const n = (await faces(page)).length;
+  if (n !== 16) throw new Error(`duo: ${n} cards, expected 16`);
+}
+
+// INSIDE-THE-EDGES for both player panels.
+async function panelsInside(page) {
+  const bad = await page.evaluate(() => [...document.querySelectorAll('.mem-panel')].filter((el) => {
+    const r = el.getBoundingClientRect();
+    return r.width === 0 || r.left < -0.5 || r.top < -0.5 || r.right > innerWidth + 0.5 || r.bottom > innerHeight + 0.5;
+  }).length);
+  if (bad) throw new Error(`${bad} player panel(s) outside the screen`);
+}
+
+// Plays the duo board to the end (closing every reward reveal) → the party screen.
+async function playDuo(page, kit) {
+  await solveBoard(page, kit);
+  for (let n = 0; n < 40; n++) {
+    if (await page.locator('.mem-party').count()) break;
+    const reveal = page.locator('.sticker-overlay');
+    if (await reveal.count()) await kit.tap(page, reveal.first());
+    await kit.wait(page, 500);
+  }
+  await page.locator('.mem-party').waitFor({ timeout: 30_000 });
+  await kit.settle(page);
+}
+
 const boardCase = (id, pairs) => ({
   name: `step ${id} board (${pairs} pairs)`,
   async setup(page, kit) {
@@ -140,8 +191,9 @@ const boardCase = (id, pairs) => ({
 });
 
 export default {
-  touch: ['.mem-card', '.mem-level-btn', '.mem-continue', '.path-play'],
-  cells: '.mem-card, .path-play', // (the path screen has no cards: its ▶ stands in)
+  touch: ['.mem-card', '.mem-level-btn', '.mem-continue', '.path-play', '.path-free',
+    '.mem-duo-btn', '.mem-pick-btn', '.mem-pick-play', '.mem-party-btn'],
+  cells: '.mem-card, .path-play, .mem-pick-btn, .mem-party-btn', // (screens with no cards: their buttons stand in)
   minCell: 64,
 
   worstCases: [
@@ -170,6 +222,30 @@ export default {
         for (let n = 0; n < 3; n++) await pair(page, kit, pairs[0][1], pairs[1][0]);
         await expectHint(page, 'mem-glow');
         await cardsInside(page);
+      },
+    },
+    { name: 'duo: pick screen', async setup(page, kit) { await openDuo(page, kit); } },
+    {
+      name: 'duo: board (8 pairs, 2 panels)',
+      async setup(page, kit) {
+        await startDuo(page, kit);
+        await cardsInside(page);
+        await panelsInside(page);
+      },
+    },
+    {
+      // One duo play to the end: +2 stars for EACH profile, the opener's skill unchanged.
+      name: 'duo: play to the end → party screen, +2 stars each, skill unchanged',
+      async setup(page, kit) {
+        await page.waitForSelector('.profile-tile');
+        await startDuo(page, kit, 3);
+        const before = await allStars(page);
+        await playDuo(page, kit);
+        const after = await allStars(page);
+        const gained = after.map((s, i) => s - before[i]);
+        if (gained.length < 2 || gained[0] !== 2 || gained[1] !== 2) throw new Error(`duo stars gained: ${gained}, expected 2,2`);
+        const skill = await savedSkill(page);
+        if (skill !== 3) throw new Error(`duo changed the skill: ${skill}, expected 3`);
       },
     },
     {

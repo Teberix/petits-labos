@@ -121,3 +121,143 @@
   box-shadow: var(--shadow);
 }
 .mem-continue svg { width: 100%; height: 100%; }
+
+/* ---------- Duo (duo.js) ---------- */
+
+.mem-duo-btn {
+  width: clamp(6rem, 24vmin, 10rem);
+  aspect-ratio: 1;
+  padding: 0.6rem;
+  border: none;
+  border-radius: 1.5rem;
+  background: #fff;
+  box-shadow: var(--shadow);
+}
+.mem-duo-btn svg { display: block; width: 100%; height: 100%; }
+
+/* Pick: every player's avatar, then ▶ (ready once a 2nd player is picked) */
+.mem-pick {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  align-content: center;
+  justify-content: center;
+  gap: var(--gap);
+  padding: var(--gap);
+}
+.mem-pick-list { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--gap); }
+.mem-pick-btn {
+  width: clamp(5rem, 22vmin, 8rem);
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  border: 0.3rem solid transparent;
+  border-radius: 50%;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+.mem-pick-btn.is-picked { border-color: var(--green); background: #E6F6E9; }
+.mem-pick-avatar { font-size: clamp(2.5rem, 11vmin, 4.5rem); line-height: 1; }
+.mem-pick-play {
+  width: 5rem;
+  height: 5rem;
+  padding: 1rem;
+  border: none;
+  border-radius: 50%;
+  background: var(--green);
+  color: #fff;
+  box-shadow: var(--shadow);
+  opacity: 0.45;
+}
+.mem-pick-play.is-ready { opacity: 1; animation: mem-pulse 1.2s ease-in-out infinite; }
+.mem-pick-play svg { width: 100%; height: 100%; }
+
+/* Board: panels on top at portrait, at the sides at landscape */
+.mem-duo {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 4px;
+  padding: 4px max(4px, env(safe-area-inset-right)) max(4px, env(safe-area-inset-bottom)) max(4px, env(safe-area-inset-left));
+}
+.mem-duo .mem-panel:first-child { grid-column: 1; grid-row: 1; }
+.mem-duo .mem-panel:last-child { grid-column: 2; grid-row: 1; }
+.mem-duo-board { grid-column: 1 / -1; grid-row: 2; }
+@media (orientation: landscape) {
+  .mem-duo { grid-template-columns: auto minmax(0, 1fr) auto; grid-template-rows: minmax(0, 1fr); }
+  .mem-duo .mem-panel:first-child { grid-column: 1; grid-row: 1; }
+  .mem-duo .mem-panel:last-child { grid-column: 3; grid-row: 1; }
+  .mem-duo-board { grid-column: 2; grid-row: 1; }
+  .mem-panel { flex-direction: column; align-self: center; }
+}
+
+.mem-panel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  min-width: 3.5rem;
+  padding: 0.3rem 0.5rem;
+  border: 0.25rem solid transparent;
+  border-radius: 1rem;
+  background: var(--surface);
+  opacity: 0.6;
+  transition: opacity 0.3s;
+}
+.mem-panel.is-turn { opacity: 1; animation: mem-turn 1.4s ease-in-out infinite; }
+.mem-panel-avatar { font-size: 2rem; line-height: 1; }
+.mem-panel-count { font-size: 1.6rem; font-weight: 800; color: #3C7BE8; min-width: 1ch; text-align: center; }
+
+/* Party: both avatars jump together, confetti; no counts */
+.mem-party {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--gap);
+}
+.mem-confetti-box { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+.mem-confetti {
+  position: absolute;
+  top: -1rem;
+  width: 0.7rem;
+  height: 1rem;
+  border-radius: 0.15rem;
+  animation: mem-fall 2.6s linear infinite;
+}
+.mem-party-avatars { display: flex; gap: clamp(1rem, 6vmin, 3rem); }
+.mem-party-avatar {
+  font-size: clamp(3.5rem, 18vmin, 7rem);
+  line-height: 1;
+  animation: mem-jump 0.9s ease-in-out infinite;
+}
+.mem-party-buttons { position: relative; display: flex; gap: var(--gap); }
+.mem-party-btn {
+  width: var(--tap);
+  height: var(--tap);
+  padding: 0.9rem;
+  border: none;
+  border-radius: 50%;
+  background: var(--green);
+  color: #fff;
+  box-shadow: var(--shadow);
+}
+.mem-party-btn.mem-home { background: #3C7BE8; }
+.mem-party-btn svg { width: 100%; height: 100%; }
+
+@keyframes mem-turn {
+  0%, 100% { border-color: #FFD23F; box-shadow: 0 0 0 2px #FFD23F, 0 0 10px 4px #FFE58A; }
+  50% { border-color: #FFD23F; box-shadow: 0 0 0 4px #FFD23F, 0 0 18px 8px #FFE58A; }
+}
+@keyframes mem-pulse { 50% { transform: scale(1.08); } }
+@keyframes mem-jump { 50% { transform: translateY(-25%); } }
+@keyframes mem-fall { to { transform: translateY(110vh) rotate(540deg); } }

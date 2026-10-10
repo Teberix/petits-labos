@@ -70,6 +70,7 @@ const PRECACHE = [
   'games/market/plural.js',
   'games/market/strings.js',
   'games/memory/board.js',
+  'games/memory/duo.js',
   'games/memory/hints.js',
   'games/memory/levels.json',
   'games/memory/memory.css',

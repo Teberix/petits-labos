@@ -1,4 +1,4 @@
-// Duo Mémoire — solo mode (step M1b). Flip two cards; the same item twice = a pair.
+// Duo Mémoire — solo mode (step M1b) + the duo button (duo.js, step M2b). Flip two cards; the same item twice = a pair.
 //
 // Home: the path (ctx.path, new engine) — ▶ plays ROUNDS_PER_PLAY boards at the level
 // the engine picked. Fixed level map when ctx.path is null (parent switch "Carte des
@@ -15,6 +15,7 @@ import { itemById, itemSvg } from '../../js/items.js';
 import { outcomeOf } from '../../js/progress.js';
 import { makeBoard } from './board.js';
 import { createHintTracker } from './hints.js';
+import { DUO_SVG, canDuo, createDuo } from './duo.js';
 import STRINGS from './strings.js';
 import data from './levels.json' with { type: 'json' };
 
@@ -89,7 +90,28 @@ function createGame(container, ctx) {
   function stopInputs() {
     resizeObserver?.disconnect();
     resizeObserver = null;
+    duo.stop();
   }
+
+  // One card button (solo and duo): the back, and the face that a flip shows.
+  function cardButton(face, i, onTap) {
+    return h('button', {
+      class: 'mem-card', type: 'button', 'data-index': String(i), 'data-face': face,
+      'aria-label': t('memory.card'),
+      onclick: onTap,
+    }, h('span', { class: 'mem-inner' },
+      h('span', { class: 'mem-back', html: BACK_SVG }),
+      h('span', { class: 'mem-front', html: itemSvg(itemById(face)) }),
+    ));
+  }
+
+  // The duo mode (duo.js): its button is on the path and on the level map.
+  const duo = createDuo(container, ctx, {
+    later, cardButton, fitGrid, capPx, restartAnimation, pickOne,
+    isDestroyed: () => destroyed, home: () => home(),
+    FLIP_MS, MISS_MS, DONE_MS,
+  });
+  const openDuo = () => { sfx.pop(); stopInputs(); duo.open(); };
 
   // ---------- Progress: { completed: [level ids] } (fixed map only) ----------
 
@@ -105,6 +127,9 @@ function createGame(container, ctx) {
     ctx.path.show(container, {
       levels: PATH_LEVELS,
       onPlay: (level) => { sfx.pop(); playLevel(level); },
+      onFree: canDuo(ctx) ? openDuo : null,
+      freeIcon: DUO_SVG,
+      freeLabel: 'memory.duo',
       roundsPerPlay: ROUNDS_PER_PLAY,
     });
     ctx.speak(t('memory.path'));
@@ -134,6 +159,11 @@ function createGame(container, ctx) {
       }, h('span', { class: 'mem-level-num' }, String(level.id)));
       return button;
     });
+    if (canDuo(ctx)) {
+      buttons.push(h('button', {
+        class: 'mem-duo-btn', type: 'button', 'aria-label': t('memory.duo'), html: DUO_SVG, onclick: openDuo,
+      }));
+    }
     container.replaceChildren(h('div', { class: 'mem-levels' }, buttons));
     ctx.speak(t('memory.chooseLevel'));
   }
@@ -167,14 +197,7 @@ function createGame(container, ctx) {
     const board = makeBoard(play.level, Math.random, play.boardKey);
     play.boardKey = board.key;
     const grid = h('div', { class: 'mem-board', 'data-round': String(play.index) });
-    const els = board.cards.map((face, i) => h('button', {
-      class: 'mem-card', type: 'button', 'data-index': String(i), 'data-face': face,
-      'aria-label': t('memory.card'),
-      onclick: () => tapCard(i),
-    }, h('span', { class: 'mem-inner' },
-      h('span', { class: 'mem-back', html: BACK_SVG }),
-      h('span', { class: 'mem-front', html: itemSvg(itemById(face)) }),
-    )));
+    const els = board.cards.map((face, i) => cardButton(face, i, () => tapCard(i)));
     grid.append(...els);
     round = {
       board, els, grid, tracker: createHintTracker(board.cards),
