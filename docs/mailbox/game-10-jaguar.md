@@ -90,3 +90,61 @@ cells of 50 seeded mazes):
 5. Loop candidates need two cells ≥ 4 apart in the tree. A tiny grid with `loops` > 0 would
    reject all tries. Not an issue for these 8 levels.
 6. Not checked (no UI): touch feel, layout, voice, the landscape grid turn, the 44 px cells.
+
+## J2 — solo UI, drag, hints, path
+
+### Sessions
+
+- Session 1 (step 0, `d10284c`, far start rule and the UI files): model not recorded.
+- Session 2 (this one, finish): Sonnet 5.5.
+
+### Changes in this checkpoint
+
+- Steps 7 and 8 are now 6×9 and 6×10 (owner). Ranges measured again (200 seeds, p10–p90):
+  step 7 dead ends 10–14, path 12–21; step 8 dead ends 10–16, path 13–22.
+- Maze cell floor is 40 px (`MIN_CELL`, `minCell`), by owner decision. At 640×360 a 6-row
+  board needs 264 px at 44 px; the area has 248 px. The jaguar hit box stays ≥ 64 px.
+- Stored data: `profiles[p].skills.jaguar` appears with this release (via `ctx.path.record`).
+
+### Path medians (played mazes, 200 seeds)
+
+| step | grid, step 0 | median, step 0 | grid, step 1 | median, step 1 |
+|---|---|---|---|---|
+| 5 | 5×8 | 16 | 5×8 | 16 |
+| 6 | 5×9 | 16 | 5×9 | 16 |
+| 7 | 6×10 | 18 | 6×9 | 16 |
+| 8 | 6×12 | 19 | 6×10 | 17 |
+
+Check 5 ≤ 6 ≤ 7 ≤ 8 passes on played mazes. Measured without the range filter, the medians are
+17, 16, 16, 17: step 5 is then above step 6.
+
+### Gate
+
+```
+node --test tests/jaguar.test.mjs            12 pass, 0 fail
+node tools/gate.mjs --game jaguar            ✓ layout 45 screens (68s), ✓ offline, GATE PASSED (75s)
+node tools/gate.mjs --only privacy           ✓ 263 files, GATE PASSED
+```
+
+Before the 40 px change, the gate failed at `step 8 board · 640x360: outside: jaguar`. A
+`step 5 board · 360x640` setup timeout showed once with `--jobs 3`. It did not come back.
+
+### Preview
+
+Preview repo was at `fea5cd6` (0.11.0-preview.18). Now `f8c1b2f` = 0.11.0-preview.19, built from
+`6537c99`. `dev` keeps `VERSION` 0.11.1 and its manifest.
+
+### Risks
+
+1. **Lost tap during the 70 ms slide.** A tap while the jaguar slides one cell is dropped.
+   A child who taps fast may see no reaction. Playtest on a tablet.
+2. **40 px cells** are small for a 6-year-old finger. Dragging the jaguar (≥ 64 px) is the
+   main input. A tap on a far cell may miss.
+3. **Step 5 flake:** one layout setup timeout at `--jobs 3`. Cause not found.
+4. Medians do not rise at steps 5→7 (16, 16, 16). Difficulty comes from grid size and dead ends.
+5. Step 7 has 6 rows in landscape at 640×360: it fits only at the 40 px floor.
+
+### Not checked by the gate
+
+Touch feel and drag feel on a real tablet; the voice; paw-print and hint timing; the hug
+animation; the landscape grid turn on a real device; the `kid-ux-reviewer` pass (not run).
