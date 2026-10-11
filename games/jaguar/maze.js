@@ -12,8 +12,8 @@
 //            so the same maze never comes twice in a row)
 
 export const ROUNDS_PER_PLAY = 2; // game constant, not level data (owner, 2026-10-11)
-export const MAX_COLS = 6;
-export const MAX_ROWS = 12;
+export const MAX_COLS = 12;
+export const MAX_ROWS = 20;
 export const MAX_TRIES = 500;
 const MIN_LOOP_GAP = 4;    // a loop joins 2 cells at least 4 steps apart in the tree
 export const FAR_RATIO = 0.9; // far papa: BFS distance ≥ 90 % of the max distance

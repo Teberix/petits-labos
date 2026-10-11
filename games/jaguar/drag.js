@@ -10,6 +10,9 @@
 //   opts.tryStep({x, y})  → true if the jaguar moved there (open neighbour), else false
 //   opts.bump()           the jaguar hits a wall
 //   opts.tapStep(event)   one tap = one step (main-direction rule, in the game)
+// Tap vs drag (owner, J3): a pointer that moves < TAP_PX between down and up is ALWAYS a
+// tap, even on the jaguar. Only a pointer that starts on the jaguar's hit box AND moves
+// ≥ TAP_PX is a drag (cells may be 20 px: a small finger wobble must not walk).
 //   opts.busy()           true while the jaguar must not move (hug)
 export const STEP_MS = 70;
 const TAP_PX = 10;
@@ -32,7 +35,7 @@ export function lineCells(a, b) {
 export function createDrag(board, opts) {
   let trail = [];       // visual cells still to walk
   let finger = null;    // the last cell the finger was on (drag only)
-  let down = null;      // { id, x, y, onJaguar }
+  let down = null;      // { id, x, y, onJaguar, dragging }
   let timer = null;
   let blocked = false;  // after a bump: wait for the finger to come back
 
@@ -61,13 +64,17 @@ export function createDrag(board, opts) {
 
   function onDown(e) {
     if (down || opts.busy()) return;
-    down = { id: e.pointerId, x: e.clientX, y: e.clientY, onJaguar: opts.onJaguar(e) };
+    down = { id: e.pointerId, x: e.clientX, y: e.clientY, onJaguar: opts.onJaguar(e), dragging: false };
     board.setPointerCapture?.(e.pointerId);
-    if (down.onJaguar) { finger = opts.jaguar(); trail = []; blocked = false; }
   }
 
   function onMove(e) {
     if (!down || e.pointerId !== down.id || !down.onJaguar) return;
+    if (!down.dragging) {
+      if (Math.hypot(e.clientX - down.x, e.clientY - down.y) < TAP_PX) return; // still a tap
+      down.dragging = true;
+      finger = opts.jaguar(); trail = []; blocked = false;
+    }
     const cell = opts.at(e);
     if (same(cell, finger)) return;
     const added = lineCells(finger, cell);
@@ -86,7 +93,7 @@ export function createDrag(board, opts) {
   function onUp(e) {
     if (!down || e.pointerId !== down.id) return;
     const moved = Math.hypot(e.clientX - down.x, e.clientY - down.y);
-    if (down.onJaguar) trail = trail.slice(0, MAX_AFTER_UP);
+    if (down.dragging) trail = trail.slice(0, MAX_AFTER_UP);
     else if (moved < TAP_PX && e.type === 'pointerup' && !opts.busy()) opts.tapStep(e);
     down = null;
     finger = null;

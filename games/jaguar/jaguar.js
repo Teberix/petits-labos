@@ -21,9 +21,13 @@ import data from './levels.json' with { type: 'json' };
 
 const LEVELS = data.levels;
 const PAD = 8;        // board padding (px), = .jg-area padding in jaguar.css
-const MIN_CELL = 40;  // floor (owner, J2: 6 rows must fit 640×360); the gate checks it (minCell)
-const MAX_CELL = 96;
-const HIT = 64;       // the jaguar's hit box: ≥ 64 px even on 40 px cells
+// Fixed board (owner, J3): every step takes the area a 6×10 maze would take (its cell
+// clamped to REF_MIN…REF_MAX); bigger steps have more, smaller cells in that same area.
+const REF = { cols: 6, rows: 10 };
+const REF_MIN = 40, REF_MAX = 96;
+const MIN_CELL = 20;  // floor (owner, J3); cells are not touch targets; the gate checks it (minCell)
+const MIN_ART = 28;   // the jaguar and papa are drawn at max(cell, 28 px), centred on their cell
+const HIT = 64;       // the jaguar's hit box: ≥ 64 px even on 20 px cells
 const HUG_MS = 1100;  // = the jg-hug animation in jaguar.css
 
 const PAW_SVG = `<svg viewBox="0 0 100 100" aria-hidden="true"><g fill="#B8741A">
@@ -197,7 +201,9 @@ function createGame(container, ctx) {
     if (w <= 0 || hgt <= 0) return;
     r.turned = w > hgt && r.maze.rows > r.maze.cols;
     const vc = r.turned ? r.maze.rows : r.maze.cols, vr = r.turned ? r.maze.cols : r.maze.rows;
-    r.cell = Math.max(MIN_CELL, Math.min(MAX_CELL, Math.floor(Math.min(w / vc, hgt / vr))));
+    const [rc, rr] = r.turned ? [REF.rows, REF.cols] : [REF.cols, REF.rows];
+    const ref = Math.max(REF_MIN, Math.min(REF_MAX, Math.floor(Math.min(w / rc, hgt / rr))));
+    r.cell = Math.max(MIN_CELL, Math.floor(Math.min((rc * ref) / vc, (rr * ref) / vr)));
     r.board.style.width = `${vc * r.cell}px`;
     r.board.style.height = `${vr * r.cell}px`;
     r.board.style.setProperty('--cell', `${r.cell}px`);
@@ -211,7 +217,7 @@ function createGame(container, ctx) {
       for (const [name, bit] of Object.entries(side)) if (wl & bit) el.classList.add(`jg-w-${name}`);
       if (r.paws.has(i)) el.classList.add('jg-paw');
     });
-    place(r.papa, r.maze.papa, r.cell);
+    place(r.papa, r.maze.papa, Math.max(r.cell, MIN_ART));
     placeJaguar();
   }
 
@@ -224,13 +230,14 @@ function createGame(container, ctx) {
 
   // The hit box (≥ 64 px) is kept inside the area; the art stays centred on the cell.
   function placeJaguar() {
-    const r = round, c = r.cell, size = Math.max(HIT, c), v = toVisual(r.at);
+    const r = round, c = r.cell, size = Math.max(HIT, c), art = Math.max(c, MIN_ART), v = toVisual(r.at);
     const bw = r.board.offsetWidth, bh = r.board.offsetHeight;
     const clamp = (val, max) => Math.min(Math.max(val, -PAD), max + PAD - size);
     const left = clamp(v.x * c + (c - size) / 2, bw), top = clamp(v.y * c + (c - size) / 2, bh);
     Object.assign(r.jaguar.style, { width: `${size}px`, height: `${size}px`, left: `${left}px`, top: `${top}px` });
     Object.assign(r.art.style, {
-      width: `${c}px`, height: `${c}px`, left: `${v.x * c - left}px`, top: `${v.y * c - top}px`,
+      width: `${art}px`, height: `${art}px`,
+      left: `${v.x * c + (c - art) / 2 - left}px`, top: `${v.y * c + (c - art) / 2 - top}px`,
     });
     r.jaguar.dataset.cell = String(r.at);
   }

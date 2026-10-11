@@ -111,8 +111,9 @@ async function toPapa(page) {
   await walk(page, route(m, m.at, m.papa));
 }
 
-// INSIDE-THE-EDGES: every cell and papa inside the board and the viewport; the jaguar's
-// hit box inside the game area and the viewport.
+// INSIDE-THE-EDGES: every cell inside the board and the viewport; papa and the jaguar's
+// art (max(cell, 28 px): they may pass the board edge a little) and the jaguar's hit box
+// inside the game area and the viewport.
 async function inside(page) {
   const bad = await page.evaluate(() => {
     const e = 0.5, out = [];
@@ -124,13 +125,36 @@ async function inside(page) {
       const r = el.getBoundingClientRect();
       if (!within(r, view) || !within(r, board)) out.push(`cell ${i}`);
     });
-    const papa = document.querySelector('.jg-papa').getBoundingClientRect();
-    if (!within(papa, view) || !within(papa, board)) out.push('papa');
-    const jag = document.querySelector('.jg-jaguar').getBoundingClientRect();
-    if (!within(jag, view) || !within(jag, area)) out.push('jaguar');
+    for (const sel of ['.jg-papa', '.jg-jaguar', '.jg-jaguar-art']) {
+      const r = document.querySelector(sel).getBoundingClientRect();
+      if (!within(r, view) || !within(r, area)) out.push(sel);
+    }
     return out;
   });
   if (bad.length) throw new Error(`outside: ${bad.join(', ')}`);
+}
+
+// Tap rule (owner, J3): a press on the jaguar's hit box that moves < 10 px is a tap → one
+// step toward the tap point. Taps inside the hit box, 0.6 cell toward an open neighbour,
+// with a 5 px wobble; the jaguar must stand on that neighbour.
+async function tapOnHitBox(page) {
+  const m = await mazeState(page);
+  const to = neighbours(m, m.at)[0];
+  const centre = async (sel) => {
+    const b = await page.locator(sel).boundingBox();
+    return { x: b.x + b.width / 2, y: b.y + b.height / 2 };
+  };
+  const a = await centre(`.jg-cell[data-cell="${m.at}"]`), b = await centre(`.jg-cell[data-cell="${to}"]`);
+  const x = a.x + 0.6 * (b.x - a.x), y = a.y + 0.6 * (b.y - a.y);
+  const onJaguar = await page.evaluate(([px, py]) =>
+    !!document.elementFromPoint(px, py)?.closest('.jg-jaguar'), [x, y]);
+  if (!onJaguar) throw new Error('the tap point is not on the jaguar hit box');
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  await page.mouse.move(x + 3, y + 4); // 5 px: still a tap
+  await page.mouse.up();
+  await page.waitForFunction((c) => document.querySelector('.jg-jaguar')?.dataset.cell === String(c), to, { timeout: 10_000 })
+    .catch(() => { throw new Error(`tap on the hit box: the jaguar did not step to cell ${to}`); });
 }
 
 const paws = (page) => page.evaluate(() => document.querySelectorAll('.jg-cell.jg-paw').length);
@@ -158,13 +182,17 @@ const boardCase = (id) => ({
 export default {
   touch: ['.jg-jaguar', '.jg-level-btn', '.jg-continue', '.path-play'],
   cells: '.jg-cell, .path-play', // (the path screen has no cells: its button stands in)
-  minCell: 40, // touch-target exception: cells are not touch targets (games/jaguar/CLAUDE.md)
+  minCell: 20, // touch-target exception: cells are not touch targets (games/jaguar/CLAUDE.md)
 
   worstCases: [
     { name: 'path screen', async setup(page, kit) { await openPath(page, kit); } },
     boardCase(1),
-    boardCase(5),
+    boardCase(4),
     boardCase(8),
+    {
+      name: 'step 8, a tap on the jaguar hit box (5 px wobble) → one step',
+      async setup(page, kit) { await openLevel(page, kit, 8); await tapOnHitBox(page); await inside(page); },
+    },
     {
       name: "step 4, 'clue' (3 dead ends: paw prints on the next 2 cells)",
       async setup(page, kit) {

@@ -6,10 +6,10 @@
   "properties": {
     "id": { "type": "integer", "minimum": 1 },
     "difficulty": { "type": "integer", "minimum": 1, "maximum": 10 },
-    "cols": { "type": "integer", "minimum": 3, "maximum": 6 },
-    "rows": { "type": "integer", "minimum": 4, "maximum": 12 },
+    "cols": { "type": "integer", "minimum": 3, "maximum": 12 },
+    "rows": { "type": "integer", "minimum": 5, "maximum": 20 },
     "bias": { "type": "number", "minimum": 0, "maximum": 1 },
-    "loops": { "type": "integer", "minimum": 0, "maximum": 4 },
+    "loops": { "type": "integer", "minimum": 0, "maximum": 8 },
     "papa": { "enum": ["far", "middle"] },
     "deadEnds": { "type": "array", "minItems": 2, "maxItems": 2, "items": { "type": "integer", "minimum": 0 } },
     "path": { "type": "array", "minItems": 2, "maxItems": 2, "items": { "type": "integer", "minimum": 2 } },

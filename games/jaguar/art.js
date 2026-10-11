@@ -29,7 +29,8 @@ export const JAGUAR_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 
 <path d="M43 54 Q50 60 57 54" fill="none" stroke="#4A5160" stroke-width="2.5" stroke-linecap="round"/>
 </svg>`;
 
-// The papa jaguar: bigger and broader than the baby, more rosettes, calm smile.
+// The papa jaguar: bigger and broader than the baby, more rosettes, calm smile, whiskers and
+// eyebrows (owner, J3: papa_whiskers.svg).
 export const PAPA_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" aria-hidden="true">
 <path d="M76 88 C94 88 97 70 90 58" fill="none" stroke="#7A4A10" stroke-width="10" stroke-linecap="round"/>
 <path d="M76 88 C94 88 97 70 90 58" fill="none" stroke="#F2B84B" stroke-width="4" stroke-linecap="round"/>
@@ -61,4 +62,5 @@ export const PAPA_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10
 <circle cx="68" cy="31" r="2.2" fill="#FFFFFF"/>
 <path d="M43 42 L57 42 L50 49 Z" fill="#4A5160" stroke="#4A5160" stroke-width="2.5" stroke-linejoin="round"/>
 <path d="M40 53 Q50 61 60 53" fill="none" stroke="#4A5160" stroke-width="2.5" stroke-linecap="round"/>
-</svg>`;
+<path d="M36 47 L10 42 M36 50 L9 51 M36 53 L11 60 M64 47 L90 42 M64 50 L91 51 M64 53 L89 60" stroke="#4A5160" stroke-width="2.6" stroke-linecap="round" fill="none"/>
+<path d="M30 25 Q34 22 39 25 M61 25 Q66 22 70 25" stroke="#7A4A10" stroke-width="2.8" stroke-linecap="round" fill="none"/></svg>`;

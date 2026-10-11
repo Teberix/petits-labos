@@ -112,7 +112,7 @@ test('hints: hintFor thresholds', () => {
 
 // A tracker needs only maze.deadEnds and maze.path: a fake maze with many dead ends and
 // a 10-move shortest path (11 cells), so the thresholds can be tested at every step.
-const fakeMaze = { deadEnds: [100, 101, 102, 103, 104, 105, 106, 107], path: Array.from({ length: 11 }, (_, i) => i) };
+const fakeMaze = { deadEnds: Array.from({ length: 12 }, (_, i) => 100 + i), path: Array.from({ length: 11 }, (_, i) => i) };
 
 test('hints (a): 1 dead end → none, even if hit twice', () => {
   const t = createHintTracker(fakeMaze, LEVELS[0].hints);
@@ -130,8 +130,8 @@ test('hints (b): step-1 thresholds give clue at 2 dead ends, glow at 3', () => {
   assert.equal(t.strongest(), 'glow');
 });
 
-test('hints (c): step-8 thresholds give none at 3 dead ends', () => {
-  const hints = LEVELS[7].hints;
+test('hints (c): step-6 thresholds give none at 3 dead ends, clue at 4, glow at 7', () => {
+  const hints = LEVELS[5].hints;
   assert.deepEqual(hints.deadEnds, [4, 7]);
   const t = createHintTracker(fakeMaze, hints);
   t.step(100); t.step(101);
@@ -139,6 +139,22 @@ test('hints (c): step-8 thresholds give none at 3 dead ends', () => {
   assert.equal(t.step(103).hint, 'clue');
   t.step(104); t.step(105);
   assert.equal(t.step(106).hint, 'glow');
+});
+
+test('hints (c8): step-8 thresholds (J3) give none at 5 dead ends, clue at 6, glow at 12', () => {
+  const hints = LEVELS[7].hints;
+  assert.deepEqual(hints.deadEnds, [6, 12]);
+  const t = createHintTracker(fakeMaze, hints);
+  for (let k = 0; k < 4; k++) t.step(100 + k);
+  assert.equal(t.step(104).hint, 'none');
+  assert.equal(t.step(105).hint, 'clue');
+  for (let k = 6; k < 11; k++) t.step(100 + k);
+  assert.equal(t.step(111).hint, 'glow');
+});
+
+test('levels (J3): the 8 grids grow, short × long', () => {
+  const grids = LEVELS.map((l) => `${l.cols}x${l.rows}`);
+  assert.deepEqual(grids, ['3x5', '4x7', '5x8', '6x10', '7x12', '8x14', '10x16', '12x20']);
 });
 
 test('hints (d): a walk of 3× the shortest path with no dead end → clue; 5× → glow', () => {
@@ -160,4 +176,34 @@ test('hints: the stronger of the two triggers wins', () => {
   assert.equal(t.current(), 'clue');
   t.step(100); t.step(101);                      // 2 dead ends → clue, 3 → glow
   assert.equal(t.step(102).hint, 'glow');
+});
+
+// Tap vs drag (owner, J3): < 10 px between down and up = always a tap, even on the jaguar.
+test('drag: a short press on the jaguar is a tap; ≥ 10 px from the jaguar is a drag', async () => {
+  const { createDrag, STEP_MS } = await import('../games/jaguar/drag.js');
+  const on = {};
+  const board = { addEventListener: (n, f) => { on[n] = f; }, removeEventListener() {} };
+  let taps = 0, at = { x: 1, y: 1 };
+  const steps = [];
+  const drag = createDrag(board, {
+    at: (e) => ({ x: Math.floor(e.clientX / 20), y: Math.floor(e.clientY / 20) }),
+    jaguar: () => at,
+    onJaguar: () => true,
+    tryStep: (v) => { steps.push(v); at = v; return true; },
+    bump() {},
+    tapStep: () => { taps++; },
+    busy: () => false,
+  });
+  const ev = (type, x, y) => ({ type, pointerId: 1, clientX: x, clientY: y });
+  // 6 px move that crosses a cell border (cells of 20 px): still a tap, no drag step.
+  on.pointerdown(ev('pointerdown', 37, 30)); on.pointermove(ev('pointermove', 43, 30)); on.pointerup(ev('pointerup', 43, 30));
+  await new Promise((r) => setTimeout(r, STEP_MS * 3));
+  assert.equal(taps, 1);
+  assert.deepEqual(steps, []);
+  // 25 px move: a drag, one step to the right, no tap.
+  on.pointerdown(ev('pointerdown', 30, 30)); on.pointermove(ev('pointermove', 55, 30)); on.pointerup(ev('pointerup', 55, 30));
+  await new Promise((r) => setTimeout(r, STEP_MS * 3));
+  assert.equal(taps, 1);
+  assert.deepEqual(steps, [{ x: 2, y: 1 }]);
+  drag.stop();
 });
