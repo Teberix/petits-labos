@@ -20,6 +20,7 @@ export function render(root, params, app) {
           h('span', { class: 'tile-label' }, profile.name),
         )))
     : h('div', { class: 'empty-state' },
+        h('p', { class: 'welcome-note' }, t('welcomeNote')),
         h('p', {}, t('noProfiles')),
         h('p', { class: 'hint' }, t('noProfilesHint')),
       );

@@ -165,6 +165,8 @@ button:disabled { opacity: 0.5; cursor: default; }
 
 .empty-state { text-align: center; font-size: 1.2rem; }
 .hint { color: var(--ink-soft); }
+/* Parent welcome note: plain text, calm, readable; not a touch target. */
+.welcome-note { color: var(--ink-soft); max-width: 36rem; margin-inline: auto; line-height: 1.5; }
 
 /* ---------- Game screen ---------- */
 

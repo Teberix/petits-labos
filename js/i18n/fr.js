@@ -67,6 +67,7 @@ export default {
   unlockAllHint: 'Oui : tous les niveaux de tous les jeux sont ouverts. Non : ils se débloquent un par un.',
   yes: 'Oui',
   no: 'Non',
+  welcomeNote: 'Bienvenue ! Petits Labos est une app de sciences, de logique et de maths pour apprendre en jouant.',
   noProfiles: 'Aucun profil pour le moment.',
   noProfilesHint: 'Parents : maintenez ⚙️ 3 secondes pour en créer un.',
 

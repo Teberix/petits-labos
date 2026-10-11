@@ -67,6 +67,7 @@ export default {
   unlockAllHint: 'Yes: every level of every game is open. No: they unlock one by one.',
   yes: 'Yes',
   no: 'No',
+  welcomeNote: 'Welcome! Petits Labos is a science, logic and maths app for learning through play.',
   noProfiles: 'No profiles yet.',
   noProfilesHint: 'Parents: hold ⚙️ for 3 seconds to create one.',
 
