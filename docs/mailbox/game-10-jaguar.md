@@ -214,3 +214,40 @@ The doubled wait (30 s → 60 s) did not stop the failure. The failure is interm
 1. Cells at step 8 are 21–26 px. A 20 px tap on a real phone may be hard. The jaguar hit box is 64 px. Taps use the main-direction rule.
 2. The owner checks on the phone that the path climbs through steps 6–8. Measured medians: 28, 29, 35.
 3. The jobs-3 layout timeout is not explained. Watch for it in the next full gate.
+
+## J4 — jungle world (preview.21)
+
+**Model:** Sonnet 5.5 (main session). Scene-artist subagent (Sonnet): 45k tokens. Main session: about 125k tokens (over the 110k budget; the bug hunt and one gate re-run took the extra).
+
+**Built**
+- `scenes/jungle/pack.js`: square 160×160, ground 0.45, kind `free`. Registered in `scenes/registry.js`. `games/jaguar/meta.js` has `scene: 'jungle'`. PRECACHE updated (131 files).
+- `tests/jaguar.test.mjs`: the old assertion `meta.scene === undefined` now expects `'jungle'`.
+- Gift `jaguar-family` reuses the JAGUAR_SVG and PAPA_SVG shapes, scaled and copied as strings. Shapes are unchanged.
+- 18 item ids: jaguar-family, toucan, parrot, monkey, sloth, tree-frog, chameleon, butterfly-blue, snake, tapir, capybara, banana-bunch, giant-leaf, liana, orchid, waterfall, jungle-hut, canoe.
+- No id exists in another pack. fr/es/en strings exist for the title and every item.
+- Margin check: a pixel scan (strokes included) found 7 items past the 2-unit margin. I wrapped them in a `<g transform>` scale (0.96; liana 0.9). All 18 now fit.
+
+**Bug hunt**
+- Render bug: none found. `layout()` already returns on a 0 px area, and the ResizeObserver re-runs it.
+- Repro 1: step-1 board at 640×360, 3 parallel jobs, 51 runs, 0 failures. Slowest run 12.7 s, average 1.7–3.2 s.
+- Repro 2: step 8 level tap at 412×915, 3 parallel jobs, 36 runs, 0 failures.
+- During the gate, one failure: step 8 at 412×915, 60 s wait. The failure screenshot shows the level screen with all 8 buttons unlocked. The board was never started, so the tap was lost, not slow to render.
+- Cause: the test harness. Under load, one tap on a level button is lost. No product code was changed.
+- Fix (`games/jaguar/checks.js`, `openLevel`): tap again, up to 3 times, while no board exists. Commit 9f1741f.
+- Not proven: why the tap is lost (Playwright touch tap under load is the likely cause).
+
+**Gates**
+- `node --test tests/jaguar.test.mjs tests/packs.test.mjs`: 27 pass, 0 fail.
+- `node tools/gate.mjs --game jaguar` (7 sizes), final run: unit 15/0, levels 8, layout 52 screens (125 s), offline 130 files, GATE PASSED. The first run failed on the lost tap above.
+- `node tools/gate.mjs --only privacy`: PASSED.
+
+**Commits (dev, pushed):** 9f1741f harness retry, c9ad343 jungle world.
+
+**Preview:** `Teberix/petits-labos-preview` main = fe4494a, version 0.11.0-preview.21 (replaced ba18d85). The temporary branch is deleted. `dev` has no version bump.
+
+**Risks**
+- Art unseen by me: no contact sheet, as ordered. The owner's reviewer must check all 18 items on 3 grounds.
+- Scaled items have outlines of 3.84 (0.96) and 3.6 (liana). The rule says ≥ 4.
+- `jaguar-family` keeps the original 3-unit strokes of cub and papa (scaled down). The "do not change" rule and the "outline ≥ 4" rule conflict there. I kept the shapes.
+- The lost-tap cause is not proven. If a kid-side tap is ever lost on the level screen, this is the first suspect.
+- Hub/unlock effect of `scene: 'jungle'` on the jaguar path is not played on a device.
