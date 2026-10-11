@@ -295,10 +295,11 @@ export default {
     },
   ],
 
-  // Offline: ▶ from a fresh path → one step-1 board to the end → one more star.
+  // Offline: ▶ from the step-1 path → one step-1 board to the end → one more star.
   async offline(page, kit) {
-    // earlier games' offline checks leave fixedMap on (shared profile): back to the path, step 1
-    await setSkill(page, null);
+    // earlier games' offline checks leave fixedMap on (shared profile): back to the path, step 1.
+    // An explicit skill, not null: a null skill is seeded from `completed` (js/path.js).
+    await setSkill(page, 1);
     await openPath(page, kit);
     const before = await savedStars(page);
     await kit.tap(page, page.locator('.path-play'));
