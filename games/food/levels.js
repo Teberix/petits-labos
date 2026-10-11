@@ -57,6 +57,13 @@ export const ANIMALS = {
   orca: { diet: 'carn', habitats: ['sea', 'ice'], eats: ['fish', 'seal', 'penguin'] },
   krill: { diet: 'herb', habitats: ['sea', 'ice'], eats: ['algae'], snack: true },
   fish: { diet: null, habitats: ['sea', 'ice'], eats: ['krill'], sometimes: ['algae'], snack: true },
+  shark: { diet: 'carn', habitats: ['sea'], eats: ['fish', 'seal'] },
+  barracuda: { diet: 'pisc', habitats: ['sea'], eats: ['fish'] },
+  pelican: { diet: 'pisc', habitats: ['sea'], eats: ['fish'] },
+  kingfisher: { diet: 'pisc', habitats: ['forest'], eats: ['fish'] },
+  parrotfish: { diet: 'herb', habitats: ['sea'], eats: ['algae'] },
+  clownfish: { diet: 'omni', habitats: ['sea'], eats: ['algae', 'krill'] },
+  angelfish: { diet: 'omni', habitats: ['sea'], eats: ['algae', 'krill'] },
   turtle: { diet: 'omni', habitats: ['sea'], eats: ['algae'], sometimes: ['krill', 'fish', 'grass'] },
   crab: { diet: 'omni', habitats: ['sea'], eats: ['algae'], sometimes: ['fish', 'krill'] },
 };

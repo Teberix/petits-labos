@@ -76,6 +76,7 @@ export default {
     'food.name.penguin': 'le manchot', 'food.name.seal': 'le phoque', 'food.name.orca': 'l’orque',
     'food.name.krill': 'le krill', 'food.name.fish': 'le poisson', 'food.name.turtle': 'la tortue de mer',
     'food.name.crab': 'le crabe',
+    'food.name.shark': 'le requin', 'food.name.barracuda': 'le barracuda', 'food.name.pelican': 'le pélican', 'food.name.kingfisher': 'le martin-pêcheur', 'food.name.parrotfish': 'le poisson-perroquet', 'food.name.clownfish': 'le poisson-clown', 'food.name.angelfish': 'le poisson-ange',
   },
   es: {
     'food.chooseLevel': '¡Elige un nivel!',
@@ -150,6 +151,7 @@ export default {
     'food.name.penguin': 'el pingüino', 'food.name.seal': 'la foca', 'food.name.orca': 'la orca',
     'food.name.krill': 'el kril', 'food.name.fish': 'el pez', 'food.name.turtle': 'la tortuga marina',
     'food.name.crab': 'el cangrejo',
+    'food.name.shark': 'el tiburón', 'food.name.barracuda': 'el barracuda', 'food.name.pelican': 'el pelícano', 'food.name.kingfisher': 'el martín pescador', 'food.name.parrotfish': 'el pez loro', 'food.name.clownfish': 'el pez payaso', 'food.name.angelfish': 'el pez ángel',
   },
   en: {
     'food.chooseLevel': 'Choose a level!',
@@ -224,6 +226,7 @@ export default {
     'food.name.penguin': 'the penguin', 'food.name.seal': 'the seal', 'food.name.orca': 'the orca',
     'food.name.krill': 'the krill', 'food.name.fish': 'the fish', 'food.name.turtle': 'the sea turtle',
     'food.name.crab': 'the crab',
+    'food.name.shark': 'the shark', 'food.name.barracuda': 'the barracuda', 'food.name.pelican': 'the pelican', 'food.name.kingfisher': 'the kingfisher', 'food.name.parrotfish': 'the parrotfish', 'food.name.clownfish': 'the clownfish', 'food.name.angelfish': 'the angelfish',
   },
   de: {
     'food.chooseLevel': 'Wähle eine Stufe!',
@@ -298,5 +301,6 @@ export default {
     'food.name.penguin': 'der Pinguin', 'food.name.seal': 'die Robbe', 'food.name.orca': 'der Orca',
     'food.name.krill': 'der Krill', 'food.name.fish': 'der Fisch', 'food.name.turtle': 'die Meeresschildkröte',
     'food.name.crab': 'die Krabbe',
+    'food.name.shark': 'der Hai', 'food.name.barracuda': 'der Barrakuda', 'food.name.pelican': 'der Pelikan', 'food.name.kingfisher': 'der Eisvogel', 'food.name.parrotfish': 'der Papageifisch', 'food.name.clownfish': 'der Clownfisch', 'food.name.angelfish': 'der Kaiserfisch',
   },
 };

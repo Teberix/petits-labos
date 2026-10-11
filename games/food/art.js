@@ -357,6 +357,70 @@ export const ART = {
     <circle cx="42" cy="36" r="6" fill="#fff"/><circle cx="58" cy="36" r="6" fill="#fff"/>
     ${eye(42, 37, 3.2)}${eye(58, 37, 3.2)}
     ${smile(50, 72, 4)}`),
+  // ---------- Sea and shore (F5) ----------
+  shark: svg(`
+    <path d="M78 62q12-14 20-24-2 14 0 22 2 8 0 16-8-10-20-14z" fill="#78909C"/>
+    <path d="M44 42q8-22 22-26 0 14 4 26z" fill="#78909C"/>
+    <path d="M8 62q8-24 44-24 28 0 38 24-10 18-40 18-34 0-42-18z" fill="#90A4AE"/>
+    <path d="M12 66q30 14 74-2-10 14-38 14-28 0-36-12z" fill="#ECEFF1"/>
+    <path d="M48 72q-4 12-14 16 12 2 20-8z" fill="#78909C"/>
+    ${eye(24, 56, 3.4)}
+    <path d="M13 66q8 7 18 4" fill="none" stroke="#37474F" stroke-width="1.8" stroke-linecap="round"/>
+    <path d="M42 56q-2 6 0 10M48 56q-2 6 0 10" fill="none" stroke="#78909C" stroke-width="1.6" stroke-linecap="round"/>`),
+  barracuda: svg(`
+    <path d="M78 58l18-14q-2 14 0 28L78 62z" fill="#78909C"/>
+    <path d="M60 52l6-10 8 12zM56 70l6 8 6-10z" fill="#78909C"/>
+    <path d="M4 60q2-6 14-10 30-8 62 2l2 10q-30 14-62 8-12-2-16-10z" fill="#B0BEC5"/>
+    <path d="M14 66q30 10 66 0l1 4q-34 12-67 2z" fill="#ECEFF1"/>
+    <path d="M26 52q18 6 52 2M26 58q18 4 52 0" fill="none" stroke="#90A4AE" stroke-width="2"/>
+    ${eye(22, 57, 3.2)}
+    <path d="M5 63q8 4 16 2" fill="none" stroke="#37474F" stroke-width="1.8" stroke-linecap="round"/>`),
+  pelican: svg(`
+    <path d="M70 70q18-12 22-30-14 4-26 14z" fill="#CFD8DC"/>
+    <ellipse cx="54" cy="62" rx="28" ry="22" fill="#FAFAFA"/>
+    <path d="M50 58q16 0 28 14-12 6-28-2z" fill="#E3E8EB"/>
+    <path d="M38 22q4-12 16-8 8 4 4 16-2 10-8 18-12-4-12-26z" fill="#FAFAFA"/>
+    <path d="M20 24q-12 0-18 14 10 8 22 6l14-14z" fill="#FFB300" stroke="#E65100" stroke-width="2" stroke-linejoin="round"/>
+    <path d="M24 26l22 4" stroke="#E65100" stroke-width="2.4" stroke-linecap="round"/>
+    ${eye(44, 24, 3)}
+    <path d="M44 84v8M60 84v8" stroke="#FF8F00" stroke-width="3" stroke-linecap="round"/>
+    <path d="M38 94h14M54 94h14" stroke="#FF8F00" stroke-width="3.4" stroke-linecap="round"/>`),
+  kingfisher: svg(`
+    <path d="M62 60q22 6 30 28-16 0-30-18z" fill="#1E88E5"/>
+    <ellipse cx="48" cy="62" rx="22" ry="26" fill="#FF8F00"/>
+    <path d="M52 40q20 6 20 28-8 12-22 12 14-18 2-40z" fill="#1E88E5"/>
+    <circle cx="40" cy="32" r="16" fill="#1E88E5"/>
+    <ellipse cx="42" cy="44" rx="9" ry="5" fill="#FAFAFA"/>
+    <path d="M26 28L4 33l22 6z" fill="#37474F"/>
+    ${eye(37, 29, 3)}
+    <path d="M40 86v6M52 86v6" stroke="#E53935" stroke-width="3" stroke-linecap="round"/>
+    <path d="M36 95h10M48 95h10" stroke="#E53935" stroke-width="3" stroke-linecap="round"/>`),
+  parrotfish: svg(`
+    <path d="M76 58l18-16v34z" fill="#26A69A"/>
+    <path d="M36 40q10-12 26-2-14 2-26 2zM42 80q10 8 22 0-12-2-22 0z" fill="#80CBC4"/>
+    <ellipse cx="46" cy="60" rx="34" ry="22" fill="#00B8A9"/>
+    <path d="M30 70q16 12 40 4-14 8-40-4z" fill="#4DD0C4"/>
+    <path d="M40 46q-4 10 0 18M52 46q-4 10 0 18M64 48q-4 8 0 16" fill="none" stroke="#00897B" stroke-width="2.4" stroke-linecap="round"/>
+    <path d="M12 56q-8 0-8 8 0 6 8 6l4-4z" fill="#FFF3C4" stroke="#BCA45A" stroke-width="1.6" stroke-linejoin="round"/>
+    <path d="M6 64h9" stroke="#BCA45A" stroke-width="1.4"/>
+    ${eye(24, 52, 3.4)}`),
+  clownfish: svg(`
+    <path d="M76 60l18-14v28z" fill="#FF7A1A"/>
+    <path d="M38 40q10-14 26-4-14 2-26 4z" fill="#FF7A1A"/>
+    <ellipse cx="46" cy="60" rx="34" ry="22" fill="#FF7A1A"/>
+    <path d="M28 41q-6 19 0 38 6 2 8 0-6-19 0-38-4-2-8 0zM50 38q-6 22 0 44 6 2 8 0-6-22 0-44-4-2-8 0zM68 46q-4 14 0 28 4 1 6 0-4-14 0-28-3-1-6 0z" fill="#FAFAFA" stroke="#2B2B2B" stroke-width="1.6" stroke-linejoin="round"/>
+    <path d="M44 82q6 6 16 0-8-2-16 0z" fill="#FF7A1A"/>
+    ${eye(20, 56, 3)}
+    ${smile(14, 66, 3)}`),
+  angelfish: svg(`
+    <path d="M70 52l24-24q4 14 0 32 4 14 0 30L70 70z" fill="#29B6F6"/>
+    <path d="M44 38L50 6q10 20 14 40z" fill="#29B6F6"/>
+    <path d="M42 80l6 16q8-10 12-22z" fill="#29B6F6"/>
+    <ellipse cx="46" cy="58" rx="26" ry="30" fill="#FFD600"/>
+    <path d="M40 30q-8 28 0 56M54 30q-6 28 0 56" fill="none" stroke="#263238" stroke-width="5" stroke-linecap="round"/>
+    <ellipse cx="28" cy="62" rx="5" ry="4" fill="#FFB300"/>
+    ${eye(30, 50, 3.4)}
+    ${smile(24, 66, 3)}`),
 };
 
 // ---------- Scenes ----------
