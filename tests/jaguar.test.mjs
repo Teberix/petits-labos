@@ -29,7 +29,7 @@ test('levels: 8 steps, meta matches, 2 rounds per play', () => {
   assert.equal(meta.steps, 8);
   assert.equal(meta.id, 'jaguar');
   assert.equal(meta.path, true);
-  assert.equal(meta.scene, undefined);
+  assert.equal(meta.scene, 'jungle');
   assert.equal(ROUNDS_PER_PLAY, 2);
 });
 

@@ -3,7 +3,8 @@ export default {
   id: 'jaguar',
   // Non-linguistic game → played in the app language (French by default).
   titleKey: 'jaguar.title',
-  // New engine: the path screen (js/path.js). No scene: this game gives no world of its own.
+  // New engine: the path screen (js/path.js). Its world: the jungle (scenes/jungle).
+  scene: 'jungle',
   path: true,
   steps: 8, // difficulty steps of the path (= maxStep of its levels; a unit test checks it)
   strings: {
