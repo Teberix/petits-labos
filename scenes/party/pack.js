@@ -222,7 +222,7 @@ export default {
     de: {
       title: 'das Fest',
       'item.cake': 'die Geburtstagstorte', 'item.present': 'das Geschenk', 'item.balloons': 'die Luftballons',
-      'item.party-hat': 'der Partyhut', 'item.bunting': 'die Wimpelkette', 'item.cupcake': 'das Cupcake',
+      'item.party-hat': 'der Partyhut', 'item.bunting': 'die Wimpelkette', 'item.cupcake': 'der Cupcake',
       'item.lemonade': 'die Limonade', 'item.pinata': 'die Piñata', 'item.party-blower': 'die Partytröte',
       'item.confetti': 'das Konfetti', 'item.table': 'der Tisch', 'item.bear': 'der Bär',
       'item.rabbit': 'das Kaninchen', 'item.elephant': 'der Elefant', 'item.giraffe': 'die Giraffe',
