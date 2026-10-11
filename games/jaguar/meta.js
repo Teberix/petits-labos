@@ -11,6 +11,7 @@ export default {
     fr: { 'jaguar.title': 'Le Petit Jaguar' },
     es: { 'jaguar.title': 'El Pequeño Jaguar' },
     en: { 'jaguar.title': 'Little Jaguar' },
+    de: { 'jaguar.title': 'Kleiner Jaguar' },
   },
   // Tile art: a spotted jaguar face above a little maze corner.
   icon: `<svg viewBox="0 0 100 100" aria-hidden="true">

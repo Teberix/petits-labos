@@ -7,6 +7,7 @@ export default {
     fr: { 'market.title': 'Le Marché' },
     es: { 'market.title': 'El Mercado' },
     en: { 'market.title': 'The Market' },
+    de: { 'market.title': 'Der Markt' },
   },
   // Tile art: a market stall awning over an apple and a coin.
   icon: `<svg viewBox="0 0 100 100" aria-hidden="true">

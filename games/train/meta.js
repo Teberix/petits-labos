@@ -11,6 +11,7 @@ export default {
     fr: { 'train.title': 'Le Train des Suites' },
     es: { 'train.title': 'El Tren de las Series' },
     en: { 'train.title': 'The Pattern Train' },
+    de: { 'train.title': 'Der Musterzug' },
   },
   // Tile art: a little locomotive pulling a red circle and a blue square.
   icon: `<svg viewBox="0 0 100 100" aria-hidden="true">

@@ -11,6 +11,7 @@ export default {
     fr: { 'balance.title': 'La Balance' },
     es: { 'balance.title': 'La Balanza' },
     en: { 'balance.title': 'The Scales' },
+    de: { 'balance.title': 'Die Waage' },
   },
   // Tile art: a balance leaning right — a balloon up, a stone down.
   icon: `<svg viewBox="0 0 100 100" aria-hidden="true">

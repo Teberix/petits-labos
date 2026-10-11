@@ -11,6 +11,7 @@ export default {
     fr: { 'shapes.title': 'Formes à tourner' },
     es: { 'shapes.title': 'Formas para girar' },
     en: { 'shapes.title': 'Turn the Shapes' },
+    de: { 'shapes.title': 'Formen drehen' },
   },
   // Tile art: a red triangle, a yellow circle and a blue square, and the triangle's
   // shadow (a turned grey outline).

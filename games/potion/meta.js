@@ -7,6 +7,7 @@ export default {
     fr: { 'potion.title': 'La Potion' },
     es: { 'potion.title': 'La Poción' },
     en: { 'potion.title': 'The Potion' },
+    de: { 'potion.title': 'Der Zaubertrank' },
   },
   // Tile art: a round flask with a bubbling potion.
   icon: `<svg viewBox="0 0 100 100" aria-hidden="true">

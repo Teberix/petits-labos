@@ -23,3 +23,21 @@ test('every en key exists in de, with a non-empty value and the same placeholder
 test('de has no key that en lacks', () => {
   for (const key of Object.keys(de)) assert.ok(key in en, `extra de key: ${key}`);
 });
+
+// G2: every game's strings and hub title have a complete 'de' block.
+const GAMES = ['balance', 'food', 'jaguar', 'market', 'memory', 'potion', 'robot', 'shapes', 'train'];
+for (const id of GAMES) {
+  test(`game ${id}: de strings match en (keys, non-empty, placeholders)`, async () => {
+    const strings = (await import(`../games/${id}/strings.js`)).default;
+    const meta = (await import(`../games/${id}/meta.js`)).default;
+    for (const dict of [strings, meta.strings]) {
+      assert.ok(dict.de, `${id}: no de block`);
+      for (const [key, value] of Object.entries(dict.en)) {
+        assert.ok(key in dict.de, `${id}: missing de key ${key}`);
+        assert.ok(dict.de[key].trim() !== '', `${id}: empty de value ${key}`);
+        assert.equal(placeholders(dict.de[key]), placeholders(value), `${id}: placeholders differ ${key}`);
+      }
+      for (const key of Object.keys(dict.de)) assert.ok(key in dict.en, `${id}: extra de key ${key}`);
+    }
+  });
+}

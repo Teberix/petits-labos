@@ -7,6 +7,7 @@ export default {
     fr: { 'food.title': 'Qui mange qui ?' },
     es: { 'food.title': '¿Quién come qué?' },
     en: { 'food.title': 'Who Eats What?' },
+    de: { 'food.title': 'Wer frisst was?' },
   },
   // Tile art: a carrot → a rabbit, joined by an arrow.
   icon: `<svg viewBox="0 0 100 100" aria-hidden="true">

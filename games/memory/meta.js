@@ -11,6 +11,7 @@ export default {
     fr: { 'memory.title': 'Duo Mémoire' },
     es: { 'memory.title': 'Memoria en Dúo' },
     en: { 'memory.title': 'Memory Duo' },
+    de: { 'memory.title': 'Memory-Duo' },
   },
   // Tile art: one face-down card and one turned over (a red circle).
   icon: `<svg viewBox="0 0 100 100" aria-hidden="true">

@@ -11,6 +11,7 @@ export default {
     fr: { 'robot.title': 'Robot Codeur' },
     es: { 'robot.title': 'Robot Programador' },
     en: { 'robot.title': 'Robot Coder' },
+    de: { 'robot.title': 'Roboter-Coder' },
   },
   // Tile art: the robot's head over an arrow card.
   icon: `<svg viewBox="0 0 100 100" aria-hidden="true">

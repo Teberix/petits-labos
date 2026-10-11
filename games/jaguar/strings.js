@@ -39,4 +39,17 @@ export default {
     'jaguar.glow': 'The paw prints show the way!',
     'jaguar.hug': 'A big hug!',
   },
+  de: {
+    'jaguar.path': 'Hilf dem kleinen Jaguar, seinen Papa zu finden! Schieb den Jaguar.',
+    'jaguar.chooseLevel': 'Wähle eine Stufe.',
+    'jaguar.level': 'Stufe {n}',
+    'jaguar.jaguar': 'Kleiner Jaguar',
+    'jaguar.board': 'Labyrinth',
+    'jaguar.continue': 'Weiter',
+    'jaguar.levelDone': 'Super! Der kleine Jaguar ist bei seinem Papa!',
+    'jaguar.sniff': 'Hm… Papa ruft!',
+    'jaguar.clue': 'Folge den Pfotenspuren!',
+    'jaguar.glow': 'Die Pfotenspuren zeigen den Weg!',
+    'jaguar.hug': 'Eine dicke Umarmung!',
+  },
 };
