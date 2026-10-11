@@ -1,0 +1,18 @@
+{
+  "$comment": "ONE level of market (a parameter set; its sales are made at play time by money.js nextBasket). Dev-only (never precached). The free shop is not a level: it lives in levels.js (FREE).",
+  "type": "object",
+  "required": ["id", "difficulty", "coins", "prices", "rounds"],
+  "additionalProperties": false,
+  "properties": {
+    "id": { "type": "integer", "minimum": 1 },
+    "difficulty": { "type": "integer", "minimum": 1, "maximum": 10 },
+    "coins": { "type": "array", "minItems": 1, "items": { "enum": [1, 2, 5] } },
+    "prices": { "type": "array", "minItems": 2, "maxItems": 2, "items": { "type": "integer", "minimum": 1, "maximum": 10 } },
+    "items": { "type": "integer", "minimum": 2, "maximum": 3 },
+    "total": { "type": "array", "minItems": 2, "maxItems": 2, "items": { "type": "integer", "minimum": 2, "maximum": 10 } },
+    "rounds": { "type": "integer", "minimum": 1 },
+    "seller": { "const": true },
+    "paidWith": { "enum": [5, 10] },
+    "intro": { "type": "string", "pattern": "^market\\.intro\\.[a-z]+$" }
+  }
+}

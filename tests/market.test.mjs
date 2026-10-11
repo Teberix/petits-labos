@@ -112,7 +112,7 @@ test('level 4 asks for two items; every total from 3 to 10 can come up', () => {
 });
 
 test('seller level: one 5-franc coin, prices 1–4, all the change can be given from the till', () => {
-  const level = LEVELS.find((l) => l.seller);
+  const level = LEVELS.find((l) => l.id === 5);
   assert.equal(level.paidWith, 5);
   assert.deepEqual(level.prices, [1, 4]);
   assert.deepEqual(level.coins, [1, 2]);
@@ -123,9 +123,34 @@ test('seller level: one 5-franc coin, prices 1–4, all the change can be given 
   }
 });
 
+test('level 8: three items, every total from 6 to 10', () => {
+  const level = LEVELS.find((l) => l.id === 8);
+  assert.equal(level.items, 3);
+  const baskets = possibleBaskets(level);
+  assert.ok(baskets.length >= 2);
+  for (const basket of baskets) {
+    assert.equal(basket.length, 3);
+    const price = total(basket);
+    assert.ok(price >= 6 && price <= 10, `${basket}: total ${price}`);
+    assert.ok(canPay(price, level.coins));
+  }
+  assert.deepEqual([...new Set(baskets.map(total))].sort((a, b) => a - b), [6, 7, 8, 9, 10]);
+});
+
+test('level 7: a 10-franc note, change 1–9, every change can be given with 1, 2 and 5', () => {
+  const level = LEVELS.find((l) => l.id === 7);
+  assert.equal(level.paidWith, 10);
+  assert.deepEqual(level.coins, [1, 2, 5]);
+  for (const [price] of possibleBaskets(level)) {
+    const change = saleTarget(level, price);
+    assert.ok(change >= 1 && change <= 9, `price ${price}: change ${change}`);
+    assert.ok(canPay(change, level.coins), `change ${change} can be given`);
+  }
+});
+
 test('saleTarget: the price when buying, the change when selling', () => {
   const buying = LEVELS.find((l) => l.id === 3);
-  const selling = LEVELS.find((l) => l.seller);
+  const selling = LEVELS.find((l) => l.id === 5);
   assert.equal(saleTarget(buying, 7), 7);
   assert.equal(saleTarget(selling, 3), 2);
   for (const [price] of possibleBaskets(selling)) {

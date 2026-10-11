@@ -156,6 +156,23 @@ export default {
       },
     },
     {
+      // Level 8 (fixed map): three items on the counter, their tags must not overlap.
+      name: 'level 8, three items on the counter',
+      async setup(page, kit) {
+        await openLevel(page, kit, 8);
+        const n = await page.locator('.mk-item').count();
+        if (n !== 3) throw new Error(`${n} items, expected 3`);
+      },
+    },
+    {
+      // Level 7 (fixed map): the customer hands over a 10-franc note, not a coin.
+      name: 'level 7 (seller), the 10-franc note is shown',
+      async setup(page, kit) {
+        await openLevel(page, kit, 7);
+        if (!await page.locator('.mk-paid[data-value="10"]').count()) throw new Error('no 10-franc note');
+      },
+    },
+    {
       // Seller level, all hints (red circles up to 5, wiggling coins). One coin of
       // 1 franc must not be the exact change, so a sale with change 1 is done first.
       name: 'level 5 (seller), all hints on screen',

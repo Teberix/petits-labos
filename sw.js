@@ -72,6 +72,7 @@ const PRECACHE = [
   'games/jaguar/strings.js',
   'games/market/art.js',
   'games/market/levels.js',
+  'games/market/levels.json',
   'games/market/market.css',
   'games/market/market.js',
   'games/market/meta.js',

@@ -23,6 +23,19 @@ export function coin(value) {
   </svg>`;
 }
 
+// A friendly 10-franc banknote (the seller level where the customer pays with 10). Original
+// design: a rounded rectangle, a big numeral, ten little dots. Not the real note.
+export function note(value) {
+  const dots = Array.from({ length: value }, (_, i) =>
+    `<circle cx="${(18 + (i % 5) * 16).toFixed(0)}" cy="${i < 5 ? 14 : 62}" r="3.5" fill="#FF8A2A"/>`);
+  return `<svg viewBox="0 0 100 76" aria-hidden="true">
+    <rect x="3" y="3" width="94" height="70" rx="9" fill="#F5D88A" stroke="#C9A24A" stroke-width="4"/>
+    <rect x="11" y="11" width="78" height="54" rx="6" fill="#FBEBB8"/>
+    ${dots.join('')}
+    <text x="50" y="52" text-anchor="middle" font-size="34" font-weight="800" fill="#6B5420" font-family="system-ui, sans-serif">${value}</text>
+  </svg>`;
+}
+
 // ---------- Customers ----------
 // Head and shoulders above the counter. One mouth per mood (market.css shows the
 // right one from data-mood): neutral, happy, wait (a little "o").

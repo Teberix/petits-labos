@@ -143,6 +143,7 @@
 /* Seller level: the customer's coin lies on the counter, in front of it. */
 .mk-paid { position: absolute; z-index: 2; left: 28cqw; bottom: 5cqh; width: 24cqh; filter: drop-shadow(0 0.2rem 0 rgba(43, 33, 65, 0.25)); }
 .mk-paid svg { display: block; width: 100%; height: auto; }
+.mk-paid[data-value="10"] { width: 36cqh; } /* the banknote: wider than a coin */
 .mk-paid.mk-gone { visibility: hidden; }
 
 /* Moods: one mouth per mood. */

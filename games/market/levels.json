@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "game": "market",
+  "levels": [
+    { "id": 1, "difficulty": 1, "coins": [1], "prices": [1, 5], "rounds": 5 },
+    { "id": 2, "difficulty": 2, "coins": [1, 2], "prices": [2, 6], "rounds": 5, "intro": "market.intro.two" },
+    { "id": 3, "difficulty": 3, "coins": [1, 2, 5], "prices": [3, 10], "rounds": 5, "intro": "market.intro.five" },
+    { "id": 4, "difficulty": 4, "coins": [1, 2, 5], "prices": [1, 6], "items": 2, "total": [3, 10], "rounds": 5, "intro": "market.intro.basket" },
+    { "id": 5, "difficulty": 5, "seller": true, "coins": [1, 2], "paidWith": 5, "prices": [1, 4], "rounds": 5, "intro": "market.intro.seller" },
+    { "id": 8, "difficulty": 6, "coins": [1, 2, 5], "prices": [1, 4], "items": 3, "total": [6, 10], "rounds": 5, "intro": "market.intro.three" },
+    { "id": 7, "difficulty": 7, "seller": true, "coins": [1, 2, 5], "paidWith": 10, "prices": [1, 9], "rounds": 5, "intro": "market.intro.ten" }
+  ]
+}

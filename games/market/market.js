@@ -239,7 +239,7 @@ function createGame(container, ctx) {
       priceTag(price)));
     // Seller level: the customer's coin (e.g. 5 francs) lies on the counter, in front of it.
     const paid = sale.seller
-      ? h('div', { class: 'mk-paid', 'data-value': play.level.paidWith, html: art.coin(play.level.paidWith) })
+      ? h('div', { class: 'mk-paid', 'data-value': play.level.paidWith, html: play.level.paidWith >= 10 ? art.note(play.level.paidWith) : art.coin(play.level.paidWith) })
       : null;
     play.els.scene.replaceChildren(h('div', { class: `mk-stall${sale.seller ? ' mk-selling' : ''}` },
       seller, h('div', { class: 'mk-counter' }), paid, h('div', { class: 'mk-goods' }, goods)));
