@@ -5,6 +5,7 @@
 export default {
   fr: {
     'market.chooseLevel': 'Choisis un niveau !',
+    'market.path': 'Appuie sur le bouton : un client arrive au marché !',
     'market.level': 'Niveau {n}',
     'market.howTo': 'Glisse des pièces de ton porte-monnaie sur le comptoir, puis appuie sur la main verte pour payer.',
     'market.intro.two': 'Nouvelle pièce ! Celle-ci vaut 2 francs.',
@@ -75,6 +76,7 @@ export default {
   },
   es: {
     'market.chooseLevel': '¡Elige un nivel!',
+    'market.path': '¡Pulsa el botón: llega un cliente al mercado!',
     'market.level': 'Nivel {n}',
     'market.howTo': 'Arrastra monedas de tu monedero al mostrador y luego pulsa la mano verde para pagar.',
     'market.intro.two': '¡Moneda nueva! Esta vale 2 francos.',
@@ -145,6 +147,7 @@ export default {
   },
   en: {
     'market.chooseLevel': 'Choose a level!',
+    'market.path': 'Press the button: a customer comes to the market!',
     'market.level': 'Level {n}',
     'market.howTo': 'Drag coins from your purse onto the counter, then press the green hand to pay.',
     'market.intro.two': 'A new coin! This one is worth 2 francs.',
@@ -215,6 +218,7 @@ export default {
   },
   de: {
     'market.chooseLevel': 'Wähle eine Stufe!',
+    'market.path': 'Drück auf den Knopf: Ein Kunde kommt auf den Markt!',
     'market.level': 'Stufe {n}',
     'market.howTo': 'Zieh Münzen aus deinem Geldbeutel auf die Theke, dann drück die grüne Hand zum Bezahlen.',
     'market.intro.two': 'Eine neue Münze! Sie ist 2 Franken wert.',

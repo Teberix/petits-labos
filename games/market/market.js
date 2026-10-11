@@ -73,6 +73,7 @@ const pickOne = (n) => 1 + Math.floor(Math.random() * n);
 function createGame(container, ctx) {
   const { t, sfx } = ctx;
   const timers = new Set();
+  const saidFewerIn = new Set();  // level ids where "fewer coins?" was said (once per level, not per ▶)
   let purseCleanups = []; // drag listeners of the purse coins
   let trayCleanups = [];  // drag listeners of the counter's stacks (rebuilt on every change)
   let destroyed = false;
@@ -130,7 +131,7 @@ function createGame(container, ctx) {
       onFree: () => { sfx.pop(); playLevel(FREE); },
       roundsPerPlay: ROUNDS_PER_PLAY,
     });
-    ctx.speak(t('market.chooseLevel'));
+    ctx.speak(t('market.path'));
   }
 
   // The level's intro (and the "how to" of the first level) is said once per level:
@@ -210,7 +211,6 @@ function createGame(container, ctx) {
       index: 0,
       perfectRun: true,  // every sale that left a choice got the bonus star
       hadChoice: false,  // at least one sale left a choice (else no crown: nothing to earn)
-      saidFewer: false,  // "could you do it with fewer coins?" — once per level
       els: { root, scene, tray, purse },
     };
     if (level.free) startFree();
@@ -517,8 +517,8 @@ function createGame(container, ctx) {
     if (choice && !bonus) play.perfectRun = false;
     if (bonus) {
       remark(t('market.bonus'));
-    } else if (choice && !overpaid && !play.saidFewer && coinCount > fewest) {
-      play.saidFewer = true; // said at most once per level: the crown does the rest
+    } else if (choice && !overpaid && !saidFewerIn.has(play.level.id) && coinCount > fewest) {
+      saidFewerIn.add(play.level.id); // said at most once per level: the crown does the rest
       remark(t('market.fewer'));
     } else if (!overpaid) {
       // (After too much, the seller is still saying how much it was: no talking over it.)
