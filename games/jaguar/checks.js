@@ -40,7 +40,13 @@ async function openLevel(page, kit, id) {
   await page.reload();
   await kit.openGame(page, 'jaguar');
   await page.locator('.jg-level-btn').first().waitFor({ timeout: 30_000 });
-  await kit.tap(page, page.locator('.jg-level-btn').nth(id - 1));
+  // Under load a tap was lost twice (J4: the level screen was still shown after 60 s; 36 runs
+  // alone never lost one) → tap again while the level buttons are still on screen.
+  for (let attempt = 0; attempt < 3; attempt++) {
+    await kit.tap(page, page.locator('.jg-level-btn').nth(id - 1));
+    const started = await page.waitForSelector('.jg-board', { timeout: 8_000 }).then(() => true, () => false);
+    if (started) break;
+  }
   await waitBoard(page, kit);
 }
 
