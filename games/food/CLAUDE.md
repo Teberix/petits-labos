@@ -24,8 +24,7 @@ cards of the same kind: penguin → fish / worm / fly) · 5 chain of 3, plant in
 6 chain of 3 + 1 decoy · 7 chain of 4. 5 rounds each. Progress is saved by level
 `id` — never renumber.
 
-**Levels in `levels.js`, not `levels.json`** — an exception the owner accepted
-(2026-09-30, noted in GAMES.md): rounds are generated from the data, not hand-made, and
+**Level params in `levels.json`** (loaded by `levels.js`). Rounds are generated from the data, not hand-made, and
 `tests/food.test.mjs` acts as the solver: it lists every round each level can make and
 checks each has exactly one right answer.
 
@@ -90,6 +89,7 @@ checks each has exactly one right answer.
 - The 4 diets: `herb` (plants), `carn` (land animals), `pisc` (fish), `omni` (both).
 - `diet` in `levels.js` is **curated by the owner, never derived** from `eats`. An
   animal without a diet (fish) is never sorted. A new animal needs an owner-approved diet.
+- Optional `exclude: [ids]` in a level hides those animals from its sort rounds (level 12: shark, orca — owner, F6).
 - Level 10 = 2 diets, 11 = 3, 12 = 4. 5 rounds each. The intro is said in round 1
   and replaces the round question.
 - `checks.js`: level 12 (4 baskets + 8 animals) and level 10 (2 + 4) on the fixed map.
