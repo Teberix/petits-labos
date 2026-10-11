@@ -107,17 +107,21 @@ export async function checkLayout(args = []) {
   const server = await startServer();
   const browser = await chromium.launch();
   let screens = 0;
+  const retries = []; // setups that failed in the parallel pass without a JS error
+  const flaky = [];   // … and passed when re-run alone (information, not a failure)
 
   // One suite at one size. A worst case marked `once: true` (a behaviour check: it plays
   // and asserts saved data; its screen is not a layout case of its own) runs at the first
   // size only. A worst case that timed out or broke on a JS error is skipped at the other
   // sizes (it would fail the same way).
-  async function runJob({ id, checks, broken }, size) {
+  // retry = null: first pass (parallel). retry = a worst case: run only it, alone (serial).
+  async function runJob(suite, size, retry = null) {
+    const { id, checks, broken } = suite;
     const context = await newContext(browser, size);
     try {
-      for (const wc of checks.worstCases) {
-        if (broken.has(wc)) continue;
-        if (wc.once && size !== sizes[0]) continue;
+      for (const wc of retry ? [retry] : checks.worstCases) {
+        if (!retry && broken.has(wc)) continue;
+        if (!retry && wc.once && size !== sizes[0]) continue;
         const page = await context.newPage();
         const errors = watchErrors(page);
         const where = `${id} · ${wc.name} · ${size.name}`;
@@ -136,11 +140,18 @@ export async function checkLayout(args = []) {
             failures.push(...problems.map((p) => `${where}: ${p}`));
           }
         } catch (err) {
-          const skip = err.timedOut || errors.some((e) => e.startsWith('page error'));
-          if (skip) broken.add(wc);
-          const skipped = skip ? ' (other sizes skipped)' : '';
-          failures.push(`${where}: setup failed — ${describeFailure(err, errors)}${skipped}`);
-          await page.screenshot({ path: screenshotPath(id, wc.name, size.name, 'error') }).catch(() => {});
+          const jsError = errors.some((e) => e.startsWith('page error'));
+          if (!retry && !jsError) {
+            // A setup that only timed out in the parallel pass may be load, not a bug:
+            // try it once more, alone, after the parallel pass (owner, 2026-10-11).
+            retries.push({ suite, size, wc, first: describeFailure(err, errors) });
+          } else {
+            if (jsError || err.timedOut) broken.add(wc);
+            const skipped = jsError || err.timedOut ? ' (other sizes skipped)' : '';
+            const again = retry ? ' (also failed when re-run alone)' : '';
+            failures.push(`${where}: setup failed — ${describeFailure(err, errors)}${again}${skipped}`);
+            await page.screenshot({ path: screenshotPath(id, wc.name, size.name, 'error') }).catch(() => {});
+          }
         }
         await page.close();
       }
@@ -162,11 +173,17 @@ export async function checkLayout(args = []) {
       for (let next = queue.shift(); next; next = queue.shift()) await runJob(...next);
     };
     await Promise.all(Array.from({ length: JOBS }, worker));
+    // Re-run alone (one at a time) every setup that failed in the parallel pass.
+    for (const r of retries) {
+      const before = failures.length;
+      await runJob(r.suite, r.size, r.wc);
+      if (failures.length === before) flaky.push(`${r.suite.id} · ${r.wc.name} · ${r.size.name}: passed when re-run alone (first try: ${r.first})`);
+    }
   } finally {
     await browser.close();
     await server.stop();
   }
-  return { ok: failures.length === 0, summary: `${screens} screens checked`, failures };
+  return { ok: failures.length === 0, summary: `${screens} screens checked${flaky.length ? `, ${flaky.length} passed on a re-run alone` : ''}`, failures, info: flaky };
 }
 
 // Run directly: print the result and set the exit code.
