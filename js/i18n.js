@@ -3,14 +3,15 @@
 import fr from './i18n/fr.js';
 import es from './i18n/es.js';
 import en from './i18n/en.js';
+import de from './i18n/de.js';
 
-export const LANGS = ['fr', 'es', 'en'];
+export const LANGS = ['fr', 'es', 'en', 'de'];
 export const DEFAULT_LANG = 'fr';
 
 // Language names are written in their own language, so they never need translating.
-export const LANG_NAMES = { fr: 'Français', es: 'Español', en: 'English' };
+export const LANG_NAMES = { fr: 'Français', es: 'Español', en: 'English', de: 'Deutsch' };
 
-const dictionaries = { fr: { ...fr }, es: { ...es }, en: { ...en } };
+const dictionaries = { fr: { ...fr }, es: { ...es }, en: { ...en }, de: { ...de } };
 let current = DEFAULT_LANG;
 
 export function setLang(lang) {
@@ -22,14 +23,14 @@ export function getLang() {
   return current;
 }
 
-// strings = { fr: { key: '…' }, es: {…}, en: {…} }
+// strings = { fr: { key: '…' }, es: {…}, en: {…}, de: {…} }
 export function addStrings(strings) {
   for (const lang of LANGS) Object.assign(dictionaries[lang], strings[lang] || {});
 }
 
 // A title used inside a sentence: its leading article goes lower case
 // ("Remettre Le Train…" → "Remettre le Train…"). Other words keep their capitals.
-const ARTICLES = { fr: /^(?:Les|Le|La)(?=\s)|^L(?=['’])/, es: /^(?:Los|Las|El|La)(?=\s)/, en: /^The(?=\s)/ };
+const ARTICLES = { fr: /^(?:Les|Le|La)(?=\s)|^L(?=['’])/, es: /^(?:Los|Las|El|La)(?=\s)/, en: /^The(?=\s)/, de: /^(?:Der|Die|Das)(?=\s)/ };
 export function inSentence(title, lang = current) {
   return title.replace(ARTICLES[lang] ?? ARTICLES[DEFAULT_LANG], (article) => article.toLowerCase());
 }

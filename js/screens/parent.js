@@ -17,7 +17,7 @@ import { iconButton, topBar } from '../ui.js';
 // A kept save's date with the month as a word (no day/month mix-up), in the app's
 // language: fr "5 oct. 2026, 14:10", es "5 oct 2026, 14:10", en "5 Oct 2026, 14:10".
 // Date and time are formatted apart and joined with ", " (some browsers put "à"/"at").
-const LOCALES = { fr: 'fr-FR', es: 'es-ES', en: 'en-GB' };
+const LOCALES = { fr: 'fr-FR', es: 'es-ES', en: 'en-GB', de: 'de-DE' };
 function formatWhen(time) {
   const d = new Date(time);
   const locale = LOCALES[getLang()] ?? 'fr-FR';

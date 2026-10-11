@@ -133,6 +133,7 @@ const PRECACHE = [
   'js/dom.js',
   'js/dragdrop.js',
   'js/i18n.js',
+  'js/i18n/de.js',
   'js/i18n/en.js',
   'js/i18n/es.js',
   'js/i18n/fr.js',
