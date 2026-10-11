@@ -15,19 +15,19 @@ Progress is saved by level `id` — never renumber. Mazes are made at play time 
 `maze.js` `makeMaze(level, rng, lastKey)`. `ROUNDS_PER_PLAY = 2` is a game constant (in
 `maze.js`), not level data.
 
-| step | grid (short×long) | bias | loops | papa | hints deadEnds |
-|---|---|---|---|---|---|
-| 1 | 3×5 | 0 | 0 | far | [2,3] |
-| 2 | 4×7 | 0.2 | 0 | far | [2,3] |
-| 3 | 5×8 | 0.3 | 0 | far | [2,3] |
-| 4 | 6×10 | 0.4 | 0 | far | [3,5] |
-| 5 | 7×12 | 0.5 | 2 | far | [3,5] |
-| 6 | 8×14 | 0.6 | 4 | middle | [4,7] |
-| 7 | 10×16 | 0.7 | 6 | middle | [4,7] |
-| 8 | 12×20 | 0.8 | 8 | middle | [6,12] |
+| step | grid (short×long) | bias | loops | papa | hints deadEnds | hints walk |
+|---|---|---|---|---|---|---|
+| 1 | 3×5 | 0 | 0 | far | [2,3] | [3,5] |
+| 2 | 4×7 | 0.2 | 0 | far | [2,3] | [3,5] |
+| 3 | 5×8 | 0.3 | 0 | far | [2,3] | [3,5] |
+| 4 | 6×10 | 0.4 | 0 | far | [3,5] | [3,5] |
+| 5 | 7×12 | 0.5 | 2 | far | [4,7] | [4,7] |
+| 6 | 8×14 | 0.6 | 4 | middle | [6,10] | [4,7] |
+| 7 | 10×16 | 0.7 | 6 | middle | [8,14] | [4,7] |
+| 8 | 12×20 | 0.8 | 8 | middle | [12,20] | [4,7] |
 
 J3 (owner, playtest: step 8 was "a step 4/5"): bigger grids, more bias and loops on top.
-Steps 6–8 deadEnds hints ≈ 10 % / 20 % of the step's median dead ends, at least [4,7].
+Hint thresholds of steps 5–8 raised (owner, J3 final): table above; walk [4,7] from step 5.
 Path medians (200 seeds): 10, 16, 19, 25, 26, 28, 29, 35. Dead-end medians: 2, 5, 8, 13,
 18, 24, 36, 59.
 
@@ -41,8 +41,7 @@ measure again.
 
 ## Rules (owner's decisions, 2026-10-11)
 - Hint thresholds are LEVEL DATA (`hints`), scaled with the maze:
-  `deadEnds` = [clue, glow] new dead ends in the round (steps 1–3: [2,3]; 4–5: [3,5];
-  6–7: [4,7]; 8: [6,12]); `walk` = [clue, glow] moves ÷ shortest path moves (all steps: [3,5]).
+  `deadEnds` = [clue, glow] new dead ends in the round (see the table); `walk` = [clue, glow] moves ÷ shortest path moves (steps 1–4: [3,5]; 5–8: [4,7]).
   The hint shown = the stronger of the two. Round outcome = the strongest hint shown
   (`none` | `clue` | `glow`) → `ctx.path.record`.
 - Rewards: 1 star per maze. 2 mazes per ▶. Never a failure screen: the maze always ends

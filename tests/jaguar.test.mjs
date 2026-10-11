@@ -112,7 +112,7 @@ test('hints: hintFor thresholds', () => {
 
 // A tracker needs only maze.deadEnds and maze.path: a fake maze with many dead ends and
 // a 10-move shortest path (11 cells), so the thresholds can be tested at every step.
-const fakeMaze = { deadEnds: Array.from({ length: 12 }, (_, i) => 100 + i), path: Array.from({ length: 11 }, (_, i) => i) };
+const fakeMaze = { deadEnds: Array.from({ length: 20 }, (_, i) => 100 + i), path: Array.from({ length: 11 }, (_, i) => i) };
 
 test('hints (a): 1 dead end → none, even if hit twice', () => {
   const t = createHintTracker(fakeMaze, LEVELS[0].hints);
@@ -130,26 +130,26 @@ test('hints (b): step-1 thresholds give clue at 2 dead ends, glow at 3', () => {
   assert.equal(t.strongest(), 'glow');
 });
 
-test('hints (c): step-6 thresholds give none at 3 dead ends, clue at 4, glow at 7', () => {
+test('hints (c): step-6 thresholds give none at 5 dead ends, clue at 6, glow at 10', () => {
   const hints = LEVELS[5].hints;
-  assert.deepEqual(hints.deadEnds, [4, 7]);
-  const t = createHintTracker(fakeMaze, hints);
-  t.step(100); t.step(101);
-  assert.equal(t.step(102).hint, 'none');
-  assert.equal(t.step(103).hint, 'clue');
-  t.step(104); t.step(105);
-  assert.equal(t.step(106).hint, 'glow');
-});
-
-test('hints (c8): step-8 thresholds (J3) give none at 5 dead ends, clue at 6, glow at 12', () => {
-  const hints = LEVELS[7].hints;
-  assert.deepEqual(hints.deadEnds, [6, 12]);
+  assert.deepEqual(hints.deadEnds, [6, 10]);
   const t = createHintTracker(fakeMaze, hints);
   for (let k = 0; k < 4; k++) t.step(100 + k);
   assert.equal(t.step(104).hint, 'none');
   assert.equal(t.step(105).hint, 'clue');
-  for (let k = 6; k < 11; k++) t.step(100 + k);
-  assert.equal(t.step(111).hint, 'glow');
+  for (let k = 6; k < 9; k++) t.step(100 + k);
+  assert.equal(t.step(109).hint, 'glow');
+});
+
+test('hints (c8): step-8 thresholds give none at 11 dead ends, clue at 12, glow at 20', () => {
+  const hints = LEVELS[7].hints;
+  assert.deepEqual(hints.deadEnds, [12, 20]);
+  const t = createHintTracker(fakeMaze, hints);
+  for (let k = 0; k < 10; k++) t.step(100 + k);
+  assert.equal(t.step(110).hint, 'none');
+  assert.equal(t.step(111).hint, 'clue');
+  for (let k = 12; k < 19; k++) t.step(100 + k);
+  assert.equal(t.step(119).hint, 'glow');
 });
 
 test('levels (J3): the 8 grids grow, short × long', () => {
@@ -157,15 +157,15 @@ test('levels (J3): the 8 grids grow, short × long', () => {
   assert.deepEqual(grids, ['3x5', '4x7', '5x8', '6x10', '7x12', '8x14', '10x16', '12x20']);
 });
 
-test('hints (d): a walk of 3× the shortest path with no dead end → clue; 5× → glow', () => {
+test('hints (d): a walk of 4× the shortest path with no dead end → clue; 7× → glow (steps 5-8)', () => {
   const t = createHintTracker(fakeMaze, LEVELS[7].hints);
   let hint;
-  for (let k = 1; k <= 29; k++) { hint = t.step(k % 2).hint; }  // 29 moves < 3 × 10
+  for (let k = 1; k <= 39; k++) { hint = t.step(k % 2).hint; }  // 39 moves < 4 × 10
   assert.equal(hint, 'none');
-  assert.equal(t.step(0).hint, 'clue');                          // move 30 = 3 × 10
-  for (let k = 31; k <= 49; k++) t.step(k % 2);
+  assert.equal(t.step(0).hint, 'clue');                          // move 40 = 4 × 10
+  for (let k = 41; k <= 69; k++) t.step(k % 2);
   assert.equal(t.current(), 'clue');
-  assert.equal(t.step(1).hint, 'glow');                          // move 50 = 5 × 10
+  assert.equal(t.step(1).hint, 'glow');                          // move 70 = 7 × 10
   assert.equal(t.deadEndsReached(), 0);
   assert.equal(t.strongest(), 'glow');
 });

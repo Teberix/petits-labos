@@ -30,7 +30,7 @@ async function waitBoard(page, kit, round = null) {
   await page.waitForFunction((r) => {
     const b = document.querySelector('.jg-board');
     return b && !b.dataset.busy && b.offsetWidth > 0 && (r === null || b.dataset.round === String(r));
-  }, round, { timeout: 30_000 });
+  }, round, { timeout: 60_000 }); // doubled (J3): timed out once with 3 parallel jobs
   await kit.settle(page);
 }
 

@@ -5,8 +5,8 @@
     {"id":2,"difficulty":2,"cols":4,"rows":7,"bias":0.2,"loops":0,"papa":"far","deadEnds":[3,7],"path":[12,21],"hints":{"deadEnds":[2,3],"walk":[3,5]}},
     {"id":3,"difficulty":3,"cols":5,"rows":8,"bias":0.3,"loops":0,"papa":"far","deadEnds":[6,10],"path":[15,25],"hints":{"deadEnds":[2,3],"walk":[3,5]}},
     {"id":4,"difficulty":4,"cols":6,"rows":10,"bias":0.4,"loops":0,"papa":"far","deadEnds":[10,16],"path":[20,31],"hints":{"deadEnds":[3,5],"walk":[3,5]}},
-    {"id":5,"difficulty":5,"cols":7,"rows":12,"bias":0.5,"loops":2,"papa":"far","deadEnds":[15,21],"path":[21,33],"hints":{"deadEnds":[3,5],"walk":[3,5]}},
-    {"id":6,"difficulty":6,"cols":8,"rows":14,"bias":0.6,"loops":4,"papa":"middle","deadEnds":[21,28],"path":[22,36],"hints":{"deadEnds":[4,7],"walk":[3,5]}},
-    {"id":7,"difficulty":7,"cols":10,"rows":16,"bias":0.7,"loops":6,"papa":"middle","deadEnds":[33,41],"path":[24,36],"hints":{"deadEnds":[4,7],"walk":[3,5]}},
-    {"id":8,"difficulty":8,"cols":12,"rows":20,"bias":0.8,"loops":8,"papa":"middle","deadEnds":[52,66],"path":[28,43],"hints":{"deadEnds":[6,12],"walk":[3,5]}}
+    {"id":5,"difficulty":5,"cols":7,"rows":12,"bias":0.5,"loops":2,"papa":"far","deadEnds":[15,21],"path":[21,33],"hints":{"deadEnds":[4,7],"walk":[4,7]}},
+    {"id":6,"difficulty":6,"cols":8,"rows":14,"bias":0.6,"loops":4,"papa":"middle","deadEnds":[21,28],"path":[22,36],"hints":{"deadEnds":[6,10],"walk":[4,7]}},
+    {"id":7,"difficulty":7,"cols":10,"rows":16,"bias":0.7,"loops":6,"papa":"middle","deadEnds":[33,41],"path":[24,36],"hints":{"deadEnds":[8,14],"walk":[4,7]}},
+    {"id":8,"difficulty":8,"cols":12,"rows":20,"bias":0.8,"loops":8,"papa":"middle","deadEnds":[52,66],"path":[28,43],"hints":{"deadEnds":[12,20],"walk":[4,7]}}
   ]}
