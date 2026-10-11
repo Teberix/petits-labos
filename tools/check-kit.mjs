@@ -56,11 +56,14 @@ export const OUTPUT_DIR = join(ROOT, 'tools', '.check-output');
 
 // A fake player with every level unlocked (the parent switch), created before the
 // app starts. Never a real name: this data is only in the check's throwaway browser.
+// GATE_LANG=de (env var) runs every check with that app + reading language (default fr),
+// to catch long words that overflow. Checks that look for French text may fail then.
+const GATE_LANG = process.env.GATE_LANG || 'fr';
 const TEST_PROFILE = {
   schema: 1,
-  settings: { lang: 'fr' },
+  settings: { lang: GATE_LANG },
   profiles: [{
-    id: 'check', name: 'Test', avatar: '🐸', readingLang: 'fr', unlockAll: true,
+    id: 'check', name: 'Test', avatar: '🐸', readingLang: GATE_LANG, unlockAll: true,
     games: {}, rewards: { stars: 0, stickers: [] },
   }],
 };
