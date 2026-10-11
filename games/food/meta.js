@@ -3,6 +3,7 @@ export default {
   id: 'food',
   // Non-linguistic game → played in the app language (French by default).
   titleKey: 'food.title',
+  path: true, // the new engine's path (no scene yet: the savanna world comes later)
   strings: {
     fr: { 'food.title': 'Qui mange qui ?' },
     es: { 'food.title': '¿Quién come qué?' },

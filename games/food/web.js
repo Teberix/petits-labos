@@ -185,6 +185,12 @@ export function levelRounds(level) {
   return roundsCache.get(level);
 }
 
+// A home round's miss count for the path: the HIGHEST per-animal count (the hints run per
+// animal), 0 if nobody missed. `misses` is a Map animal → count.
+export function worstMisses(misses) {
+  return Math.max(0, ...misses.values());
+}
+
 // Shuffles a copy of `list` (Fisher–Yates).
 export function shuffled(list, random) {
   const out = [...list];

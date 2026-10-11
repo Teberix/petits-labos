@@ -26,7 +26,10 @@ const NEXT_MS = 2000;  // after the last arrow, before the next round
 
 // Plays chain `level` in `container`; calls onDone() after the last round.
 // Returns { stop }.
-export function playChain(ctx, level, container, onDone) {
+// `options` (optional, from the path): { rounds, sayIntro, onRound(misses) } — see food.js.
+export function playChain(ctx, level, container, onDone, options = {}) {
+  const totalRounds = options.rounds ?? level.rounds;
+  const sayIntro = options.sayIntro ?? true;
   const { t, sfx } = ctx;
   const remark = (text) => speak(text, ctx.lang); // a reaction: the repeat button keeps the question
   const name = (id) => t(`food.name.${id}`);
@@ -89,7 +92,7 @@ export function playChain(ctx, level, container, onDone) {
     rowEl.replaceChildren(...parts);
     render();
     let line = question();
-    if (index === 0 && level.intro) line = `${t(level.intro)} ${line}`;
+    if (index === 0 && sayIntro && level.intro) line = `${t(level.intro)} ${line}`;
     ctx.speak(line);
   }
 
@@ -203,11 +206,12 @@ export function playChain(ctx, level, container, onDone) {
       sfx.chime();
       // 1 star per round (it flies from the chain). Every 5th star also brings a sticker.
       const sticker = ctx.rewards.star(boxEl);
+      options.onRound?.(round.misses);
       later(async () => {
         if (sticker) await ctx.rewards.showSticker(sticker);
         if (stopped) return; // (the player left during the sticker)
         index++;
-        if (index < level.rounds) start();
+        if (index < totalRounds) start();
         else onDone();
       }, NEXT_MS);
     }, arrowEls.length * LINK_MS);

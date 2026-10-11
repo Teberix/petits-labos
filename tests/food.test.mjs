@@ -5,7 +5,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  eats, mightEat, isPlant, foodCards, homeOf, chainOk, chainSolutions, levelRounds, makeRound, feedHint, homeHint, chainCheck, chainHint, combinations, permutations,
+  eats, mightEat, isPlant, foodCards, homeOf, chainOk, chainSolutions, levelRounds, makeRound, feedHint, homeHint, worstMisses, chainCheck, chainHint, combinations, permutations,
 } from '../games/food/web.js';
 import { HABITATS, PLANTS, ANIMALS, CHAINS, LEVELS, PATH_LEVELS } from '../games/food/levels.js';
 import { ART, SCENES } from '../games/food/art.js';
@@ -287,4 +287,10 @@ test('solver: 200 seeded sample rounds per level have exactly one answer', () =>
     const random = seeded(level.id * 13 + 5);
     for (let i = 0; i < 200; i++) assert.equal(sampleRound(level, random).answers, 1, `level ${level.id}, sample ${i}`);
   }
+});
+
+test('the path counts a home round by its worst animal, not the sum', () => {
+  assert.equal(worstMisses(new Map([['a', 1], ['b', 2]])), 2);
+  assert.equal(worstMisses(new Map([['a', 1], ['b', 1]])), 1);
+  assert.equal(worstMisses(new Map()), 0);
 });

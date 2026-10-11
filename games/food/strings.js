@@ -5,6 +5,7 @@
 export default {
   fr: {
     'food.chooseLevel': 'Choisis un niveau !',
+    'food.path': 'Appuie sur le bouton : les animaux ont faim !',
     'food.level': 'Niveau {n}',
     'food.levelDone': 'Bravo ! Tu connais bien les animaux !',
     'food.continue': 'Continuer',
@@ -66,6 +67,7 @@ export default {
   },
   es: {
     'food.chooseLevel': '¡Elige un nivel!',
+    'food.path': '¡Pulsa el botón: los animales tienen hambre!',
     'food.level': 'Nivel {n}',
     'food.levelDone': '¡Bravo! ¡Conoces muy bien a los animales!',
     'food.continue': 'Continuar',
@@ -127,6 +129,7 @@ export default {
   },
   en: {
     'food.chooseLevel': 'Choose a level!',
+    'food.path': 'Press the button: the animals are hungry!',
     'food.level': 'Level {n}',
     'food.levelDone': 'Well done! You know the animals well!',
     'food.continue': 'Continue',
@@ -188,6 +191,7 @@ export default {
   },
   de: {
     'food.chooseLevel': 'Wähle eine Stufe!',
+    'food.path': 'Drück auf den Knopf: Die Tiere haben Hunger!',
     'food.level': 'Stufe {n}',
     'food.levelDone': 'Super! Du kennst die Tiere gut!',
     'food.continue': 'Weiter',

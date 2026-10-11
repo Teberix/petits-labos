@@ -5,7 +5,44 @@
 import { LEVELS, CHAINS } from './levels.js';
 import { eats, homeOf } from './web.js';
 
+// The level cases use the fixed level map (parent switch "Carte des niveaux"): the test
+// profile gets fixedMap, then the page reloads (the app reads the save at start).
+async function useFixedMap(page) {
+  await page.waitForSelector('.profile-tile');
+  await page.evaluate(() => {
+    const data = JSON.parse(localStorage.getItem('petits-labos'));
+    data.profiles[0].fixedMap = true;
+    localStorage.setItem('petits-labos', JSON.stringify(data));
+  });
+  await page.reload();
+}
+
+// The path (new engine): the game opens on it; ▶ plays 3 rounds.
+async function openPath(page, kit) {
+  await kit.openGame(page, 'food');
+  await page.locator('.path-play').waitFor();
+  await kit.settle(page);
+}
+
+async function playFromPath(page, kit) {
+  await openPath(page, kit);
+  await kit.tap(page, page.locator('.path-play'));
+  await page.locator('.fd-card').first().waitFor();
+}
+
+const savedSkillState = (page) => page.evaluate(() => JSON.parse(localStorage.getItem('petits-labos')).profiles[0].skills.food);
+
+async function resetSkill(page) {
+  await page.evaluate(() => {
+    const data = JSON.parse(localStorage.getItem('petits-labos'));
+    delete data.profiles[0].skills.food;
+    localStorage.setItem('petits-labos', JSON.stringify(data));
+  });
+  await page.reload();
+}
+
 async function openMap(page, kit) {
+  await useFixedMap(page);
   await kit.openGame(page, 'food');
   // Wait for food.css (loaded when the game mounts): before it applies, the level
   // buttons aren't where they end up, and a tap can land next to them.
@@ -98,6 +135,32 @@ export default {
   touch: ['.fd-level-btn', '.fd-continue', '.fd-card', '.fd-animal', '.fd-home', '.fd-cslot'],
 
   worstCases: [
+    {
+      name: 'path: one round at step 1',
+      async setup(page, kit) {
+        await playFromPath(page, kit);
+        await readFeed(page);
+        await kit.settle(page);
+      },
+    },
+    {
+      // The game gives the seed itself (js/path.js): old completed [1,2,3] → skill 3.
+      name: 'seed: completed [1,2,3] and no skill → skills.food { skill: 3, best: 3 }',
+      once: true,
+      async setup(page, kit) {
+        await page.waitForSelector('.profile-tile');
+        await page.evaluate(() => {
+          const data = JSON.parse(localStorage.getItem('petits-labos'));
+          data.profiles[0].games.food = { completed: [1, 2, 3] };
+          delete data.profiles[0].skills.food;
+          localStorage.setItem('petits-labos', JSON.stringify(data));
+        });
+        await page.reload();
+        await openPath(page, kit);
+        const state = await savedSkillState(page);
+        if (state?.skill !== 3 || state?.best !== 3) throw new Error(`seed: skills.food is ${JSON.stringify(state)}`);
+      },
+    },
     {
       name: 'level map (all levels)',
       async setup(page, kit) {
@@ -284,23 +347,36 @@ export default {
     },
   ],
 
-  // Level 1: a wrong card gives nothing and stays in the tray; the right one gives one
-  // star and disappears; then a new round comes with a new animal.
+  // From the path: one wrong card gives no star and stays in the tray; then the 3 rounds
+  // of one ▶ (no miss) give 3 stones and move the skill 1 → 2.
   async offline(page, kit) {
-    await openLevel(page, kit, 1);
+    await playFromPath(page, kit);
     const before = await savedStars(page);
-    const { animal, wrong, right } = await readFeed(page);
-
+    const { wrong } = await readFeed(page);
     await kit.drag(page, card(wrong[0]), '.fd-animal');
     if (await savedStars(page) !== before) throw new Error('wrong card: expected no star');
     if (!(await page.locator(card(wrong[0])).count())) throw new Error('wrong card: it did not stay in the tray');
 
-    await kit.drag(page, card(right), '.fd-animal');
-    if (await savedStars(page) !== before + 1) throw new Error('right card: expected one more star');
-    if (await page.locator(card(right)).count()) throw new Error('right card: still in the tray');
-    await page.waitForFunction((a) => {
-      const el = document.querySelector('.fd-animal');
-      return el && el.dataset.animal !== a && document.querySelectorAll('.fd-card').length === 3;
-    }, animal, { timeout: 8000 });
+    // Fresh path, then one clean ▶: the skill must go 1 → 2.
+    await resetSkill(page);
+    await playFromPath(page, kit);
+    for (let n = 1; n <= 3; n++) {
+      const { animal, right } = await readFeed(page);
+      const stars = await savedStars(page);
+      await kit.drag(page, card(right), '.fd-animal');
+      if (await savedStars(page) !== stars + 1) throw new Error('right card: expected one more star');
+      if (n < 3) {
+        // The next round: a new animal (a sticker may show first).
+        await page.waitForFunction((a) => {
+          const el = document.querySelector('.fd-animal');
+          return el && el.dataset.animal !== a && document.querySelectorAll('.fd-card').length === 3;
+        }, animal, { timeout: 30000 });
+        await kit.settle(page);
+      }
+    }
+    await page.locator('.path-play').waitFor({ timeout: 30000 });
+    if (await page.locator('.path-stone').count() !== 3) throw new Error('expected three stones on the path');
+    const skill = (await savedSkillState(page)).skill;
+    if (skill !== 2) throw new Error(`clean play: skill is ${skill}, expected 2`);
   },
 };

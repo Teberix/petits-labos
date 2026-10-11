@@ -14,7 +14,7 @@
 import { speak } from '../../js/audio.js';
 import { draggable } from '../../js/dragdrop.js';
 import { h } from '../../js/dom.js';
-import { makeRound, homeHint } from './web.js';
+import { makeRound, homeHint, worstMisses } from './web.js';
 import { ART, SCENES } from './art.js';
 import { cap, nearestFirst, pickOne, restartAnimation, timerSet } from './common.js';
 
@@ -23,7 +23,10 @@ const SHOW_MS = 2000; // the home glows this long right after the glow hint
 
 // Plays home `level` in `container`; calls onDone() after the last round.
 // Returns { stop }.
-export function playHome(ctx, level, container, onDone) {
+// `options` (optional, from the path): { rounds, sayIntro, onRound(misses) } — see food.js.
+export function playHome(ctx, level, container, onDone, options = {}) {
+  const totalRounds = options.rounds ?? level.rounds;
+  const sayIntro = options.sayIntro ?? true;
   const { t, sfx } = ctx;
   const remark = (text) => speak(text, ctx.lang); // a reaction: the repeat button keeps the question
   const name = (id) => t(`food.name.${id}`);
@@ -74,7 +77,7 @@ export function playHome(ctx, level, container, onDone) {
     trayEl.style.setProperty('--lcols', String(n <= 6 ? 2 : 3)); // landscape: 9 animals need 3 columns to fit
     renderTray();
     let line = t('food.ask.home');
-    if (index === 0 && level.intro) line = `${t(level.intro)} ${line}`;
+    if (index === 0 && sayIntro && level.intro) line = `${t(level.intro)} ${line}`;
     ctx.speak(line);
   }
 
@@ -166,11 +169,12 @@ export function playHome(ctx, level, container, onDone) {
     sfx.chime();
     remark(`${lives(id, home)} ${t('food.home.done')}`);
     const sticker = ctx.rewards.star(homesEl);
+    options.onRound?.(worstMisses(round.misses)); // the hints run per animal
     later(async () => {
       if (sticker) await ctx.rewards.showSticker(sticker);
       if (stopped) return; // (the player left during the sticker)
       index++;
-      if (index < level.rounds) start();
+      if (index < totalRounds) start();
       else onDone();
     }, NEXT_MS);
   }

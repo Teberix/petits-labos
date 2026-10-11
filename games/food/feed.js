@@ -21,7 +21,10 @@ const YUCK_MS = 1200; // how long the « beurk » bubble stays
 
 // Plays feed `level` in `container`; calls onDone() after the last round.
 // Returns { stop }.
-export function playFeed(ctx, level, container, onDone) {
+// `options` (optional, from the path): { rounds, sayIntro, onRound(misses) } — see food.js.
+export function playFeed(ctx, level, container, onDone, options = {}) {
+  const totalRounds = options.rounds ?? level.rounds;
+  const sayIntro = options.sayIntro ?? true;
   const { t, sfx } = ctx;
   const remark = (text) => speak(text, ctx.lang); // a reaction: the repeat button keeps the question
   const name = (id) => t(`food.name.${id}`);
@@ -64,7 +67,7 @@ export function playFeed(ctx, level, container, onDone) {
     restartAnimation(animalEl, 'fd-pop-in');
     renderCards();
     let line = question();
-    if (index === 0 && level.intro) line = `${t(level.intro)} ${line}`;
+    if (index === 0 && sayIntro && level.intro) line = `${t(level.intro)} ${line}`;
     ctx.speak(line);
   }
 
@@ -132,11 +135,12 @@ export function playFeed(ctx, level, container, onDone) {
     remark(t('food.yum', { A: cap(name(round.animal)), b: name(id) }));
     // 1 star per round (it flies from the animal). Every 5th star also brings a sticker.
     const sticker = ctx.rewards.star(animalEl);
+    options.onRound?.(round.misses);
     later(async () => {
       if (sticker) await ctx.rewards.showSticker(sticker);
       if (stopped) return; // (the player left during the sticker)
       index++;
-      if (index < level.rounds) start();
+      if (index < totalRounds) start();
       else onDone();
     }, NEXT_MS);
   }
