@@ -101,8 +101,9 @@ export function playHome(ctx, level, container, onDone, options = {}) {
     trayEl.style.setProperty('--cols', String(n <= 4 ? n : 3));
     trayEl.style.setProperty('--lcols', String(n <= 6 ? 2 : 3)); // landscape: 9 animals need 3 columns to fit
     renderTray();
-    let line = t(mode.ask);
-    if (index === 0 && sayIntro && level.intro) line = `${t(level.intro)} ${line}`;
+    // The intro already ends with the instruction: no round question after it.
+    const intro = index === 0 && sayIntro && level.intro;
+    const line = intro ? t(level.intro) : t(mode.ask);
     ctx.speak(line);
   }
 

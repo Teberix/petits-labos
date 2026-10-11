@@ -86,6 +86,15 @@ async function readHome(page) {
   return { ...got, homes };
 }
 
+// Sort round: counts the baskets and the animals in the tray.
+async function readSort(page) {
+  await page.locator('.fd-htray .fd-card').first().waitFor();
+  return page.evaluate(() => ({
+    baskets: document.querySelectorAll('.fd-home[data-diet]').length,
+    tray: document.querySelectorAll('.fd-htray .fd-card').length,
+  }));
+}
+
 const animalCard = (id) => `.fd-htray .fd-card[data-animal="${id}"]`;
 const scene = (habitat) => `.fd-home[data-habitat="${habitat}"]`;
 
@@ -238,6 +247,26 @@ export default {
         await openLevel(page, kit, 8);
         const { scenes, tray } = await readHome(page);
         if (scenes.length !== 3 || tray.length !== 9) throw new Error(`${scenes.length} scenes, ${tray.length} animals`);
+        await kit.settle(page);
+      },
+    },
+    {
+      // Sort rounds (diets): baskets are .fd-home with data-diet. Level 12 = the worst
+      // case (4 baskets in a 2 x 2 grid + 8 animals in the tray).
+      name: 'sort: level 12, 4 baskets + 8 animals',
+      async setup(page, kit) {
+        await openLevel(page, kit, 12);
+        const { baskets, tray } = await readSort(page);
+        if (baskets !== 4 || tray !== 8) throw new Error(`${baskets} baskets, ${tray} animals`);
+        await kit.settle(page);
+      },
+    },
+    {
+      name: 'sort: level 10, 2 baskets + 4 animals',
+      async setup(page, kit) {
+        await openLevel(page, kit, 10);
+        const { baskets, tray } = await readSort(page);
+        if (baskets !== 2 || tray !== 4) throw new Error(`${baskets} baskets, ${tray} animals`);
         await kit.settle(page);
       },
     },

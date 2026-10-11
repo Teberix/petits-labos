@@ -84,6 +84,16 @@ checks each has exactly one right answer.
   the scenes nearest-to-the-finger first (checked by an edge-drop worst case).
 - 1 star per round (home: when the tray is empty). No bonus star, no free mode.
 
+## Sort rounds (diets)
+- Levels 10–12 (`type: 'sort'`): drag each animal into the basket of its diet. They
+  reuse `home.js` through its `MODES` table (`data-diet`, `BASKETS`/`BADGES` in `art.js`).
+- The 4 diets: `herb` (plants), `carn` (land animals), `pisc` (fish), `omni` (both).
+- `diet` in `levels.js` is **curated by the owner, never derived** from `eats`. An
+  animal without a diet (fish) is never sorted. A new animal needs an owner-approved diet.
+- Level 10 = 2 diets, 11 = 3, 12 = 4. 5 rounds each. The intro is said in round 1
+  and replaces the round question.
+- `checks.js`: level 12 (4 baskets + 8 animals) and level 10 (2 + 4) on the fixed map.
+
 ## Files
 - `levels.js` — HABITATS, PLANTS, ANIMALS, CHAINS, LEVELS (data only).
 - `web.js` — pure logic, tested in `tests/food.test.mjs`: `eats`, `foodCards`,
