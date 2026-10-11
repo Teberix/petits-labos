@@ -11,6 +11,9 @@ export const HABITATS = ['forest', 'mountain', 'savanna', 'ice', 'sea'];
 export const PLANTS = ['grass', 'leaves', 'carrot', 'nut', 'seeds', 'berries', 'flower', 'algae'];
 
 // Animals.
+//   diet      its basket in "sort" rounds (owner's curated list, 2026-10-11; never
+//             derived from eats/sometimes): 'herb' (plants), 'carn' (other animals),
+//             'pisc' (mostly fish), 'omni' (plants AND animals), null = never sorted.
 //   habitats  where it really lives (1 or more scenes). A home round never shows an
 //             animal that fits 2 of its scenes (tested).
 //   eats      what it clearly, typically eats (its well-known food): a right answer
@@ -23,38 +26,39 @@ export const PLANTS = ['grass', 'leaves', 'carrot', 'nut', 'seeds', 'berries', '
 //             they only get an arrow and a « miam ».
 export const ANIMALS = {
   // Forest (the Alps)
-  rabbit: { habitats: ['forest'], eats: ['grass', 'leaves', 'carrot'], sometimes: ['flower', 'seeds', 'berries'] },
-  squirrel: { habitats: ['forest'], eats: ['nut', 'seeds'], sometimes: ['berries', 'flower', 'leaves', 'grasshopper', 'worm'] },
-  hedgehog: { habitats: ['forest'], eats: ['worm', 'grasshopper'], sometimes: ['berries', 'fly', 'seeds'] },
-  mouse: { habitats: ['forest'], eats: ['seeds', 'nut'], sometimes: ['berries', 'grasshopper', 'worm', 'fly', 'carrot', 'leaves', 'flower'] },
-  owl: { habitats: ['forest'], eats: ['mouse'], sometimes: ['frog', 'grasshopper', 'worm'] },
-  frog: { habitats: ['forest'], eats: ['fly', 'worm', 'grasshopper'] },
-  fox: { habitats: ['forest', 'mountain'], eats: ['rabbit', 'mouse', 'frog'], sometimes: ['marmot', 'worm', 'grasshopper', 'berries'] },
+  rabbit: { diet: 'herb', habitats: ['forest'], eats: ['grass', 'leaves', 'carrot'], sometimes: ['flower', 'seeds', 'berries'] },
+  squirrel: { diet: 'omni', habitats: ['forest'], eats: ['nut', 'seeds'], sometimes: ['berries', 'flower', 'leaves', 'grasshopper', 'worm'] },
+  hedgehog: { diet: 'omni', habitats: ['forest'], eats: ['worm', 'grasshopper'], sometimes: ['berries', 'fly', 'seeds'] },
+  mouse: { diet: 'omni', habitats: ['forest'], eats: ['seeds', 'nut'], sometimes: ['berries', 'grasshopper', 'worm', 'fly', 'carrot', 'leaves', 'flower'] },
+  owl: { diet: 'carn', habitats: ['forest'], eats: ['mouse'], sometimes: ['frog', 'grasshopper', 'worm'] },
+  frog: { diet: 'carn', habitats: ['forest'], eats: ['fly', 'worm', 'grasshopper'] },
+  fox: { diet: 'omni', habitats: ['forest', 'mountain'], eats: ['rabbit', 'mouse', 'frog'], sometimes: ['marmot', 'worm', 'grasshopper', 'berries'] },
   bear: {
+    diet: 'omni',
     habitats: ['forest', 'mountain'], eats: ['berries', 'fish'],
     sometimes: ['nut', 'grass', 'leaves', 'worm', 'grasshopper', 'seeds', 'flower', 'carrot', 'fly', 'mouse', 'marmot'],
   },
   // Small animals (snacks): live nearly everywhere on land.
-  worm: { habitats: ['forest', 'mountain', 'savanna'], eats: ['leaves'], snack: true },
-  fly: { habitats: ['forest', 'mountain', 'savanna'], eats: ['flower'], snack: true },
-  grasshopper: { habitats: ['forest', 'mountain', 'savanna'], eats: ['grass', 'leaves'], snack: true },
+  worm: { diet: 'omni', habitats: ['forest', 'mountain', 'savanna'], eats: ['leaves'], snack: true },
+  fly: { diet: 'omni', habitats: ['forest', 'mountain', 'savanna'], eats: ['flower'], snack: true },
+  grasshopper: { diet: 'herb', habitats: ['forest', 'mountain', 'savanna'], eats: ['grass', 'leaves'], snack: true },
   // Mountain
-  marmot: { habitats: ['mountain'], eats: ['grass', 'flower'], sometimes: ['seeds', 'leaves', 'berries', 'grasshopper', 'worm'] },
-  ibex: { habitats: ['mountain'], eats: ['grass', 'leaves'], sometimes: ['flower', 'seeds', 'berries', 'carrot'] },
-  eagle: { habitats: ['mountain'], eats: ['marmot'], sometimes: ['rabbit', 'fox', 'mouse', 'fish'] },
+  marmot: { diet: 'herb', habitats: ['mountain'], eats: ['grass', 'flower'], sometimes: ['seeds', 'leaves', 'berries', 'grasshopper', 'worm'] },
+  ibex: { diet: 'herb', habitats: ['mountain'], eats: ['grass', 'leaves'], sometimes: ['flower', 'seeds', 'berries', 'carrot'] },
+  eagle: { diet: 'carn', habitats: ['mountain'], eats: ['marmot'], sometimes: ['rabbit', 'fox', 'mouse', 'fish'] },
   // Savanna
-  lion: { habitats: ['savanna'], eats: ['zebra', 'giraffe'] },
-  zebra: { habitats: ['savanna'], eats: ['grass'], sometimes: ['leaves', 'flower', 'seeds'] },
-  giraffe: { habitats: ['savanna'], eats: ['leaves'], sometimes: ['flower', 'seeds', 'grass'] },
-  elephant: { habitats: ['savanna'], eats: ['grass', 'leaves'], sometimes: ['berries', 'seeds', 'flower', 'carrot', 'nut'] },
+  lion: { diet: 'carn', habitats: ['savanna'], eats: ['zebra', 'giraffe'] },
+  zebra: { diet: 'herb', habitats: ['savanna'], eats: ['grass'], sometimes: ['leaves', 'flower', 'seeds'] },
+  giraffe: { diet: 'herb', habitats: ['savanna'], eats: ['leaves'], sometimes: ['flower', 'seeds', 'grass'] },
+  elephant: { diet: 'herb', habitats: ['savanna'], eats: ['grass', 'leaves'], sometimes: ['berries', 'seeds', 'flower', 'carrot', 'nut'] },
   // Ice floe (Antarctic) and sea
-  penguin: { habitats: ['ice'], eats: ['krill', 'fish'] },
-  seal: { habitats: ['sea', 'ice'], eats: ['fish', 'krill'], sometimes: ['penguin'] },
-  orca: { habitats: ['sea', 'ice'], eats: ['fish', 'seal', 'penguin'] },
-  krill: { habitats: ['sea', 'ice'], eats: ['algae'], snack: true },
-  fish: { habitats: ['sea', 'ice'], eats: ['krill'], sometimes: ['algae'], snack: true },
-  turtle: { habitats: ['sea'], eats: ['algae'], sometimes: ['krill', 'fish', 'grass'] },
-  crab: { habitats: ['sea'], eats: ['algae'], sometimes: ['fish', 'krill'] },
+  penguin: { diet: 'pisc', habitats: ['ice'], eats: ['krill', 'fish'] },
+  seal: { diet: 'pisc', habitats: ['sea', 'ice'], eats: ['fish', 'krill'], sometimes: ['penguin'] },
+  orca: { diet: 'carn', habitats: ['sea', 'ice'], eats: ['fish', 'seal', 'penguin'] },
+  krill: { diet: 'herb', habitats: ['sea', 'ice'], eats: ['algae'], snack: true },
+  fish: { diet: null, habitats: ['sea', 'ice'], eats: ['krill'], sometimes: ['algae'], snack: true },
+  turtle: { diet: 'omni', habitats: ['sea'], eats: ['algae'], sometimes: ['krill', 'fish', 'grass'] },
+  crab: { diet: 'omni', habitats: ['sea'], eats: ['algae'], sometimes: ['fish', 'krill'] },
 };
 
 // Food chains, first (a plant) → last: each one is eaten by the next (tested).
@@ -91,9 +95,11 @@ export const CHAINS = [
 //                     animals per scene in the tray
 // chain: length       3 or 4; given = slots already filled at the start (the plant);
 //                     decoys = extra animal cards that belong to no slot
+// sort:  diets        the baskets shown (herb, carn, pisc, omni); perBasket = animals
+//                     per basket in the tray
 import data from './levels.json' with { type: 'json' };
 
-// The path's levels, from levels.json (ids 8 and 9 are steps 4 and 8: new levels got new ids).
+// The path's levels, from levels.json (ids 8 and 9 are steps 4 and 7, 10–12 the sort steps 8–10: new levels got new ids).
 export const PATH_LEVELS = data.levels;
 
 // The fixed level map: every level by id order. Levels unlock in this order.

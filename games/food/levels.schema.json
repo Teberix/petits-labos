@@ -1,12 +1,12 @@
 {
-  "$comment": "ONE level of food (a parameter set; its rounds are made at play time by web.js makeRound). Dev-only (never precached). One object for the 3 types (feed, home, chain): the validator has no oneOf, so every type-specific field is optional.",
+  "$comment": "ONE level of food (a parameter set; its rounds are made at play time by web.js makeRound). Dev-only (never precached). One object for the 4 types (feed, home, sort, chain): the validator has no oneOf, so every type-specific field is optional.",
   "type": "object",
   "required": ["id", "difficulty", "type", "rounds"],
   "additionalProperties": false,
   "properties": {
     "id": { "type": "integer", "minimum": 1 },
     "difficulty": { "type": "integer", "minimum": 1, "maximum": 10 },
-    "type": { "enum": ["feed", "home", "chain"] },
+    "type": { "enum": ["feed", "home", "sort", "chain"] },
     "rounds": { "type": "integer", "minimum": 1 },
     "intro": { "type": "string", "pattern": "^food\\.intro\\.[A-Za-z]+$" },
     "distractors": { "enum": ["other", "same"] },
@@ -14,6 +14,8 @@
     "habitats": { "type": "array", "minItems": 2, "items": { "enum": ["forest", "mountain", "savanna", "ice", "sea"] } },
     "scenes": { "type": "integer", "minimum": 2, "maximum": 4 },
     "perScene": { "type": "integer", "minimum": 1, "maximum": 4 },
+    "diets": { "type": "array", "minItems": 2, "maxItems": 4, "items": { "enum": ["herb", "carn", "pisc", "omni"] } },
+    "perBasket": { "type": "integer", "minimum": 1, "maximum": 3 },
     "length": { "type": "integer", "minimum": 3, "maximum": 4 },
     "given": { "type": "integer", "minimum": 1, "maximum": 3 },
     "decoys": { "type": "integer", "minimum": 0, "maximum": 2 }

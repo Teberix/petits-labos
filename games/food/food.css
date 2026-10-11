@@ -10,7 +10,7 @@
   overflow-y: auto; /* many levels on a small landscape phone: scroll the MAP, never the game */
   display: flex;
   flex-wrap: wrap;
-  align-content: center;
+  align-content: safe center; /* "safe": 12 levels overflow → scroll from the top, never under the top bar */
   justify-content: center;
   gap: var(--gap);
   padding: var(--gap);
@@ -318,3 +318,20 @@
 @keyframes fd-hop { 50% { transform: translateY(-10%); } }
 @keyframes fd-dance { 25% { transform: translateY(-8%) rotate(-8deg); } 75% { transform: translateY(-8%) rotate(8deg); } }
 @keyframes fd-glow { 50% { box-shadow: 0 0 0 0.35rem #FFD54F, 0 0 1rem 0.3rem rgba(255, 179, 0, 0.6); } }
+
+/* Sort rounds (diet baskets, played by home.js): the 4 baskets as 2 × 2; each basket's
+   symbol in its top-left corner, above the animals sorted into it. */
+.fd-homes[data-count="4"] {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+}
+.fd-badge {
+  position: absolute;
+  top: 3cqmin;
+  left: 3cqmin;
+  width: min(32cqh, 30cqw);
+  height: min(32cqh, 30cqw);
+  pointer-events: none;
+}
+.fd-badge svg { display: block; width: 100%; height: 100%; }

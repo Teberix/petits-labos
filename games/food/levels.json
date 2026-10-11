@@ -118,12 +118,51 @@
   },
   {
    "id": 9,
-   "difficulty": 8,
+   "difficulty": 7,
    "type": "chain",
    "length": 4,
    "given": 1,
    "decoys": 1,
    "rounds": 5
+  },
+  {
+   "id": 10,
+   "difficulty": 8,
+   "type": "sort",
+   "diets": [
+    "herb",
+    "carn"
+   ],
+   "perBasket": 2,
+   "rounds": 5,
+   "intro": "food.intro.sort"
+  },
+  {
+   "id": 11,
+   "difficulty": 9,
+   "type": "sort",
+   "diets": [
+    "herb",
+    "carn",
+    "omni"
+   ],
+   "perBasket": 2,
+   "rounds": 5,
+   "intro": "food.intro.omni"
+  },
+  {
+   "id": 12,
+   "difficulty": 10,
+   "type": "sort",
+   "diets": [
+    "herb",
+    "carn",
+    "pisc",
+    "omni"
+   ],
+   "perBasket": 2,
+   "rounds": 5,
+   "intro": "food.intro.pisc"
   }
  ]
 }

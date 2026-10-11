@@ -110,7 +110,7 @@ test('every name and habitat is said in fr, es and en', () => {
 test('levels: unique ids, known types, enough rounds to never repeat', () => {
   assert.equal(new Set(LEVELS.map((l) => l.id)).size, LEVELS.length);
   for (const level of LEVELS) {
-    assert.ok(['feed', 'home', 'chain'].includes(level.type), `level ${level.id}: type`);
+    assert.ok(['feed', 'home', 'sort', 'chain'].includes(level.type), `level ${level.id}: type`);
     const keys = new Set(levelRounds(level).map((r) => r.key));
     assert.ok(keys.size >= 2, `level ${level.id}: needs 2+ different rounds (never twice in a row)`);
   }
@@ -194,7 +194,8 @@ test('makeRound draws from all the combinations and never repeats a round twice 
     }
     // Varies across replays: many different rounds show up.
     const keys = new Set(levelRounds(level).map((r) => r.key));
-    assert.equal([...keys].filter((k) => seen.has(k)).length, keys.size, `level ${level.id}: some rounds never drawn`);
+    // (a sort level has hundreds of animal sets: 300 draws can't see them all)
+    if (level.type !== 'sort') assert.equal([...keys].filter((k) => seen.has(k)).length, keys.size, `level ${level.id}: some rounds never drawn`);
   }
 });
 
@@ -279,7 +280,7 @@ test('solver: every path level is solvable and has whole difficulty steps with n
   for (const level of PATH_LEVELS) assert.equal(solve(level).solvable, true, `level ${level.id}`);
   const steps = [...new Set(PATH_LEVELS.map((l) => l.difficulty))].sort((a, b) => a - b);
   assert.deepEqual(steps, steps.map((_, i) => i + 1));
-  assert.deepEqual(LEVELS.map((l) => l.id), [1, 2, 3, 4, 5, 6, 7, 8, 9]);
+  assert.deepEqual(LEVELS.map((l) => l.id), [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]);
 });
 
 test('solver: 200 seeded sample rounds per level have exactly one answer', () => {
@@ -293,4 +294,28 @@ test('the path counts a home round by its worst animal, not the sum', () => {
   assert.equal(worstMisses(new Map([['a', 1], ['b', 2]])), 2);
   assert.equal(worstMisses(new Map([['a', 1], ['b', 1]])), 1);
   assert.equal(worstMisses(new Map()), 0);
+});
+
+// ---------- sort (F4): diets ----------
+
+test('sort: every animal has a diet from the list, consistent with what it eats', () => {
+  for (const [id, a] of Object.entries(ANIMALS)) {
+    assert.ok(['herb', 'carn', 'pisc', 'omni', null].includes(a.diet), `${id}: diet`);
+    if (a.diet === 'herb') assert.ok(a.eats.every(isPlant), `${id}: a herbivore eats no animal`);
+    if (a.diet === 'carn' || a.diet === 'pisc') assert.ok(!a.eats.some(isPlant), `${id}: eats no plant`);
+    if (a.diet === 'pisc') assert.ok(a.eats.includes('fish'), `${id}: a piscivore eats fish`);
+  }
+});
+
+test('sort: each level has 3+ rounds, perBasket animals per basket, one answer each', () => {
+  for (const level of LEVELS.filter((l) => l.type === 'sort')) {
+    const rounds = levelRounds(level);
+    assert.ok(rounds.length >= 3, `level ${level.id}: rounds`);
+    for (const r of rounds) {
+      for (const diet of level.diets) assert.equal(r.animals.filter((a) => a.home === diet).length, level.perBasket);
+      assert.ok(r.animals.every((a) => ANIMALS[a.id].diet === a.home), `level ${level.id}: wrong basket`);
+      assert.equal(new Set(r.animals.map((a) => a.id)).size, r.animals.length);
+    }
+    assert.equal(solve(level).solvable, true, `level ${level.id}: solver`);
+  }
 });

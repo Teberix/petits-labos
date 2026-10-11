@@ -3,7 +3,7 @@
 // Flow: the path (▶ = 3 rounds at the level the path picks) — or, with the parent switch
 // "Carte des niveaux", the fixed map: level map → level (5 rounds) → level done → map.
 // Files: levels.js (animals, plants, chains, levels), web.js (pure logic, tested),
-//        feed.js / home.js / chain.js (the three kinds of rounds), common.js (small
+//        feed.js / home.js (home + sort) / chain.js (the kinds of rounds), common.js (small
 //        helpers), strings.js, art.js, food.css.
 import { h } from '../../js/dom.js';
 import { addStrings } from '../../js/i18n.js';
@@ -109,7 +109,7 @@ function createGame(container, ctx) {
 
   function playLevel(level) {
     stopLevel();
-    const play = { feed: playFeed, home: playHome, chain: playChain }[level.type];
+    const play = { feed: playFeed, home: playHome, sort: playHome, chain: playChain }[level.type]; // home.js plays sort rounds too
     if (!ctx.path) {
       rounds = play(ctx, level, container, () => levelDone(level));
       return;

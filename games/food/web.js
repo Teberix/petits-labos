@@ -113,6 +113,24 @@ export function homeHint(misses) {
   return ['ask', 'name', 'glow'][misses - 1] ?? null;
 }
 
+// ---------- sort: some diet baskets, drag each animal into its basket ----------
+
+// All the rounds a sort level can show, in the SAME shape as a home round (so home.js
+// plays both): { scenes: the level's diets, animals: [{ id, home: its diet }], key }.
+// `perBasket` animals of each diet; an animal with diet null, or a diet the level
+// doesn't show, is never picked. key = the animal set (never the same set twice in a row).
+function sortRounds(level) {
+  const groups = level.diets.map((diet) => combinations(
+    Object.keys(ANIMALS).filter((id) => ANIMALS[id].diet === diet), level.perBasket));
+  if (groups.some((g) => g.length === 0)) return []; // not enough animals for a basket
+  let mixes = [[]];
+  for (const g of groups) mixes = mixes.flatMap((mix) => g.map((group) => [...mix, group]));
+  return mixes.map((mix) => {
+    const animals = mix.flatMap((group, i) => group.map((id) => ({ id, home: level.diets[i] })));
+    return { scenes: level.diets, animals, key: animals.map((a) => a.id).sort().join('+') };
+  });
+}
+
 // ---------- chain: put a food chain in order ----------
 
 // Is `list` a real food chain (each one eaten by the next)?
@@ -179,7 +197,7 @@ const roundsCache = new WeakMap();
 
 export function levelRounds(level) {
   if (!roundsCache.has(level)) {
-    const build = { feed: feedRounds, home: homeRounds, chain: chainRounds }[level.type];
+    const build = { feed: feedRounds, home: homeRounds, sort: sortRounds, chain: chainRounds }[level.type];
     roundsCache.set(level, build(level));
   }
   return roundsCache.get(level);
@@ -202,7 +220,8 @@ export function shuffled(list, random) {
 }
 
 // One round, picked at random among ALL the level's rounds. `previousKey` = the last
-// round's key: never the same animal (feed), scenes (home) or chain twice in a row.
+// round's key: never the same animal (feed), scenes (home), animal set (sort) or chain
+// twice in a row.
 // Cards, animals and scenes come shuffled; feed rounds also get `cards` (answer +
 // wrong).
 export function makeRound(level, random, previousKey = null) {
@@ -211,7 +230,7 @@ export function makeRound(level, random, previousKey = null) {
   const pool = fresh.length ? fresh : all;
   const round = pool[Math.floor(random() * pool.length)];
   if (level.type === 'feed') return { ...round, cards: shuffled([round.answer, ...round.wrong], random) };
-  if (level.type === 'home') {
+  if (level.type === 'home' || level.type === 'sort') {
     return { ...round, scenes: shuffled(round.scenes, random), animals: shuffled(round.animals, random) };
   }
   return { ...round, cards: shuffled(round.cards, random) };

@@ -426,3 +426,29 @@ export const ARROW = `<svg viewBox="0 0 40 40" aria-hidden="true"><path d="M6 20
 
 export const ICON_NEXT = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M12 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 export const ICON_LOCK = `<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10" width="14" height="11" rx="2.5" fill="currentColor"/><path d="M8 10V7a4 4 0 0 1 8 0v3" fill="none" stroke="currentColor" stroke-width="2.5"/></svg>`;
+
+// ---------- Sort baskets (diets) ----------
+// BASKETS[diet] = the basket's backdrop (a woven basket on a soft colour, 160×100,
+// "slice" like a scene); BADGES[diet] = its symbol (100×100, drawn over the top-left
+// corner by home.js): herb = a leaf, carn = a paw print, pisc = a fish, omni = a leaf
+// + a paw print. No prey, no blood, no bones.
+const basket = (bg) => scene(`
+    <rect width="160" height="100" fill="${bg}"/>
+    <path d="M14 52h132l-12 44H26z" fill="#C8955A"/>
+    <path d="M22 66h116M26 81h108M50 55l4 41M80 55v41M110 55l-4 41" fill="none" stroke="#A9733F" stroke-width="3"/>
+    <path d="M14 52h132" stroke="#8D5A2B" stroke-width="6" stroke-linecap="round"/>`);
+export const BASKETS = {
+  herb: basket('#DCF2C8'),
+  carn: basket('#FBE0CC'),
+  pisc: basket('#D4ECFA'),
+  omni: basket('#EFE3F7'),
+};
+const LEAF = `<g transform="rotate(35 50 50)"><path d="M50 12C22 30 22 64 50 88C78 64 78 30 50 12z" fill="#43A047"/><path d="M50 26V84" stroke="#1B5E20" stroke-width="4" stroke-linecap="round"/></g>`;
+const PAW = `<g fill="#6D4C41"><ellipse cx="50" cy="64" rx="21" ry="18"/><ellipse cx="24" cy="42" rx="8.5" ry="11"/><ellipse cx="40" cy="26" rx="8.5" ry="11"/><ellipse cx="60" cy="26" rx="8.5" ry="11"/><ellipse cx="76" cy="42" rx="8.5" ry="11"/></g>`;
+const badge = (body) => `<svg viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="48" fill="#FFFFFF" stroke="#8D5A2B" stroke-width="3"/>${body}</svg>`;
+export const BADGES = {
+  herb: badge(LEAF),
+  carn: badge(PAW),
+  pisc: badge(`<path d="M14 50C30 26 62 26 74 50C62 74 30 74 14 50z" fill="#1E88E5"/><path d="M72 50L90 33V67z" fill="#1E88E5"/><circle cx="30" cy="46" r="5" fill="#FFFFFF"/>`),
+  omni: badge(`<g transform="translate(2 22) scale(0.55)">${LEAF}</g><g transform="translate(43 24) scale(0.55)">${PAW}</g>`),
+};
