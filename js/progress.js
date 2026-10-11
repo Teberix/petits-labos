@@ -71,6 +71,18 @@ export function recordPlay(state, outcomes, levels) {
   return { ...s, skill, best: Math.max(s.best, skill) };
 }
 
+// The first skill of a player who already played a game before it moved to the path
+// (owner, 2026-10-11): the highest `difficulty` among the path levels whose id is in the
+// game's old `completed` list (no +1). Ids that are not path levels (free modes) are
+// ignored. No completed path level → null (no seed: the state stays missing = START).
+export function seedSkill(levels, completedIds) {
+  const done = new Set(completedIds ?? []);
+  const steps = levels.filter((l) => done.has(l.id)).map((l) => l.difficulty);
+  if (!steps.length) return null;
+  const skill = Math.max(...steps);
+  return { ...START, seen: [], skill, best: skill };
+}
+
 // The next level for a player at `skill`: levels at that step first (if the step has
 // none — it can't, the gate forbids holes — the nearest step below, then above). Among
 // them: one not seen recently, at random; if all were seen, the one seen longest ago.

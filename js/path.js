@@ -9,6 +9,9 @@
 //       freeIcon / freeLabel (optional) = that button's SVG string / i18n key (defaults:
 //       the free-play icon, 'pathFree') — e.g. Duo Mémoire's duo button;
 //       roundsPerPlay = rounds in one ▶ (the game's constant). Drops any partial play.
+//       First show with no skill saved: the skill is seeded from the game's old
+//       `completed` list (progress.js seedSkill). A skill that exists (also after the
+//       parent's reset) is never seeded again (owner, 2026-10-11).
 //   ctx.path.record(level, outcome, levels)
 //       after each round: one stone is added and the outcome is kept. When the play's last
 //       round is recorded (roundsPerPlay outcomes), the skill moves at once, by the worst
@@ -17,8 +20,8 @@
 import { h } from './dom.js';
 import { t } from './i18n.js';
 import { ICONS } from './icons.js';
-import { getSkill, setSkill } from './storage.js';
-import { pickLevel, recordPlay, recordRound } from './progress.js';
+import { getGameData, getSkill, setSkill } from './storage.js';
+import { pickLevel, recordPlay, recordRound, seedSkill } from './progress.js';
 
 // The most stones drawn: older ones scroll off the start of the path.
 export const STONES_SHOWN = 24;
@@ -34,6 +37,11 @@ export function createPath(profileId, gameId) {
       }
       outcomes = [];
       perPlay = roundsPerPlay;
+      // a player from before the path: start at the highest step they completed
+      if (getSkill(profileId, gameId) === null) {
+        const seed = seedSkill(levels, getGameData(profileId, gameId).completed);
+        if (seed) setSkill(profileId, gameId, seed);
+      }
       const rounds = getSkill(profileId, gameId)?.rounds ?? 0;
       const stones = Array.from({ length: Math.min(rounds, STONES_SHOWN) }, (_, i) => h('span', {
         class: `path-stone tone-${i % 3}`, 'aria-hidden': 'true',

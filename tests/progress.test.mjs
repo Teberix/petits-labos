@@ -3,8 +3,19 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  START, STEP, SEEN_MAX, outcomeOf, outcomeForMisses, maxStep, nextSkill, recordRound, recordPlay, pickLevel,
+  START, STEP, SEEN_MAX, outcomeOf, outcomeForMisses, maxStep, nextSkill, recordRound, recordPlay, pickLevel, seedSkill,
 } from '../js/progress.js';
+
+test('seedSkill(): no completed path level → null (no seed)', () => {
+  assert.equal(seedSkill(LEVELS_8, []), null);
+  assert.equal(seedSkill(LEVELS_8, undefined), null);
+  assert.equal(seedSkill(LEVELS_8, ['free', 99]), null, 'free-mode ids only');
+});
+
+test('seedSkill(): the highest completed step, no +1; rounds 0 and seen []', () => {
+  const state = seedSkill(LEVELS_8, ['s2', 'free', 's5']);
+  assert.deepEqual(state, { skill: 5, best: 5, rounds: 0, seen: [] });
+});
 
 function seeded(seed) {
   return () => {
