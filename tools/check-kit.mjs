@@ -65,6 +65,14 @@ const TEST_PROFILE = {
   }],
 };
 
+// Puts the fresh test profile back and reloads: each game's offline() starts from the
+// same save, whatever the previous game left (fixedMap, skills…). The page must already
+// be on the app's origin.
+export async function resetTestProfile(page) {
+  await page.evaluate((data) => localStorage.setItem('petits-labos', data), JSON.stringify(TEST_PROFILE));
+  await page.reload();
+}
+
 export async function loadGameChecks(id) {
   try {
     return (await import(`../games/${id}/checks.js`)).default;

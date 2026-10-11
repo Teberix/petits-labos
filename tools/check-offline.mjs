@@ -8,7 +8,7 @@
 import { chromium } from 'playwright';
 import {
   SIZES, STEP_TIMEOUT, describeFailure, isMain, kit, loadGameChecks, newContext, screenshotPath,
-  selectedGames, startServer, watchErrors, withTimeout,
+  resetTestProfile, selectedGames, startServer, watchErrors, withTimeout,
 } from './check-kit.mjs';
 import { isDevOnly, listAppFiles, precacheIsUpToDate, readPrecache } from './precache.mjs';
 
@@ -61,6 +61,7 @@ export async function checkOffline(args = []) {
       const offlineErrors = watchErrors(offlinePage);
       try {
         await offlinePage.goto(server.base);
+        await resetTestProfile(offlinePage); // no state shared between games
         await withTimeout(checks.offline(offlinePage, kit), STEP_TIMEOUT, 'offline()');
         played++;
         failures.push(...offlineErrors.map((e) => `${game.id} offline: ${e}`));
