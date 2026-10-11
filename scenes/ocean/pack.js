@@ -199,5 +199,14 @@ export default {
       'item.coral': 'the coral', 'item.seaweed': 'the seaweed', 'item.submarine': 'the submarine',
       'item.diver': 'the diver', 'item.anchor': 'the anchor', 'item.pearl-oyster': 'the pearl oyster',
     },
+    de: {
+      title: 'das Meer',
+      'item.treasure-chest': 'die Schatzkiste', 'item.whale': 'der Wal', 'item.dolphin': 'der Delfin',
+      'item.octopus': 'der Oktopus', 'item.crab': 'die Krabbe', 'item.sea-star': 'der Seestern',
+      'item.seahorse': 'das Seepferdchen', 'item.sea-turtle': 'die Meeresschildkröte', 'item.jellyfish': 'die Qualle',
+      'item.clownfish': 'der Clownfisch', 'item.shark': 'der Hai', 'item.shell': 'die Muschel',
+      'item.coral': 'die Koralle', 'item.seaweed': 'die Alge', 'item.submarine': 'das U-Boot',
+      'item.diver': 'der Taucher', 'item.anchor': 'der Anker', 'item.pearl-oyster': 'die Perlmuschel',
+    },
   },
 };

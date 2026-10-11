@@ -191,5 +191,14 @@ export default {
       'item.space-station': 'the space station', 'item.telescope': 'the telescope', 'item.moon-rover': 'the moon rover',
       'item.meteor': 'the meteorite', 'item.flag': 'the flag', 'item.constellation': 'the constellation',
     },
+    de: {
+      title: 'der Weltraum',
+      'item.rocket': 'die Rakete', 'item.planet': 'der Planet', 'item.ringed-planet': 'der Ringplanet',
+      'item.moon': 'der Mond', 'item.sun': 'die Sonne', 'item.earth': 'die Erde',
+      'item.star': 'der Stern', 'item.comet': 'der Komet', 'item.astronaut': 'der Astronaut',
+      'item.alien': 'der Ausserirdische', 'item.ufo': 'das Ufo', 'item.satellite': 'der Satellit',
+      'item.space-station': 'die Raumstation', 'item.telescope': 'das Teleskop', 'item.moon-rover': 'das Mondauto',
+      'item.meteor': 'der Meteorit', 'item.flag': 'die Flagge', 'item.constellation': 'das Sternbild',
+    },
   },
 };

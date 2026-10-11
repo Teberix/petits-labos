@@ -281,5 +281,14 @@ export default {
       'item.giant-leaf': 'the giant leaf', 'item.liana': 'the vine', 'item.orchid': 'the orchid',
       'item.waterfall': 'the waterfall', 'item.jungle-hut': 'the jungle hut', 'item.canoe': 'the canoe',
     },
+    de: {
+      title: 'der Dschungel',
+      'item.jaguar-family': 'die Jaguarfamilie', 'item.toucan': 'der Tukan', 'item.parrot': 'der Papagei',
+      'item.monkey': 'der Affe', 'item.sloth': 'das Faultier', 'item.tree-frog': 'der Laubfrosch',
+      'item.chameleon': 'das Chamäleon', 'item.butterfly-blue': 'der blaue Schmetterling', 'item.snake': 'die Schlange',
+      'item.tapir': 'der Tapir', 'item.capybara': 'das Wasserschwein', 'item.banana-bunch': 'die Bananenstaude',
+      'item.giant-leaf': 'das Riesenblatt', 'item.liana': 'die Liane', 'item.orchid': 'die Orchidee',
+      'item.waterfall': 'der Wasserfall', 'item.jungle-hut': 'die Dschungelhütte', 'item.canoe': 'das Kanu',
+    },
   },
 };

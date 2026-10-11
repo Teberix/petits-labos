@@ -65,7 +65,7 @@ export function initAudio() {
 
 // ---- Speech ----
 
-const LOCALES = { fr: 'fr-FR', es: 'es-ES', en: 'en-GB', de: 'de-DE' };
+const LOCALES = { fr: 'fr-FR', es: 'es-ES', en: 'en-GB', de: 'de-CH' };
 
 // Voices load asynchronously on Android/Chrome; getVoices() may be empty at first.
 function findVoice(lang) {

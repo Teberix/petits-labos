@@ -184,5 +184,15 @@ export default {
       'item.bone': 'the bone', 'item.flower': 'the flower', 'item.pond': 'the pond',
       'item.dragonfly': 'the dragonfly', 'item.mushroom': 'the mushroom',
     },
+    de: {
+      title: 'die Dinosaurier',
+      'item.egg': 'das Dinosaurier-Ei', 'item.baby': 'der kleine Dinosaurier', 'item.eggs': 'die Eier',
+      'item.nest': 'das Nest', 'item.longneck': 'der Langhals-Dinosaurier', 'item.triceratops': 'der Triceratops',
+      'item.stegosaurus': 'der Stegosaurus', 'item.trex': 'der T-Rex', 'item.ankylo': 'der Ankylosaurus',
+      'item.pterosaur': 'der Flugsaurier', 'item.fern': 'der Farn', 'item.palm': 'die Palme',
+      'item.volcano': 'der Vulkan', 'item.rock': 'der Felsen', 'item.footprints': 'die Fussspuren',
+      'item.bone': 'der Knochen', 'item.flower': 'die Blume', 'item.pond': 'der Teich',
+      'item.dragonfly': 'die Libelle', 'item.mushroom': 'der Pilz',
+    },
   },
 };

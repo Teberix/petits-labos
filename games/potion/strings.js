@@ -195,7 +195,7 @@ export default {
     'potion.color.lightgreen': 'Hellgrün', 'potion.color.lilac': 'Flieder', 'potion.color.peach': 'Pfirsich',
     'potion.color.darkred': 'Dunkelrot', 'potion.color.darkblue': 'Dunkelblau', 'potion.color.darkgreen': 'Dunkelgrün',
     'potion.color.softgreen': 'Limettengrün', 'potion.color.dustypink': 'Altrosa', 'potion.color.greyblue': 'Graublau', 'potion.color.coral': 'Koralle',
-    'potion.color.olive': 'Olivgrün', 'potion.color.beige': 'Beige', 'potion.color.brown': 'Braun', 'potion.color.white': 'Weiß', 'potion.color.black': 'Schwarz', 'potion.color.grey': 'Grau',
+    'potion.color.olive': 'Olivgrün', 'potion.color.beige': 'Beige', 'potion.color.brown': 'Braun', 'potion.color.white': 'Weiss', 'potion.color.black': 'Schwarz', 'potion.color.grey': 'Grau',
 
     'potion.name.red': 'Rot', 'potion.name.yellow': 'Gelb', 'potion.name.blue': 'Blau',
     'potion.name.orange': 'Orange', 'potion.name.purple': 'Lila', 'potion.name.green': 'Grün',
@@ -206,6 +206,6 @@ export default {
     'potion.name.lightgreen': 'Hellgrün', 'potion.name.lilac': 'Flieder', 'potion.name.peach': 'Pfirsich',
     'potion.name.darkred': 'Dunkelrot', 'potion.name.darkblue': 'Dunkelblau', 'potion.name.darkgreen': 'Dunkelgrün',
     'potion.name.softgreen': 'Limettengrün', 'potion.name.dustypink': 'Altrosa', 'potion.name.greyblue': 'Graublau', 'potion.name.coral': 'Koralle',
-    'potion.name.olive': 'Olivgrün', 'potion.name.beige': 'Beige', 'potion.name.brown': 'Braun', 'potion.name.white': 'Weiß', 'potion.name.black': 'Schwarz', 'potion.name.grey': 'Grau',
+    'potion.name.olive': 'Olivgrün', 'potion.name.beige': 'Beige', 'potion.name.brown': 'Braun', 'potion.name.white': 'Weiss', 'potion.name.black': 'Schwarz', 'potion.name.grey': 'Grau',
   },
 };

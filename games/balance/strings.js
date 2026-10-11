@@ -160,7 +160,7 @@ export default {
     'balance.level': 'Stufe {n}',
     'balance.place': 'Leg beide Dinge auf die Waage!',
     'balance.howTo': 'Die Seite, die nach unten geht, ist die schwerere.',
-    'balance.intro.surprise': 'Aufgepasst: Große Dinge sind nicht immer die schwersten!',
+    'balance.intro.surprise': 'Aufgepasst: Grosse Dinge sind nicht immer die schwersten!',
     'balance.intro.light': 'Hör gut zu: Mal frage ich nach dem Schwereren, mal nach dem Leichteren!',
     'balance.tray': 'Dinge zum Wiegen',
     'balance.pan.left': 'Linke Schale',

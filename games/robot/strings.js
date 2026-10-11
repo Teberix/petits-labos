@@ -151,7 +151,7 @@ export default {
     'robot.empty': 'Leg zuerst ein paar Pfeile in den Streifen!',
     'robot.full': 'Der Streifen ist voll!',
     'robot.hintNext': 'Schau auf das leuchtende Feld: Dorthin geht es!',
-    'robot.hintPath': 'Folge den kleinen Fußspuren zur Station!',
+    'robot.hintPath': 'Folge den kleinen Fussspuren zur Station!',
     'robot.success.1': 'Bsss… Aufgeladen! Danke!',
     'robot.success.2': 'Piep piep! Geschafft! Tolles Programm!',
     'robot.success.3': 'Super, Programmierer! Meine Batterien sind voll!',

@@ -147,5 +147,15 @@ export default {
       'item.frog': 'the frog', 'item.duck': 'the duck', 'item.sun': 'the sun',
       'item.cloud': 'the cloud', 'item.rainbow': 'the rainbow',
     },
+    de: {
+      title: 'die Wiese',
+      'item.tree': 'der Apfelbaum', 'item.pine': 'die Tanne', 'item.flower': 'die Blume',
+      'item.sunflower': 'die Sonnenblume', 'item.mushroom': 'der Pilz', 'item.bush': 'der Busch',
+      'item.house': 'das Haus', 'item.fence': 'der Zaun', 'item.pond': 'der Teich',
+      'item.rabbit': 'das Kaninchen', 'item.fox': 'der Fuchs', 'item.hedgehog': 'der Igel',
+      'item.bird': 'der Vogel', 'item.butterfly': 'der Schmetterling', 'item.snail': 'die Schnecke',
+      'item.frog': 'der Frosch', 'item.duck': 'die Ente', 'item.sun': 'die Sonne',
+      'item.cloud': 'die Wolke', 'item.rainbow': 'der Regenbogen',
+    },
   },
 };

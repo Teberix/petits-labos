@@ -256,5 +256,14 @@ export default {
       'item.snowflake': 'the snowflake', 'item.fish': 'the fish', 'item.kayak': 'the kayak',
       'item.puffin': 'the puffin', 'item.snowy-pine': 'the snowy pine', 'item.ice-skates': 'the ice skates',
     },
+    de: {
+      title: 'die Arktis',
+      'item.igloo': 'das Iglu', 'item.polar-bear': 'der Eisbär', 'item.seal': 'die Robbe',
+      'item.walrus': 'das Walross', 'item.arctic-fox': 'der Polarfuchs', 'item.snowy-owl': 'die Schneeeule',
+      'item.narwhal': 'der Narwal', 'item.reindeer': 'das Rentier', 'item.husky': 'der Husky',
+      'item.sled': 'der Schlitten', 'item.snowman': 'der Schneemann', 'item.iceberg': 'der Eisberg',
+      'item.snowflake': 'die Schneeflocke', 'item.fish': 'der Fisch', 'item.kayak': 'das Kajak',
+      'item.puffin': 'der Papageitaucher', 'item.snowy-pine': 'die verschneite Tanne', 'item.ice-skates': 'die Schlittschuhe',
+    },
   },
 };
