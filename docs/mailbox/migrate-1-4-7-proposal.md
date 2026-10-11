@@ -245,3 +245,11 @@ S0 is skipped if `ctx.path` already accepts a first skill.
   (seed entry unknown), the three test files (section 6 is from the game notes).
 - Potion "one answer" not run on the real recipes: P1 measures it.
 - Food optional id 8: not checked that 3 scenes × 3 single-scene animals exist.
+
+## 10. Owner decisions (2026-10-11)
+These replace the proposal where they differ.
+- D1. Seed of the first path skill: ONE place, shared code. No per-game seedSkill(). No `seeded` field.
+- D2. Seed rule: skill = the highest `difficulty` among the path levels whose id is in the game's old `completed` list. No +1. No completed path level → no seed (the state stays missing = START). best = skill.
+- D3. When: in path.show(), only when getSkill(profileId, gameId) is null. A skill that exists (also after the parent's resetSkill, which keeps the state at skill 1) is never seeded again. All path games get this (Train, Balance, Robot, Shapes, Memory, Jaguar too): OK.
+- D4. Potion solver: "one answer" = for each round R of a level, the number of rounds R2 of the same level with matches(R.recipe, R2.recipe, level.match) === true must be 1 (only R itself). The ratio tolerance is on purpose (mixing.js lines 105-107): never change it to pass the solver.
+- D5. Questions 1-6 of the proposal: all YES, except food optional id 8 (home 3x3): only if F1 shows there are enough single-scene animals.
