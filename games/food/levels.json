@@ -161,6 +161,10 @@
     "omni"
    ],
    "perBasket": 2,
+   "exclude": [
+    "shark",
+    "orca"
+   ],
    "rounds": 5,
    "intro": "food.intro.pisc"
   }

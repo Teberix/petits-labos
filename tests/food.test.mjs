@@ -319,3 +319,13 @@ test('sort: each level has 3+ rounds, perBasket animals per basket, one answer e
     assert.equal(solve(level).solvable, true, `level ${level.id}: solver`);
   }
 });
+
+test('sort: level 12 shows no shark or orca; every excluded id is a known animal', () => {
+  for (const level of LEVELS.filter((l) => l.exclude)) {
+    for (const id of level.exclude) assert.ok(ANIMALS[id], `level ${level.id}: unknown animal ${id}`);
+  }
+  const level12 = LEVELS.find((l) => l.id === 12);
+  for (const r of levelRounds(level12)) {
+    assert.ok(!r.animals.some((a) => a.id === 'shark' || a.id === 'orca'), 'shark/orca in level 12');
+  }
+});

@@ -118,10 +118,10 @@ export function homeHint(misses) {
 // All the rounds a sort level can show, in the SAME shape as a home round (so home.js
 // plays both): { scenes: the level's diets, animals: [{ id, home: its diet }], key }.
 // `perBasket` animals of each diet; an animal with diet null, or a diet the level
-// doesn't show, is never picked. key = the animal set (never the same set twice in a row).
+// doesn't show, or one in level.exclude, is never picked. key = the animal set (never the same set twice in a row).
 function sortRounds(level) {
   const groups = level.diets.map((diet) => combinations(
-    Object.keys(ANIMALS).filter((id) => ANIMALS[id].diet === diet), level.perBasket));
+    Object.keys(ANIMALS).filter((id) => ANIMALS[id].diet === diet && !level.exclude?.includes(id)), level.perBasket));
   if (groups.some((g) => g.length === 0)) return []; // not enough animals for a basket
   let mixes = [[]];
   for (const g of groups) mixes = mixes.flatMap((mix) => g.map((group) => [...mix, group]));

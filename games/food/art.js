@@ -370,16 +370,16 @@ export const ART = {
   barracuda: svg(`
     <path d="M78 58l18-14q-2 14 0 28L78 62z" fill="#78909C"/>
     <path d="M60 52l6-10 8 12zM56 70l6 8 6-10z" fill="#78909C"/>
-    <path d="M4 60q2-6 14-10 30-8 62 2l2 10q-30 14-62 8-12-2-16-10z" fill="#B0BEC5"/>
+    <path d="M4 60q2-6 14-10 30-8 62 2l2 10q-30 14-62 8-12-2-16-10z" fill="#B0BEC5" stroke="#78909C" stroke-width="2" stroke-linejoin="round"/>
     <path d="M14 66q30 10 66 0l1 4q-34 12-67 2z" fill="#ECEFF1"/>
     <path d="M26 52q18 6 52 2M26 58q18 4 52 0" fill="none" stroke="#90A4AE" stroke-width="2"/>
     ${eye(22, 57, 3.2)}
     <path d="M5 63q8 4 16 2" fill="none" stroke="#37474F" stroke-width="1.8" stroke-linecap="round"/>`),
   pelican: svg(`
     <path d="M70 70q18-12 22-30-14 4-26 14z" fill="#CFD8DC"/>
-    <ellipse cx="54" cy="62" rx="28" ry="22" fill="#FAFAFA"/>
-    <path d="M50 58q16 0 28 14-12 6-28-2z" fill="#E3E8EB"/>
-    <path d="M38 22q4-12 16-8 8 4 4 16-2 10-8 18-12-4-12-26z" fill="#FAFAFA"/>
+    <ellipse cx="54" cy="62" rx="28" ry="22" fill="#FAFAFA" stroke="#78909C" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M50 58q16 0 28 14-12 6-28-2z" fill="#E3E8EB" stroke="#78909C" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M38 22q4-12 16-8 8 4 4 16-2 10-8 18-12-4-12-26z" fill="#FAFAFA" stroke="#78909C" stroke-width="3" stroke-linejoin="round"/>
     <path d="M20 24q-12 0-18 14 10 8 22 6l14-14z" fill="#FFB300" stroke="#E65100" stroke-width="2" stroke-linejoin="round"/>
     <path d="M24 26l22 4" stroke="#E65100" stroke-width="2.4" stroke-linecap="round"/>
     ${eye(44, 24, 3)}
