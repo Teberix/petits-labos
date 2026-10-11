@@ -170,7 +170,7 @@ export default {
     'potion.name.olive': 'olive', 'potion.name.beige': 'beige', 'potion.name.brown': 'brown', 'potion.name.white': 'white', 'potion.name.black': 'black', 'potion.name.grey': 'grey',
   },
   de: {
-    'potion.path': 'Drück auf den Knopf: Ein Wesen kommt!',
+    'potion.path': 'Drück auf den Knopf: Ein kleines Monster kommt!',
     'potion.intro.detective': 'Diesmal gibt es kein Rezept: Probier Mischungen aus, bis die Farbe stimmt!',
     'potion.intro.chef': 'Meisterkoch! Zähl die Tropfen jeder Farbe genau.',
     'potion.intro.dark': 'Weiss macht es heller, Schwarz macht es dunkler. Findest du es?',

@@ -25,3 +25,7 @@ test('levels 9, 10 and 11 have an intro key, and every intro key exists in fr, e
   }
   for (const lang of ['fr', 'es', 'en', 'de']) assert.ok(STRINGS[lang]['potion.path'], `potion.path in ${lang}`);
 });
+
+test('every path level has at least 3 rounds (ROUNDS_PER_PLAY)', () => {
+  for (const level of PATH_LEVELS) assert.ok(level.rounds.length >= 3, `level ${level.id}`);
+});

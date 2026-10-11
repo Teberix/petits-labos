@@ -18,8 +18,8 @@ import * as art from './art.js';
 const WRONG_BEFORE_HINT = 2;
 const STIR_MS = 1400;       // spoon animation length
 const CELEBRATE_MS = 2800;  // time to enjoy a success before the next creature
-const MAX_MAP_DOTS = 5;
-const ROUNDS_PER_PLAY = 3;  // creature visits per ▶ on the path     // colour dots under each level number
+const MAX_MAP_DOTS = 5;     // colour dots under each level number
+const ROUNDS_PER_PLAY = 3;  // creature visits per ▶ on the path
 
 function loadStylesheet() {
   if (document.querySelector('link[data-game="potion"]')) return;
