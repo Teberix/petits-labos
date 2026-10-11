@@ -148,3 +148,69 @@ Preview repo was at `fea5cd6` (0.11.0-preview.18). Now `f8c1b2f` = 0.11.0-previe
 
 Touch feel and drag feel on a real tablet; the voice; paw-print and hint timing; the hug
 animation; the landscape grid turn on a real device; the `kid-ux-reviewer` pass (not run).
+
+## J3 — fixed board, harder steps, higher hint thresholds
+
+Models: Sonnet 5.5 (code, gate, preview, this mailbox).
+Commits on dev: 8d991d4 (J3 build), 5023952 (hint thresholds, board wait).
+The owner's file `papa_whiskers.svg` was deleted. Its art is in `art.js`.
+
+### Steps
+
+Path and dead-end ranges are the 10th–90th percentile of 200 seeded mazes per step. Median dead ends: 2, 5, 8, 13, 18, 24, 36, 59. Median path: 10, 16, 19, 25, 26, 28, 29, 35.
+
+| step | grid | bias | loops | papa | dead ends | path | median path | hints.deadEnds (NEW at 5–8) | hints.walk (NEW at 5–8) |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | 3×5 | 0 | 0 | far | 1–3 | 8–13 | 10 | 2, 3 | 3, 5 |
+| 2 | 4×7 | 0.2 | 0 | far | 3–7 | 12–21 | 16 | 2, 3 | 3, 5 |
+| 3 | 5×8 | 0.3 | 0 | far | 6–10 | 15–25 | 19 | 2, 3 | 3, 5 |
+| 4 | 6×10 | 0.4 | 0 | far | 10–16 | 20–31 | 25 | 3, 5 | 3, 5 |
+| 5 | 7×12 | 0.5 | 2 | far | 15–21 | 21–33 | 26 | **4, 7** | **4, 7** |
+| 6 | 8×14 | 0.6 | 4 | middle | 21–28 | 22–36 | 28 | **6, 10** | **4, 7** |
+| 7 | 10×16 | 0.7 | 6 | middle | 33–41 | 24–36 | 29 | **8, 14** | **4, 7** |
+| 8 | 12×20 | 0.8 | 8 | middle | 52–66 | 28–43 | 35 | **12, 20** | **4, 7** |
+
+Walk thresholds changed too, from 5 to 8. The owner decision lists `walk` [4,7] there.
+
+### Cell size (px), computed from the sizing code
+
+Assumptions: area = screen minus a 88 px top bar, minus 8 px padding per side. No browser was used. Real values can differ by a few px.
+
+| step | 360×640 | 640×360 |
+|---|---|---|
+| 1 | 106 | 84 |
+| 2 | 75 | 60 |
+| 3 | 63 | 50 |
+| 4 | 53 | 42 |
+| 5 | 44 | 35 |
+| 6 | 37 | 30 |
+| 7 | 31 | 25 |
+| 8 | 26 | 21 |
+
+### Gate
+
+```
+node --test tests/jaguar.test.mjs        15 pass, 0 fail
+node tools/gate.mjs --only levels,privacy
+  ✓ privacy  263 files ... GATE PASSED (6s)
+node tools/gate.mjs --game jaguar --quick
+  ✓ unit 15 · ✓ privacy · ✓ levels 8 · ✓ layout 24 screens (67s) · ✓ offline 129 files (6s)
+  GATE PASSED (84s)
+```
+
+Earlier runs, before the pass above:
+- Jobs 3, wait 60 s: FAIL. `step 1 board · 640x360: setup failed — waitForFunction Timeout 60000ms`.
+- `--jobs 1`: PASS (layout 117 s).
+- Jobs 3, rerun: PASS.
+
+The doubled wait (30 s → 60 s) did not stop the failure. The failure is intermittent and may not come from slowness. Cause not found.
+
+### Preview
+
+`0.11.0-preview.20` = `ba18d85` in `Teberix/petits-labos-preview` main. The previous head was `f8c1b2f` (preview.19), as required. `dev` has no version or manifest change.
+
+### Risks
+
+1. Cells at step 8 are 21–26 px. A 20 px tap on a real phone may be hard. The jaguar hit box is 64 px. Taps use the main-direction rule.
+2. The owner checks on the phone that the path climbs through steps 6–8. Measured medians: 28, 29, 35.
+3. The jobs-3 layout timeout is not explained. Watch for it in the next full gate.
