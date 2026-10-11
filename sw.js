@@ -168,6 +168,7 @@ const PRECACHE = [
   'scenes/ocean/pack.js',
   'scenes/party/pack.js',
   'scenes/registry.js',
+  'scenes/savanna/pack.js',
   'scenes/space/pack.js',
 ];
 // PRECACHE:END
