@@ -1,0 +1,129 @@
+{
+ "schemaVersion": 1,
+ "game": "food",
+ "levels": [
+  {
+   "id": 1,
+   "difficulty": 1,
+   "type": "feed",
+   "distractors": "other",
+   "rounds": 5,
+   "animals": [
+    "rabbit",
+    "squirrel",
+    "hedgehog",
+    "frog",
+    "penguin",
+    "giraffe",
+    "zebra",
+    "marmot"
+   ]
+  },
+  {
+   "id": 2,
+   "difficulty": 2,
+   "type": "home",
+   "habitats": [
+    "forest",
+    "mountain",
+    "savanna",
+    "ice",
+    "sea"
+   ],
+   "scenes": 2,
+   "perScene": 2,
+   "rounds": 5,
+   "intro": "food.intro.home"
+  },
+  {
+   "id": 3,
+   "difficulty": 3,
+   "type": "home",
+   "habitats": [
+    "forest",
+    "mountain",
+    "savanna",
+    "ice",
+    "sea"
+   ],
+   "scenes": 3,
+   "perScene": 2,
+   "rounds": 5
+  },
+  {
+   "id": 4,
+   "difficulty": 4,
+   "type": "feed",
+   "distractors": "same",
+   "rounds": 5,
+   "intro": "food.intro.feedHard",
+   "animals": [
+    "rabbit",
+    "squirrel",
+    "hedgehog",
+    "frog",
+    "penguin",
+    "seal",
+    "giraffe",
+    "zebra",
+    "marmot",
+    "ibex",
+    "turtle"
+   ]
+  },
+  {
+   "id": 8,
+   "difficulty": 4,
+   "type": "home",
+   "habitats": [
+    "forest",
+    "mountain",
+    "savanna",
+    "ice",
+    "sea"
+   ],
+   "scenes": 3,
+   "perScene": 3,
+   "rounds": 5
+  },
+  {
+   "id": 5,
+   "difficulty": 5,
+   "type": "chain",
+   "length": 3,
+   "given": 1,
+   "decoys": 0,
+   "rounds": 5,
+   "intro": "food.intro.chain"
+  },
+  {
+   "id": 6,
+   "difficulty": 6,
+   "type": "chain",
+   "length": 3,
+   "given": 1,
+   "decoys": 1,
+   "rounds": 5,
+   "intro": "food.intro.decoy"
+  },
+  {
+   "id": 7,
+   "difficulty": 7,
+   "type": "chain",
+   "length": 4,
+   "given": 1,
+   "decoys": 0,
+   "rounds": 5,
+   "intro": "food.intro.long"
+  },
+  {
+   "id": 9,
+   "difficulty": 8,
+   "type": "chain",
+   "length": 4,
+   "given": 1,
+   "decoys": 1,
+   "rounds": 5
+  }
+ ]
+}

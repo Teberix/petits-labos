@@ -1,7 +1,7 @@
-// "Qui mange qui ?" data — edit this file to add or change animals, plants, chains and
-// levels; no game logic here. Every round is generated from these tables (food.js
-// makeRound), and tests/food.test.mjs checks that every round it can build has exactly
-// one right answer.
+// "Qui mange qui ?" data — edit this file to add or change animals, plants and chains;
+// the level params live in levels.json; no game logic here. Every round is generated
+// from these tables (web.js makeRound), and solver.mjs + tests/food.test.mjs check that
+// every round it can build has exactly one right answer.
 
 // The 5 scenes. forest + mountain = the Alps; savanna = Africa; ice = the Antarctic ice
 // floe (penguins, seals, orcas — no polar bear); sea = the open sea.
@@ -76,6 +76,7 @@ export const CHAINS = [
 // Level fields:
 //   id        number shown on the level map (levels unlock in this order; progress is
 //             saved by id, so never renumber an existing level)
+//   difficulty whole step 1…N of the path (every step has a level)
 //   type      'feed'  — one animal, 3 food cards: drag the one it eats to its mouth
 //             'home'  — some scenes + a tray of animals: drag each one home
 //             'chain' — slots in a row: put the chain in the right order
@@ -90,20 +91,10 @@ export const CHAINS = [
 //                     animals per scene in the tray
 // chain: length       3 or 4; given = slots already filled at the start (the plant);
 //                     decoys = extra animal cards that belong to no slot
-export const LEVELS = [
-  {
-    id: 1, type: 'feed', distractors: 'other', rounds: 5,
-    animals: ['rabbit', 'squirrel', 'hedgehog', 'frog', 'penguin', 'giraffe', 'zebra', 'marmot'],
-  },
-  { id: 2, type: 'home', habitats: HABITATS, scenes: 2, perScene: 2, rounds: 5, intro: 'food.intro.home' },
-  { id: 3, type: 'home', habitats: HABITATS, scenes: 3, perScene: 2, rounds: 5 },
-  {
-    id: 4, type: 'feed', distractors: 'same', rounds: 5, intro: 'food.intro.feedHard',
-    // (no bear or elephant: they eat so many things that no wrong card is clearly out)
-    animals: ['rabbit', 'squirrel', 'hedgehog', 'frog', 'penguin', 'seal', 'giraffe', 'zebra',
-      'marmot', 'ibex', 'turtle'],
-  },
-  { id: 5, type: 'chain', length: 3, given: 1, decoys: 0, rounds: 5, intro: 'food.intro.chain' },
-  { id: 6, type: 'chain', length: 3, given: 1, decoys: 1, rounds: 5, intro: 'food.intro.decoy' },
-  { id: 7, type: 'chain', length: 4, given: 1, decoys: 0, rounds: 5, intro: 'food.intro.long' },
-];
+import data from './levels.json' with { type: 'json' };
+
+// The path's levels, from levels.json (ids 8 and 9 are steps 4 and 8: new levels got new ids).
+export const PATH_LEVELS = data.levels;
+
+// The fixed level map: every level by id order. Levels unlock in this order.
+export const LEVELS = [...PATH_LEVELS].sort((a, b) => a.id - b.id);

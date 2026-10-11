@@ -20,11 +20,7 @@ owner confirms it was playtested with the kids.
 | 13 | Les Paires | pair matching on stacked tiles, visual search | TODO |
 | 14 | Les Pompons | moving zones to guide balls to their colour, cause/effect | TODO |
 
-### Game 7 note (owner, 2026-09-30)
-Qui mange qui ? keeps its levels in `games/food/levels.js`, not `levels.json` — an
-accepted exception: its rounds are generated from the animal/food data, not hand-made
-puzzles, and the consistency tests in `tests/food.test.mjs` act as its solver (every
-round `makeRound` can build has exactly one right answer).
+Qui mange qui ? moved to levels.json + solver.mjs (owner, 2026-10-11): the exception is closed.
 
 ### Big update after game 10: new engine + rewards (owner, 2026-10-01)
 From the Qui mange qui ? playtest: the kids finished all 7 levels in under 5 minutes.

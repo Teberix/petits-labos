@@ -7,10 +7,11 @@ import assert from 'node:assert/strict';
 import {
   eats, mightEat, isPlant, foodCards, homeOf, chainOk, chainSolutions, levelRounds, makeRound, feedHint, homeHint, chainCheck, chainHint, combinations, permutations,
 } from '../games/food/web.js';
-import { HABITATS, PLANTS, ANIMALS, CHAINS, LEVELS } from '../games/food/levels.js';
+import { HABITATS, PLANTS, ANIMALS, CHAINS, LEVELS, PATH_LEVELS } from '../games/food/levels.js';
 import { ART, SCENES } from '../games/food/art.js';
 import { nearestFirst, distanceTo } from '../games/food/common.js';
 import STRINGS from '../games/food/strings.js';
+import { solve, sampleRound } from '../games/food/solver.mjs';
 
 // A tiny repeatable random generator, so every run tests the same rounds.
 function seeded(seed) {
@@ -270,4 +271,20 @@ test('helpers: combinations and permutations', () => {
   assert.equal(permutations(['a', 'b', 'c']).length, 6);
   assert.ok(chainOk(['grass', 'rabbit', 'fox']));
   assert.ok(!chainOk(['grass', 'fox', 'rabbit']));
+});
+
+// ---------- solver (the gate's levels check) ----------
+
+test('solver: every path level is solvable and has whole difficulty steps with no hole', () => {
+  for (const level of PATH_LEVELS) assert.equal(solve(level).solvable, true, `level ${level.id}`);
+  const steps = [...new Set(PATH_LEVELS.map((l) => l.difficulty))].sort((a, b) => a - b);
+  assert.deepEqual(steps, steps.map((_, i) => i + 1));
+  assert.deepEqual(LEVELS.map((l) => l.id), [1, 2, 3, 4, 5, 6, 7, 8, 9]);
+});
+
+test('solver: 200 seeded sample rounds per level have exactly one answer', () => {
+  for (const level of PATH_LEVELS) {
+    const random = seeded(level.id * 13 + 5);
+    for (let i = 0; i < 200; i++) assert.equal(sampleRound(level, random).answers, 1, `level ${level.id}, sample ${i}`);
+  }
 });

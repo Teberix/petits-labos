@@ -71,6 +71,7 @@ export function playHome(ctx, level, container, onDone) {
     homesEl.dataset.count = String(round.scenes.length);
     const n = round.animals.length;
     trayEl.style.setProperty('--cols', String(n <= 4 ? n : 3));
+    trayEl.style.setProperty('--lcols', String(n <= 6 ? 2 : 3)); // landscape: 9 animals need 3 columns to fit
     renderTray();
     let line = t('food.ask.home');
     if (index === 0 && level.intro) line = `${t(level.intro)} ${line}`;

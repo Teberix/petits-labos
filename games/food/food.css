@@ -201,7 +201,7 @@
   gap: calc(var(--gap) * 0.75);
 }
 @media (orientation: landscape) {
-  .fd-htray { grid-template-columns: repeat(2, auto); }
+  .fd-htray { grid-template-columns: repeat(var(--lcols, 2), auto); }
 }
 .fd-htray .fd-card, .fd-htray .fd-slot { --card: clamp(64px, 17vmin, 7.5rem); }
 
@@ -276,6 +276,8 @@
 @media (orientation: landscape) {
   .fd-chain-play .fd-tray { flex-direction: row; }
 }
+/* 4 cards in the tray (chain of 4 + a decoy): smaller cards so they fit a 360px width. */
+.fd-chain-play .fd-tray:has(.fd-card:nth-child(4)) .fd-card { --card: clamp(64px, 17vmin, 7.5rem); }
 
 /* Level complete. */
 .fd-done {

@@ -170,6 +170,15 @@ export default {
       },
     },
     {
+      name: 'home: level 8, 3 scenes x 3 animals in the tray',
+      async setup(page, kit) {
+        await openLevel(page, kit, 8);
+        const { scenes, tray } = await readHome(page);
+        if (scenes.length !== 3 || tray.length !== 9) throw new Error(`${scenes.length} scenes, ${tray.length} animals`);
+        await kit.settle(page);
+      },
+    },
+    {
       // Each scene's first animal dropped 3 px inside the edge it shares with its
       // neighbour (the enlarged hit areas overlap there: it must still go to THIS
       // scene) → 2 animals in some scenes; then one animal dropped 3 times on a wrong
@@ -217,6 +226,15 @@ export default {
         await openLevel(page, kit, 7);
         const { slots, tray } = await readChain(page);
         if (slots.length !== 4 || tray.length !== 3) throw new Error(`${slots.length} slots, ${tray.length} cards`);
+        await kit.settle(page);
+      },
+    },
+    {
+      name: 'chain: level 9, a 4-link chain with one decoy card',
+      async setup(page, kit) {
+        await openLevel(page, kit, 9);
+        const { slots, tray } = await readChain(page);
+        if (slots.length !== 4 || tray.length !== 4) throw new Error(`${slots.length} slots, ${tray.length} cards`);
         await kit.settle(page);
       },
     },

@@ -58,6 +58,7 @@ const PRECACHE = [
   'games/food/food.js',
   'games/food/home.js',
   'games/food/levels.js',
+  'games/food/levels.json',
   'games/food/meta.js',
   'games/food/strings.js',
   'games/food/web.js',
