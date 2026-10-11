@@ -5,6 +5,10 @@
 // potion.n.* are numbers in words, agreeing with "goutte"/"gota" (feminine).
 export default {
   fr: {
+    'potion.path': 'Appuie sur le bouton : une créature arrive !',
+    'potion.intro.detective': 'Pas de recette cette fois : essaie des mélanges pour trouver la bonne couleur !',
+    'potion.intro.chef': 'Grand chef ! Compte bien les gouttes de chaque couleur.',
+    'potion.intro.dark': 'Le blanc rend plus clair, le noir rend plus foncé. À toi de trouver !',
     'potion.chooseLevel': 'Choisis un niveau !',
     'potion.ask': 'Je voudrais une potion {color}, s’il te plaît !',
     'potion.askRecipe': 'Je voudrais une potion avec {recipe}, s’il te plaît !',
@@ -56,6 +60,10 @@ export default {
     'potion.name.olive': 'kaki', 'potion.name.beige': 'beige', 'potion.name.brown': 'marron', 'potion.name.white': 'blanc', 'potion.name.black': 'noir', 'potion.name.grey': 'gris',
   },
   es: {
+    'potion.path': '¡Pulsa el botón: llega una criatura!',
+    'potion.intro.detective': 'Esta vez no hay receta: ¡prueba mezclas para encontrar el color!',
+    'potion.intro.chef': '¡Gran chef! Cuenta bien las gotas de cada color.',
+    'potion.intro.dark': 'El blanco aclara, el negro oscurece. ¡A ver si lo encuentras!',
     'potion.chooseLevel': '¡Elige un nivel!',
     'potion.ask': '¡Quiero una poción {color}, por favor!',
     'potion.askRecipe': '¡Quiero una poción con {recipe}, por favor!',
@@ -107,6 +115,10 @@ export default {
     'potion.name.olive': 'verde oliva', 'potion.name.beige': 'beige', 'potion.name.brown': 'marrón', 'potion.name.white': 'blanco', 'potion.name.black': 'negro', 'potion.name.grey': 'gris',
   },
   en: {
+    'potion.path': 'Press the button: a creature is coming!',
+    'potion.intro.detective': 'No recipe this time: try mixes to find the right colour!',
+    'potion.intro.chef': 'Master chef! Count the drops of each colour carefully.',
+    'potion.intro.dark': 'White makes it lighter, black makes it darker. Can you find it?',
     'potion.chooseLevel': 'Pick a level!',
     'potion.ask': 'I’d like a {color} potion, please!',
     'potion.askRecipe': 'I’d like a potion with {recipe}, please!',
@@ -158,6 +170,10 @@ export default {
     'potion.name.olive': 'olive', 'potion.name.beige': 'beige', 'potion.name.brown': 'brown', 'potion.name.white': 'white', 'potion.name.black': 'black', 'potion.name.grey': 'grey',
   },
   de: {
+    'potion.path': 'Drück auf den Knopf: Ein Wesen kommt!',
+    'potion.intro.detective': 'Diesmal gibt es kein Rezept: Probier Mischungen aus, bis die Farbe stimmt!',
+    'potion.intro.chef': 'Meisterkoch! Zähl die Tropfen jeder Farbe genau.',
+    'potion.intro.dark': 'Weiss macht es heller, Schwarz macht es dunkler. Findest du es?',
     'potion.chooseLevel': 'Wähle eine Stufe!',
     'potion.ask': 'Ich möchte einen Zaubertrank in {color}, bitte!',
     'potion.askRecipe': 'Ich möchte einen Zaubertrank mit {recipe}, bitte!',

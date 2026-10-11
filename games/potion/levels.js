@@ -5,6 +5,8 @@
 //   id           number shown on the level map (levels unlock in this order;
 //                progress is saved by id, so never renumber an existing level)
 //   difficulty   the step on the path (1, 2, 3…; two levels may share a step)
+//   intro        string key (js/i18n) said once: on the fixed map at the level's first round, on
+//                the path the first time it is picked (saved in `heard`). Optional.
 //   ingredients  jars on the shelf, in order (ids from INGREDIENTS in mixing.js)
 //   match        how the potion is checked (see matches() in mixing.js):
 //                  { mode: 'ratio', tolerance: 0.2 }  same ingredients, about the same proportions

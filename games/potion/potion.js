@@ -10,14 +10,16 @@ import { h } from '../../js/dom.js';
 import { draggable } from '../../js/dragdrop.js';
 import { addStrings } from '../../js/i18n.js';
 import { mixColor, matches, extraIngredients, missingIngredient, nameColor } from './mixing.js';
-import { LEVELS } from './levels.js';
+import { LEVELS, PATH_LEVELS, FREE } from './levels.js';
+import { outcomeForMisses } from '../../js/progress.js';
 import STRINGS from './strings.js';
 import * as art from './art.js';
 
 const WRONG_BEFORE_HINT = 2;
 const STIR_MS = 1400;       // spoon animation length
 const CELEBRATE_MS = 2800;  // time to enjoy a success before the next creature
-const MAX_MAP_DOTS = 5;     // colour dots under each level number
+const MAX_MAP_DOTS = 5;
+const ROUNDS_PER_PLAY = 3;  // creature visits per ▶ on the path     // colour dots under each level number
 
 function loadStylesheet() {
   if (document.querySelector('link[data-game="potion"]')) return;
@@ -73,8 +75,44 @@ function createGame(container, ctx) {
 
   // ---------- Progress (saved per player) ----------
 
+  // { completed: [level ids] (fixed map only), heard: [level ids whose intro was said on the
+  //   path] } — `heard` is new with the path; older saves don't have it.
   function progress() {
-    return { completed: [], ...ctx.load() };
+    return { completed: [], heard: [], ...ctx.load() };
+  }
+
+  // The game's home: the path, or the fixed level map.
+  function home() {
+    if (ctx.path) showPath();
+    else showLevels();
+  }
+
+  function showPath() {
+    stopRoundInputs();
+    ctx.path.show(container, {
+      levels: PATH_LEVELS,
+      onPlay: (level) => { sfx.pop(); playLevel(level); },
+      onFree: () => { sfx.pop(); playLevel(FREE); },
+      roundsPerPlay: ROUNDS_PER_PLAY,
+    });
+    ctx.speak(t('potion.path'));
+  }
+
+  // Level 1's "how to" and each level's intro are said once: on the fixed map at the
+  // level's first round, on the path the first time the path picks the level.
+  function introLine(level) {
+    if (!ctx.path) {
+      if (play.index > 0) return '';
+    } else {
+      const p = progress();
+      if (p.heard.includes(level.id)) return '';
+      p.heard.push(level.id);
+      ctx.save(p);
+    }
+    let line = '';
+    if (level.id === LEVELS[0].id) line += ' ' + t('potion.howTo');
+    if (level.intro) line += ' ' + t(level.intro);
+    return line;
   }
 
   function isUnlocked(index) {
@@ -178,6 +216,7 @@ function createGame(container, ctx) {
 
     let rounds = level.shuffle ? shuffled(level.rounds) : [...level.rounds];
     if (level.pick) rounds = rounds.slice(0, level.pick);
+    if (ctx.path && !level.free) rounds = shuffled(level.rounds).slice(0, ROUNDS_PER_PLAY);
 
     play = {
       level,
@@ -230,11 +269,12 @@ function createGame(container, ctx) {
     clearHint();
     creatureWalksIn(creatureIndexFor(play.index));
     play.els.request.replaceChildren(...requestView(spec));
+    play.els.request.dataset.recipe = JSON.stringify(spec.recipe); // read by the offline check
 
     let line = play.level.showRecipe
       ? t('potion.askRecipe', { recipe: recipeWords(spec.recipe) })
       : t('potion.ask', { color: t(`potion.color.${nameColor(spec.recipe)}`) });
-    if (play.level.id === LEVELS[0].id && play.index === 0) line += ' ' + t('potion.howTo');
+    if (play.index === 0) line += introLine(play.level);
     ctx.speak(line);
   }
 
@@ -369,6 +409,8 @@ function createGame(container, ctx) {
     // Every potion earns a star (it flies from the creature to the counter);
     // every 5th star also brings a new sticker, revealed before the next creature.
     const sticker = ctx.rewards.star(play.els.creatureBox);
+    // On the path every round leaves a stone and moves the skill (once per ▶).
+    if (ctx.path) ctx.path.record(play.level, outcomeForMisses(round.wrong), PATH_LEVELS);
 
     later(async () => {
       if (sticker) await ctx.rewards.showSticker(sticker);
@@ -377,6 +419,8 @@ function createGame(container, ctx) {
       if (play.index < play.rounds.length) {
         restartAnimation(play.els.creatureBox.parentElement, 'leave');
         later(startRound, 450);
+      } else if (ctx.path) {
+        showPath();
       } else {
         levelDone();
       }
@@ -448,14 +492,14 @@ function createGame(container, ctx) {
       h('div', { class: 'done-jars' }, potions),
       h('button', {
         class: 'continue-btn', type: 'button', 'aria-label': t('potion.continue'),
-        html: art.ICON_NEXT, onclick: () => { sfx.pop(); showLevels(); },
+        html: art.ICON_NEXT, onclick: () => { sfx.pop(); home(); },
       }),
     ));
     ctx.speak(t('potion.levelDone'));
   }
 
   return {
-    start: showLevels,
+    start: home,
     destroy() {
       destroyed = true;
       timers.forEach(clearTimeout);

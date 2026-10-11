@@ -377,6 +377,7 @@
     {
       "id": 9,
       "difficulty": 7,
+      "intro": "potion.intro.detective",
       "ingredients": [
         "red",
         "yellow",
@@ -438,6 +439,7 @@
     {
       "id": 10,
       "difficulty": 8,
+      "intro": "potion.intro.chef",
       "ingredients": [
         "red",
         "yellow",
@@ -508,6 +510,7 @@
     {
       "id": 11,
       "difficulty": 9,
+      "intro": "potion.intro.dark",
       "ingredients": [
         "red",
         "yellow",
