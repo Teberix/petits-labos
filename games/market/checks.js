@@ -1,7 +1,47 @@
 // Dev-only (never precached): Le Marché's worst-case screens for tools/check-layout.mjs
 // and its offline interaction for tools/check-offline.mjs. See tools/check-kit.mjs.
 
+// The level cases use the fixed level map (parent switch "Carte des niveaux"): the test
+// profile gets fixedMap, then the page reloads (the app reads the save at start).
+async function useFixedMap(page) {
+  await page.waitForSelector('.profile-tile');
+  await page.evaluate(() => {
+    const data = JSON.parse(localStorage.getItem('petits-labos'));
+    data.profiles[0].fixedMap = true;
+    localStorage.setItem('petits-labos', JSON.stringify(data));
+  });
+  await page.reload();
+}
+
+// The path (new engine): the game opens on it; ▶ plays one sale (3 per ▶).
+async function openPath(page, kit) {
+  await kit.openGame(page, 'market');
+  await page.locator('.path-play').waitFor();
+  await kit.settle(page);
+}
+
+async function playFromPath(page, kit) {
+  await openPath(page, kit);
+  await kit.tap(page, page.locator('.path-play'));
+  await page.locator('.mk-purse .mk-coin').first().waitFor();
+  await kit.settle(page);
+}
+
+async function savedSkillState(page) {
+  return page.evaluate(() => JSON.parse(localStorage.getItem('petits-labos')).profiles[0].skills.market);
+}
+
+async function resetSkill(page) {
+  await page.evaluate(() => {
+    const data = JSON.parse(localStorage.getItem('petits-labos'));
+    delete data.profiles[0].skills.market;
+    localStorage.setItem('petits-labos', JSON.stringify(data));
+  });
+  await page.reload();
+}
+
 async function openLevel(page, kit, n) {
+  await useFixedMap(page);
   await kit.openGame(page, 'market');
   // Wait for market.css (loaded when the game mounts): before it applies, the level
   // buttons aren't where they end up, and a tap can land next to them.
@@ -67,9 +107,35 @@ async function waitHappySeller(page) {
 }
 
 export default {
-  touch: ['.mk-coin', '.mk-stack', '.mk-pay', '.mk-level-btn', '.mk-shop-item', '.mk-turn'],
+  touch: ['.mk-coin', '.mk-stack', '.mk-pay', '.mk-level-btn', '.mk-shop-item', '.mk-turn', '.path-play', '.path-free'],
 
   worstCases: [
+    {
+      name: 'path screen (▶ + free button)',
+      async setup(page, kit) { await openPath(page, kit); },
+    },
+    {
+      name: 'path: one sale at step 1',
+      async setup(page, kit) { await playFromPath(page, kit); },
+    },
+    {
+      // The game gives the seed itself (js/path.js): old completed [1,2,3] → skill 3.
+      name: 'seed: completed [1,2,3] and no skill → skills.market { skill: 3, best: 3 }',
+      once: true,
+      async setup(page, kit) {
+        await page.waitForSelector('.profile-tile');
+        await page.evaluate(() => {
+          const data = JSON.parse(localStorage.getItem('petits-labos'));
+          data.profiles[0].games.market = { completed: [1, 2, 3] };
+          delete data.profiles[0].skills.market;
+          localStorage.setItem('petits-labos', JSON.stringify(data));
+        });
+        await page.reload();
+        await openPath(page, kit);
+        const state = await savedSkillState(page);
+        if (state?.skill !== 3 || state?.best !== 3) throw new Error(`seed: skills.market is ${JSON.stringify(state)}`);
+      },
+    },
     {
       // Exactly 20 in 1-franc coins: one stack "×20"; the 21st coin bounces back.
       name: 'level 1, exactly 20 (20 × 1 fr), 21st bounces back',
@@ -303,33 +369,48 @@ export default {
     },
   ],
 
-  // Level 2: take back a specific value, then pay the exact price (1 + 1 + …): happy
-  // seller and one more star. Then the next sale: pay 1 franc too much → the sale is
-  // done (happy seller) but no star.
+  // On the path: ▶ → sale 1 overpaid (happy seller, no star), sales 2 and 3 exact (+1 star
+  // each) → back to the path with three stones. Then a fresh path and one clean ▶:
+  // skills.market.skill must go 1 → 2.
   async offline(page, kit) {
-    await openLevel(page, kit, 2);
-    let price = await priceShown(page);
-    if (!(price >= 2 && price <= 6)) throw new Error(`unexpected price ${price}`);
-    await putCoins(page, kit, [2, 1]);
-    await expectStacks(page, { 1: 1, 2: 1 }, 3);
-    await takeBack(page, kit, 2);
-    await expectStacks(page, { 1: 1 }, 1);
-    await putCoins(page, kit, Array(price - 1).fill(1));
-    await expectStacks(page, { 1: price }, price);
+    await playFromPath(page, kit);
     const before = await savedStars(page);
-    await kit.tap(page, '.mk-pay');
-    await waitHappySeller(page);
-    if (await savedStars(page) !== before + 1) throw new Error('exact payment: expected one more star');
+    for (let n = 1; n <= 3; n++) {
+      const price = await priceShown(page);
+      await putCoins(page, kit, Array(n === 1 ? price + 1 : price).fill(1));
+      const stars = await savedStars(page);
+      await kit.tap(page, '.mk-pay');
+      await waitHappySeller(page);
+      await kit.wait(page, 500);
+      const want = n === 1 ? 0 : 1;
+      if (await savedStars(page) - stars !== want) throw new Error(`sale ${n}: expected ${want} new star(s)`);
+      if (n < 3) {
+        // The next sale comes (the first star's world reveal closes by itself).
+        await page.waitForFunction(() => document.querySelector('.mk-animal')?.dataset.mood === 'neutral'
+          && !document.querySelector('.mk-stack'), null, { timeout: 30000 });
+        await kit.settle(page);
+      }
+    }
+    await page.locator('.path-play').waitFor({ timeout: 30000 });
+    if (await page.locator('.path-stone').count() !== 3) throw new Error('expected three stones on the path');
+    if (await savedStars(page) - before !== 2) throw new Error('expected two stars in the play');
 
-    // Next sale (new seller, calm again).
-    await page.waitForFunction(() => document.querySelector('.mk-animal')?.dataset.mood === 'neutral'
-      && !document.querySelector('.mk-stack'), null, { timeout: 10000 });
-    price = await priceShown(page);
-    await putCoins(page, kit, Array(price + 1).fill(1));
-    const stars = await savedStars(page);
-    await kit.tap(page, '.mk-pay');
-    await waitHappySeller(page);
-    await kit.wait(page, 500);
-    if (await savedStars(page) !== stars) throw new Error('too much: expected no star');
+    // A fresh path, then one clean ▶ (exact payments only): the skill must go 1 → 2.
+    await resetSkill(page);
+    await playFromPath(page, kit);
+    for (let n = 1; n <= 3; n++) {
+      const price = await priceShown(page);
+      await putCoins(page, kit, Array(price).fill(1));
+      await kit.tap(page, '.mk-pay');
+      await waitHappySeller(page);
+      if (n < 3) {
+        await page.waitForFunction(() => document.querySelector('.mk-animal')?.dataset.mood === 'neutral'
+          && !document.querySelector('.mk-stack'), null, { timeout: 30000 });
+        await kit.settle(page);
+      }
+    }
+    await page.locator('.path-play').waitFor({ timeout: 30000 });
+    const skill = (await savedSkillState(page)).skill;
+    if (skill !== 2) throw new Error(`clean play: skill is ${skill}, expected 2`);
   },
 };

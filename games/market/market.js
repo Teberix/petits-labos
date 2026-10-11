@@ -44,12 +44,14 @@ import {
   removeOne, nextBasket, pickOther, pickSome, saleTarget, nextPrice, fitsInBasket,
 } from './money.js';
 import { pluralKey } from './plural.js';
-import { LEVELS } from './levels.js';
+import { LEVELS, PATH_LEVELS, FREE } from './levels.js';
+import { outcomeForMisses } from '../../js/progress.js';
 import STRINGS from './strings.js';
 import * as art from './art.js';
 
 const PLAYABLE = LEVELS;
 
+const ROUNDS_PER_PLAY = 3;   // sales per ▶ on the path (owner, 2026-10-11), all at the level ▶ picked
 const FLY_MS = 450;          // a coin flying between the counter, the seller and the purse
 const CHANGE_GAP_MS = 180;   // between two coins of change
 const CELEBRATE_MS = 2600;   // time to enjoy a sale before the next sale
@@ -103,10 +105,49 @@ function createGame(container, ctx) {
   }
 
   // ---------- Progress (saved per player) ----------
-  // { completed: [level ids], perfect: [level ids where every sale got the bonus] }
+  // { completed: [level ids], perfect: [level ids where every sale got the bonus],
+  //   heard: [level ids whose intro was said on the path] }
+  // completed / perfect only drive the fixed map; the path writes neither.
+  // (`heard` is new with the path; older saves simply don't have it.)
 
   function progress() {
-    return { completed: [], perfect: [], ...ctx.load() };
+    return { completed: [], perfect: [], heard: [], ...ctx.load() };
+  }
+
+  // The game's home: the path, or the fixed level map.
+  function home() {
+    if (ctx.path) showPath();
+    else showLevels();
+  }
+
+  // ---------- Path (new engine) ----------
+
+  function showPath() {
+    stopInputs();
+    ctx.path.show(container, {
+      levels: PATH_LEVELS,
+      onPlay: (level) => { sfx.pop(); playLevel(level); },
+      onFree: () => { sfx.pop(); playLevel(FREE); },
+      roundsPerPlay: ROUNDS_PER_PLAY,
+    });
+    ctx.speak(t('market.chooseLevel'));
+  }
+
+  // The level's intro (and the "how to" of the first level) is said once per level:
+  // on the fixed map at its first sale, on the path the first time it is picked.
+  function introLine(level) {
+    if (!ctx.path) {
+      if (play.index > 0) return '';
+    } else {
+      const p = progress();
+      if (p.heard.includes(level.id)) return '';
+      p.heard.push(level.id);
+      ctx.save(p);
+    }
+    let line = '';
+    if (level.id === PLAYABLE[0].id) line += ' ' + t('market.howTo');
+    if (level.intro) line += ' ' + t(level.intro);
+    return line;
   }
 
   function isUnlocked(index) {
@@ -199,10 +240,8 @@ function createGame(container, ctx) {
 
     // Buying: "Bonjour ! La pomme coûte 3 francs." Selling: the customer's line only.
     let line = sale.seller ? orderLine() : `${t('market.hello')} ${orderLine()}`;
-    if (play.index === 0) {
-      if (level.id === PLAYABLE[0].id) line += ' ' + t('market.howTo');
-      if (level.intro) line += ' ' + t(level.intro);
-    }
+    // On the path the intro is said at the first sale of a ▶ (once per level, see introLine).
+    if (play.index === 0) line += introLine(level);
     ctx.speak(line);
   }
 
@@ -379,7 +418,7 @@ function createGame(container, ctx) {
       const el = h('div', {
         class: 'mk-fly',
         style: `left:${from.left + from.width / 2 - size / 2}px;top:${from.top + from.height / 2 - size / 2}px;width:${size}px;height:${size}px`,
-        html: art.coin(value),
+        html: value >= 10 ? art.note(value) : art.coin(value),
       });
       document.body.append(el);
       void el.offsetWidth;
@@ -489,6 +528,9 @@ function createGame(container, ctx) {
     // A star only for the exact amount. Every 5th star also brings a sticker (so two
     // stars can bring one).
     const stickers = overpaid ? [] : [ctx.rewards.star(play.els.animal)];
+    // On the path: the hidden skill moves and the path gets one stone more.
+    // Misses = "not enough" taps + 1 if the child overpaid.
+    ctx.path?.record(play.level, outcomeForMisses(sale.misses + (overpaid ? 1 : 0)), PATH_LEVELS);
     if (bonus) later(() => stickers.push(ctx.rewards.star(play.els.animal)), BONUS_STAR_DELAY);
 
     later(async () => {
@@ -498,7 +540,11 @@ function createGame(container, ctx) {
       }
       if (destroyed) return;
       play.index++;
-      if (play.index < play.level.rounds) startSale();
+      if (ctx.path) {
+        // Three sales per ▶, all at the level ▶ picked, then back to the path.
+        if (play.index < ROUNDS_PER_PLAY) startSale();
+        else showPath();
+      } else if (play.index < play.level.rounds) startSale();
       else levelDone();
     }, CELEBRATE_MS + (bonus ? BONUS_STAR_DELAY : 0));
   }
@@ -667,14 +713,14 @@ function createGame(container, ctx) {
       h('div', { class: 'mk-done-animal', 'data-mood': 'happy', html: art.animal(sale.animal) }),
       h('button', {
         class: 'mk-continue', type: 'button', 'aria-label': t('market.continue'),
-        html: art.ICON_NEXT, onclick: () => { sfx.pop(); showLevels(); },
+        html: art.ICON_NEXT, onclick: () => { sfx.pop(); home(); },
       }),
     ));
     ctx.speak(t('market.levelDone'));
   }
 
   return {
-    start: showLevels,
+    start: home,
     destroy() {
       destroyed = true;
       timers.forEach(clearTimeout);

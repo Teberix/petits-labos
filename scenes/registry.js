@@ -11,6 +11,7 @@ import space from './space/pack.js';
 import arctic from './arctic/pack.js';
 import ocean from './ocean/pack.js';
 import jungle from './jungle/pack.js';
+import farm from './farm/pack.js';
 
 export const PACKS = [
   meadow,
@@ -20,4 +21,5 @@ export const PACKS = [
   arctic,
   ocean,
   jungle,
+  farm,
 ];

@@ -159,6 +159,7 @@ const PRECACHE = [
   'js/version.js',
   'scenes/arctic/pack.js',
   'scenes/dinosaurs/pack.js',
+  'scenes/farm/pack.js',
   'scenes/jungle/pack.js',
   'scenes/meadow/pack.js',
   'scenes/ocean/pack.js',

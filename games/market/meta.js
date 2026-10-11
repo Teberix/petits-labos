@@ -1,6 +1,8 @@
 // What the hub needs to know about "Le Marché" without loading the whole game.
 export default {
   id: 'market',
+  path: true,
+  scene: 'farm',
   // Non-linguistic game → played in the app language (French by default).
   titleKey: 'market.title',
   strings: {

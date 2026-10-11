@@ -222,7 +222,7 @@ export default {
     'market.intro.basket': 'Jetzt kaufst du zwei Dinge: Zähl die beiden Preise zusammen!',
     'market.intro.seller': 'Jetzt bist du die Verkäuferin oder der Verkäufer! Gib dem Kunden das Wechselgeld.',
     'market.intro.three': 'Jetzt kaufst du drei Dinge: Zähl die drei Preise zusammen!',
-    'market.intro.ten': 'Der Kunde gibt dir eine 10-Franken-Note! Gib das Wechselgeld.',
+    'market.intro.ten': 'Der Kunde gibt dir eine 10-Franken-Note! Gib das Rückgeld zurück.',
     'market.intro.free': 'Der Markt gehört dir! Einer verkauft, der andere kauft.',
     'market.costs.apple.one': 'Der Apfel kostet {n} Franken.',
     'market.costs.apple.other': 'Der Apfel kostet {n} Franken.',
