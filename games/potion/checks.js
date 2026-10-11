@@ -31,6 +31,14 @@ export default {
       },
     },
     {
+      // Fixed map, level 11: the creature asks, no recipe shown; 5 jars, the cauldron full.
+      name: 'level 11 detective (white/black), full cauldron',
+      async setup(page, kit) {
+        await openLevel(page, kit, 11);
+        await addDrops(page, kit, 6);
+      },
+    },
+    {
       // Free lab: the longest row of drops (10).
       name: 'level 8 free lab, 10 drops',
       async setup(page, kit) {

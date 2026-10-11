@@ -89,6 +89,7 @@ const PRECACHE = [
   'games/memory/strings.js',
   'games/potion/art.js',
   'games/potion/levels.js',
+  'games/potion/levels.json',
   'games/potion/meta.js',
   'games/potion/mixing.js',
   'games/potion/potion.css',

@@ -1,0 +1,575 @@
+{
+  "schemaVersion": 1,
+  "game": "potion",
+  "levels": [
+    {
+      "id": 1,
+      "difficulty": 1,
+      "ingredients": [
+        "red",
+        "yellow",
+        "blue"
+      ],
+      "match": {
+        "mode": "ratio"
+      },
+      "maxDrops": 5,
+      "shuffle": true,
+      "success": "simple",
+      "rounds": [
+        {
+          "recipe": {
+            "red": 1
+          },
+          "icon": "🍓"
+        },
+        {
+          "recipe": {
+            "yellow": 1
+          },
+          "icon": "🌻"
+        },
+        {
+          "recipe": {
+            "blue": 1
+          },
+          "icon": "💧"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "difficulty": 2,
+      "ingredients": [
+        "red",
+        "yellow",
+        "blue"
+      ],
+      "match": {
+        "mode": "ratio",
+        "tolerance": 0.2
+      },
+      "maxDrops": 6,
+      "shuffle": true,
+      "success": "mix",
+      "rounds": [
+        {
+          "recipe": {
+            "red": 1,
+            "blue": 1
+          },
+          "icon": "🍇"
+        },
+        {
+          "recipe": {
+            "yellow": 1,
+            "blue": 1
+          },
+          "icon": "🍀"
+        },
+        {
+          "recipe": {
+            "red": 1,
+            "yellow": 1
+          },
+          "icon": "🥕"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "difficulty": 2,
+      "ingredients": [
+        "red",
+        "yellow",
+        "blue"
+      ],
+      "match": {
+        "mode": "ratio",
+        "tolerance": 0.2
+      },
+      "maxDrops": 6,
+      "shuffle": true,
+      "pick": 5,
+      "success": "mix",
+      "rounds": [
+        {
+          "recipe": {
+            "red": 1
+          },
+          "icon": "🍒"
+        },
+        {
+          "recipe": {
+            "yellow": 1
+          },
+          "icon": "🍋"
+        },
+        {
+          "recipe": {
+            "blue": 1
+          },
+          "icon": "🐳"
+        },
+        {
+          "recipe": {
+            "red": 1,
+            "blue": 1
+          },
+          "icon": "🍆"
+        },
+        {
+          "recipe": {
+            "yellow": 1,
+            "blue": 1
+          },
+          "icon": "🐸"
+        },
+        {
+          "recipe": {
+            "red": 1,
+            "yellow": 1
+          },
+          "icon": "🍊"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "difficulty": 3,
+      "ingredients": [
+        "red",
+        "yellow",
+        "blue"
+      ],
+      "match": {
+        "mode": "counts"
+      },
+      "showRecipe": true,
+      "maxDrops": 6,
+      "shuffle": true,
+      "pick": 5,
+      "success": "count",
+      "rounds": [
+        {
+          "recipe": {
+            "red": 2
+          },
+          "icon": "🍓"
+        },
+        {
+          "recipe": {
+            "yellow": 3
+          },
+          "icon": "🌻"
+        },
+        {
+          "recipe": {
+            "blue": 4
+          },
+          "icon": "💧"
+        },
+        {
+          "recipe": {
+            "red": 5
+          },
+          "icon": "🍒"
+        },
+        {
+          "recipe": {
+            "yellow": 1
+          },
+          "icon": "🍋"
+        },
+        {
+          "recipe": {
+            "blue": 3
+          },
+          "icon": "🐳"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "difficulty": 4,
+      "ingredients": [
+        "red",
+        "yellow",
+        "blue"
+      ],
+      "match": {
+        "mode": "counts"
+      },
+      "showRecipe": true,
+      "maxDrops": 6,
+      "shuffle": true,
+      "pick": 5,
+      "success": "count",
+      "rounds": [
+        {
+          "recipe": {
+            "yellow": 2,
+            "red": 1
+          },
+          "icon": "🌅"
+        },
+        {
+          "recipe": {
+            "red": 2,
+            "yellow": 1
+          },
+          "icon": "🦊"
+        },
+        {
+          "recipe": {
+            "yellow": 2,
+            "blue": 1
+          },
+          "icon": "🍏"
+        },
+        {
+          "recipe": {
+            "blue": 2,
+            "yellow": 1
+          },
+          "icon": "🦚"
+        },
+        {
+          "recipe": {
+            "red": 2,
+            "blue": 1
+          },
+          "icon": "🌺"
+        },
+        {
+          "recipe": {
+            "blue": 2,
+            "red": 1
+          },
+          "icon": "🌌"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "difficulty": 5,
+      "ingredients": [
+        "red",
+        "yellow",
+        "blue",
+        "white",
+        "black"
+      ],
+      "match": {
+        "mode": "ratio",
+        "tolerance": 0.2
+      },
+      "maxDrops": 6,
+      "shuffle": true,
+      "pick": 5,
+      "success": "mix",
+      "rounds": [
+        {
+          "recipe": {
+            "red": 1,
+            "white": 1
+          },
+          "icon": "🌸"
+        },
+        {
+          "recipe": {
+            "blue": 1,
+            "white": 1
+          },
+          "icon": "☁️"
+        },
+        {
+          "recipe": {
+            "yellow": 1,
+            "white": 1
+          },
+          "icon": "🐥"
+        },
+        {
+          "recipe": {
+            "red": 1,
+            "black": 1
+          },
+          "icon": "🍷"
+        },
+        {
+          "recipe": {
+            "blue": 1,
+            "black": 1
+          },
+          "icon": "🌙"
+        },
+        {
+          "recipe": {
+            "white": 1,
+            "black": 1
+          },
+          "icon": "🐘"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "difficulty": 6,
+      "ingredients": [
+        "red",
+        "yellow",
+        "blue",
+        "white",
+        "black"
+      ],
+      "match": {
+        "mode": "counts"
+      },
+      "showRecipe": true,
+      "maxDrops": 6,
+      "shuffle": true,
+      "pick": 5,
+      "success": "mix",
+      "rounds": [
+        {
+          "recipe": {
+            "red": 1,
+            "blue": 1,
+            "white": 1
+          },
+          "icon": "🔮"
+        },
+        {
+          "recipe": {
+            "yellow": 1,
+            "blue": 1,
+            "white": 1
+          },
+          "icon": "🌱"
+        },
+        {
+          "recipe": {
+            "red": 1,
+            "yellow": 1,
+            "blue": 1
+          },
+          "icon": "🐻"
+        },
+        {
+          "recipe": {
+            "yellow": 1,
+            "blue": 1,
+            "black": 1
+          },
+          "icon": "🌲"
+        },
+        {
+          "recipe": {
+            "red": 1,
+            "yellow": 1,
+            "white": 1
+          },
+          "icon": "🍑"
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "difficulty": 7,
+      "ingredients": [
+        "red",
+        "yellow",
+        "blue"
+      ],
+      "match": {
+        "mode": "ratio",
+        "tolerance": 0.1
+      },
+      "maxDrops": 6,
+      "shuffle": true,
+      "pick": 5,
+      "success": "mix",
+      "rounds": [
+        {
+          "recipe": {
+            "yellow": 2,
+            "red": 1
+          },
+          "icon": "🌅"
+        },
+        {
+          "recipe": {
+            "red": 2,
+            "yellow": 1
+          },
+          "icon": "🦊"
+        },
+        {
+          "recipe": {
+            "yellow": 2,
+            "blue": 1
+          },
+          "icon": "🍏"
+        },
+        {
+          "recipe": {
+            "blue": 2,
+            "yellow": 1
+          },
+          "icon": "🦚"
+        },
+        {
+          "recipe": {
+            "red": 2,
+            "blue": 1
+          },
+          "icon": "🌺"
+        },
+        {
+          "recipe": {
+            "blue": 2,
+            "red": 1
+          },
+          "icon": "🌌"
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "difficulty": 8,
+      "ingredients": [
+        "red",
+        "yellow",
+        "blue",
+        "white",
+        "black"
+      ],
+      "match": {
+        "mode": "counts"
+      },
+      "showRecipe": true,
+      "maxDrops": 6,
+      "shuffle": true,
+      "pick": 5,
+      "success": "mix",
+      "rounds": [
+        {
+          "recipe": {
+            "yellow": 2,
+            "blue": 1,
+            "white": 2
+          },
+          "icon": "🍈"
+        },
+        {
+          "recipe": {
+            "red": 2,
+            "blue": 1,
+            "white": 2
+          },
+          "icon": "🦄"
+        },
+        {
+          "recipe": {
+            "red": 1,
+            "yellow": 1,
+            "blue": 1,
+            "white": 2
+          },
+          "icon": "🐪"
+        },
+        {
+          "recipe": {
+            "yellow": 2,
+            "red": 1,
+            "blue": 1
+          },
+          "icon": "🐢"
+        },
+        {
+          "recipe": {
+            "blue": 2,
+            "white": 1,
+            "black": 1
+          },
+          "icon": "🐋"
+        },
+        {
+          "recipe": {
+            "red": 3,
+            "yellow": 1,
+            "white": 1
+          },
+          "icon": "🦩"
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "difficulty": 9,
+      "ingredients": [
+        "red",
+        "yellow",
+        "blue",
+        "white",
+        "black"
+      ],
+      "match": {
+        "mode": "ratio",
+        "tolerance": 0.1
+      },
+      "maxDrops": 6,
+      "shuffle": true,
+      "pick": 5,
+      "success": "mix",
+      "rounds": [
+        {
+          "recipe": {
+            "red": 1,
+            "white": 2
+          },
+          "icon": "🍬"
+        },
+        {
+          "recipe": {
+            "blue": 2,
+            "black": 1
+          },
+          "icon": "🫐"
+        },
+        {
+          "recipe": {
+            "yellow": 1,
+            "white": 1
+          },
+          "icon": "🧀"
+        },
+        {
+          "recipe": {
+            "red": 1,
+            "yellow": 1,
+            "black": 1
+          },
+          "icon": "🌰"
+        },
+        {
+          "recipe": {
+            "blue": 1,
+            "white": 1,
+            "black": 1
+          },
+          "icon": "🐺"
+        },
+        {
+          "recipe": {
+            "red": 2,
+            "yellow": 1,
+            "white": 1
+          },
+          "icon": "🍑"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,50 @@
+{
+  "$comment": "ONE level of potion (a parameter set + its committed rounds). Dev-only (never precached). Free lab is not a level: it lives in levels.js (FREE).",
+  "type": "object",
+  "required": ["id", "difficulty", "ingredients", "match", "maxDrops", "shuffle", "success", "rounds"],
+  "additionalProperties": false,
+  "properties": {
+    "id": { "type": "integer", "minimum": 1 },
+    "difficulty": { "type": "integer", "minimum": 1, "maximum": 9 },
+    "ingredients": {
+      "type": "array", "minItems": 3,
+      "items": { "enum": ["red", "yellow", "blue", "white", "black"] }
+    },
+    "match": {
+      "type": "object",
+      "required": ["mode"],
+      "additionalProperties": false,
+      "properties": {
+        "mode": { "enum": ["ratio", "counts"] },
+        "tolerance": { "type": "number", "minimum": 0, "maximum": 0.5 }
+      }
+    },
+    "showRecipe": { "const": true },
+    "maxDrops": { "type": "integer", "minimum": 1, "maximum": 10 },
+    "shuffle": { "type": "boolean" },
+    "pick": { "type": "integer", "minimum": 3 },
+    "success": { "enum": ["simple", "mix", "count"] },
+    "rounds": {
+      "type": "array", "minItems": 3,
+      "items": {
+        "type": "object",
+        "required": ["recipe", "icon"],
+        "additionalProperties": false,
+        "properties": {
+          "recipe": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "red": { "type": "integer", "minimum": 1, "maximum": 5 },
+              "yellow": { "type": "integer", "minimum": 1, "maximum": 5 },
+              "blue": { "type": "integer", "minimum": 1, "maximum": 5 },
+              "white": { "type": "integer", "minimum": 1, "maximum": 5 },
+              "black": { "type": "integer", "minimum": 1, "maximum": 5 }
+            }
+          },
+          "icon": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  }
+}
