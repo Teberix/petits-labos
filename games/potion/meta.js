@@ -4,6 +4,7 @@ export default {
   // Non-linguistic game → played in the app language (French by default).
   titleKey: 'potion.title',
   path: true,
+  scene: 'monster',
   strings: {
     fr: { 'potion.title': 'La Potion' },
     es: { 'potion.title': 'La Poción' },

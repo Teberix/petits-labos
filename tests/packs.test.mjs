@@ -83,3 +83,15 @@ test("every game's world exists (meta.js `scene`, none = the start world)", () =
     if (g.scene !== undefined) assert.ok(PACKS.some((p) => p.id === g.scene), `${g.id}: scene ${g.scene}`);
   }
 });
+
+// Guard: a pack nobody points at can never be unlocked (the monster world bug, P4).
+test('every pack except the start world is the `scene` of exactly one game, and every `scene` is a real pack', () => {
+  const packIds = new Set(PACKS.map((p) => p.id));
+  for (const g of GAMES) {
+    if (g.scene !== undefined) assert.ok(packIds.has(g.scene), `${g.id}: scene ${g.scene} is not a pack`);
+  }
+  for (const p of PACKS.slice(1)) {
+    const owners = GAMES.filter((g) => g.scene === p.id).map((g) => g.id);
+    assert.equal(owners.length, 1, `pack ${p.id}: games pointing at it = [${owners.join(', ')}]`);
+  }
+});
