@@ -38,3 +38,13 @@ stateDiagram-v2
 
 ## Questions
 1. Add a `localStorage` fake in `tests/fixtures/` to test the seed in `path.show()`? (tests only, small)
+
+## Reviewer findings (pwa-guardian, 11a2f4c..83e2b9f)
+
+Full gate: PASSED on 83e2b9f (975s, owner)
+
+| Severity | File:line | Finding |
+|---|---|---|
+| none | — | No violations found. Reviewer read the code only; it did not run the gate or tests. |
+
+Checks passed: offline-first and no network (no new file, no URL); no `SCHEMA_VERSION` bump needed (existing `{ skill, best, rounds, seen }` shape via `setSkill`, `js/path.js:43`, `js/progress.js:83`, `js/storage.js:395`); seed runs only when `getSkill()` is null (`js/path.js:41`) and never changes `completed`; no write when the seed is null (`js/progress.js:81`); `resetSkill` state never re-seeded (`js/storage.js:408-410`, `375-377`); fixed map unaffected (seed only in `path.show()`).
